@@ -158,6 +158,31 @@ export default function Dashboard() {
           </button>
         </div>
       </div>
+      <div className="rounded-lg border border-slate-200 bg-white p-4 md:col-span-3">
+        <h2 className="text-lg font-semibold">My Registered Events</h2>
+        {loading && <p className="mt-3 text-sm text-slate-600">Loading events...</p>}
+        {!loading && registrations.length === 0 && (
+          <p className="mt-3 text-sm text-slate-600">No registrations yet.</p>
+        )}
+        {!loading && registrations.length > 0 && (
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            {registrations.map((registration) => (
+              <div
+                key={registration._id}
+                className="rounded border border-slate-200 bg-slate-50 p-3"
+              >
+                <p className="text-sm font-semibold text-slate-800">
+                  {registration.event?.title || "Untitled event"}
+                </p>
+                <p className="mt-1 text-xs text-slate-600">
+                  {registration.event?.date || "TBA"}
+                  {registration.event?.venue ? ` · ${registration.event.venue}` : ""}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </section>
   );
 }
