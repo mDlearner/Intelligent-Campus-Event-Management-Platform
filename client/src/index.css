@@ -1,7 +1,72 @@
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --bg: #f8fafc;
+  --bg-accent: #eef2ff;
+  --surface: #ffffff;
+  --glass: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(148, 163, 184, 0.35);
+  --text: #0f172a;
+  --muted: #64748b;
+  --primary: #4f46e5;
+  --primary-dark: #4338ca;
+  --accent: #f97316;
+  --accent-strong: #ea580c;
+  --ring: rgba(79, 70, 229, 0.35);
+  --shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f172a;
+    --bg-accent: #111827;
+    --surface: #111827;
+    --glass: rgba(15, 23, 42, 0.72);
+    --glass-border: rgba(148, 163, 184, 0.2);
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --primary: #6366f1;
+    --primary-dark: #4f46e5;
+    --accent: #fb923c;
+    --accent-strong: #f97316;
+    --ring: rgba(99, 102, 241, 0.45);
+    --shadow: 0 24px 48px rgba(15, 23, 42, 0.55);
+  }
+}
+
 body {
-  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-family: "Plus Jakarta Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  background: radial-gradient(circle at top left, rgba(79, 70, 229, 0.08), transparent 45%),
+    radial-gradient(circle at 30% 20%, rgba(249, 115, 22, 0.08), transparent 38%),
+    linear-gradient(180deg, var(--bg) 0%, var(--bg-accent) 100%);
+  color: var(--text);
+}
+
+@layer components {
+  .glass-panel {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(16px);
+  }
+
+  .bento-tile {
+    background: var(--surface);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+  }
+
+  .accent-chip {
+    background: rgba(79, 70, 229, 0.12);
+    color: var(--primary);
+  }
+
+  .warm-chip {
+    background: rgba(249, 115, 22, 0.12);
+    color: var(--accent-strong);
+  }
 }

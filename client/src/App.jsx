@@ -4,17 +4,19 @@ import Home from "./pages/Home.jsx";
 import Events from "./pages/Events.jsx";
 import Login from "./pages/Login.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
+import Profile from "./pages/Profile.jsx";
 
 export default function App() {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen text-[color:var(--text)]">
       <Navbar />
-      <main className="mx-auto max-w-6xl px-4 py-8">
+      <main className="mx-auto max-w-7xl px-4 pb-14 pt-8 lg:px-8">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/events" element={<Events />} />
           <Route path="/login" element={<Login />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/profile" element={<Profile />} />
         </Routes>
       </main>
     </div>

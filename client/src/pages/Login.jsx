@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { loginUser, registerUser } from "../lib/api.js";
+import { loginUser, registerUser, resendVerification, verifyRegistration } from "../lib/api.js";
 import { setAuth } from "../lib/auth.js";
 
 const initialForm = {
@@ -8,7 +8,9 @@ const initialForm = {
   email: "",
   password: "",
   role: "student",
-  department: ""
+  department: "",
+  studentId: "",
+  year: ""
 };
 
 export default function Login() {
@@ -17,6 +19,10 @@ export default function Login() {
   const [form, setForm] = useState(initialForm);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
+  const [verificationRequired, setVerificationRequired] = useState(false);
+  const [isResending, setIsResending] = useState(false);
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -36,12 +42,21 @@ export default function Login() {
             email: form.email,
             password: form.password,
             role: form.role,
-            department: form.department || undefined
+        department: form.department || undefined,
+        studentId: form.role === "student" ? form.studentId || undefined : undefined,
+        year: form.role === "student" ? form.year || undefined : undefined
           };
 
       const result = mode === "login"
         ? await loginUser(payload)
         : await registerUser(payload);
+
+      if (result?.verificationRequired) {
+        setVerificationRequired(true);
+        setVerificationEmail(result.email || form.email);
+        setError("");
+        return;
+      }
 
       setAuth({ token: result.token, user: result.user });
       navigate("/events");
@@ -52,8 +67,44 @@ export default function Login() {
     }
   }
 
+  async function handleVerify(event) {
+    event.preventDefault();
+    setError("");
+    setIsSubmitting(true);
+
+    try {
+      const result = await verifyRegistration({
+        email: verificationEmail,
+        code: verificationCode.trim()
+      });
+
+      setAuth({ token: result.token, user: result.user });
+      navigate("/events");
+    } catch (err) {
+      setError(err.message || "Unable to verify code");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function handleResend() {
+    if (!verificationEmail) {
+      return;
+    }
+    setError("");
+    setIsResending(true);
+
+    try {
+      await resendVerification({ email: verificationEmail });
+    } catch (err) {
+      setError(err.message || "Unable to resend code");
+    } finally {
+      setIsResending(false);
+    }
+  }
+
   return (
-    <section className="mx-auto max-w-md rounded-lg border border-slate-200 bg-white p-6">
+    <section className="mx-auto max-w-md rounded-lg border border-slate-200 bg-white/80 p-6">
       <h1 className="text-2xl font-semibold">
         {mode === "login" ? "Sign in" : "Create account"}
       </h1>
@@ -63,12 +114,13 @@ export default function Login() {
           : "Create an account to register or host events."}
       </p>
 
-      <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
-        {mode === "register" && (
+      {!verificationRequired ? (
+        <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+          {mode === "register" && (
           <div>
             <label className="text-sm font-medium">Full name</label>
             <input
-              className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+              className="mt-1 w-full rounded border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-500"
               type="text"
               name="name"
               value={form.name}
@@ -78,86 +130,164 @@ export default function Login() {
             />
           </div>
         )}
-        <div>
-          <label className="text-sm font-medium">Email</label>
-          <input
-            className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
-            type="email"
-            name="email"
-            value={form.email}
-            onChange={handleChange}
-            placeholder="you@campus.edu"
-            required
-          />
-        </div>
-        <div>
-          <label className="text-sm font-medium">Password</label>
-          <input
-            className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
-            type="password"
-            name="password"
-            value={form.password}
-            onChange={handleChange}
-            placeholder="••••••••"
-            required
-          />
-        </div>
-        {mode === "register" && (
-          <>
-            <div>
-              <label className="text-sm font-medium">Role</label>
-              <select
-                className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
-                name="role"
-                value={form.role}
-                onChange={handleChange}
-              >
-                <option value="student">Student</option>
-                <option value="club">Club</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
-            <div>
-              <label className="text-sm font-medium">Department (optional)</label>
-              <input
-                className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
-                type="text"
-                name="department"
-                value={form.department}
-                onChange={handleChange}
-                placeholder="Computer Science"
-              />
-            </div>
-          </>
-        )}
-
-        {error && (
-          <div className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-            {error}
+          <div>
+            <label className="text-sm font-medium">Email</label>
+            <input
+              className="mt-1 w-full rounded border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-500"
+              type="email"
+              name="email"
+              value={form.email}
+              onChange={handleChange}
+              placeholder="you@campus.edu"
+              required
+            />
           </div>
-        )}
+          <div>
+            <label className="text-sm font-medium">Password</label>
+            <input
+              className="mt-1 w-full rounded border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-500"
+              type="password"
+              name="password"
+              value={form.password}
+              onChange={handleChange}
+              placeholder="••••••••"
+              required
+            />
+          </div>
+          {mode === "register" && (
+            <>
+              <div>
+                <label className="text-sm font-medium">Role</label>
+                <select
+                  className="mt-1 w-full rounded border border-slate-300 bg-white px-3 py-2 text-slate-900"
+                  name="role"
+                  value={form.role}
+                  onChange={handleChange}
+                >
+                  <option value="student">Student</option>
+                  <option value="club">Club</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Department (optional)</label>
+                <input
+                  className="mt-1 w-full rounded border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-500"
+                  type="text"
+                  name="department"
+                  value={form.department}
+                  onChange={handleChange}
+                  placeholder="Computer Science"
+                />
+              </div>
+              {form.role === "student" && (
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div>
+                    <label className="text-sm font-medium">Student ID</label>
+                    <input
+                      className="mt-1 w-full rounded border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-500"
+                      type="text"
+                      name="studentId"
+                      value={form.studentId}
+                      onChange={handleChange}
+                      placeholder="STU-2026-0245"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Year</label>
+                    <input
+                      className="mt-1 w-full rounded border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-500"
+                      type="text"
+                      name="year"
+                      value={form.year}
+                      onChange={handleChange}
+                      placeholder="2"
+                    />
+                  </div>
+                </div>
+              )}
+            </>
+          )}
 
+          {error && (
+            <div className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              {error}
+            </div>
+          )}
+
+          <button
+            className="w-full rounded bg-slate-900 px-3 py-2 text-white disabled:opacity-70"
+            type="submit"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Please wait..." : mode === "login" ? "Login" : "Create account"}
+          </button>
+        </form>
+      ) : (
+        <form className="mt-6 space-y-4" onSubmit={handleVerify}>
+          <div>
+            <label className="text-sm font-medium">Verification email</label>
+            <input
+              className="mt-1 w-full rounded border border-slate-300 bg-slate-100 px-3 py-2 text-slate-500"
+              type="email"
+              value={verificationEmail}
+              disabled
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium">6-digit code</label>
+            <input
+              className="mt-1 w-full rounded border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-500"
+              type="text"
+              value={verificationCode}
+              onChange={(event) => setVerificationCode(event.target.value)}
+              placeholder="Enter code"
+              maxLength={6}
+              required
+            />
+            <p className="mt-2 text-xs text-slate-500">
+              The code was sent to mdgames.21128@gmail.com. It is valid for 7 days.
+            </p>
+          </div>
+
+          {error && (
+            <div className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              {error}
+            </div>
+          )}
+
+          <button
+            className="w-full rounded bg-slate-900 px-3 py-2 text-white disabled:opacity-70"
+            type="submit"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Verifying..." : "Verify & complete"}
+          </button>
+          <button
+            className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 disabled:opacity-70"
+            type="button"
+            onClick={handleResend}
+            disabled={isResending}
+          >
+            {isResending ? "Resending..." : "Resend code"}
+          </button>
+        </form>
+      )}
+
+      {!verificationRequired && (
         <button
-          className="w-full rounded bg-slate-900 px-3 py-2 text-white disabled:opacity-70"
-          type="submit"
-          disabled={isSubmitting}
+          className="mt-4 w-full text-sm text-slate-600"
+          type="button"
+          onClick={() => {
+            setMode((prev) => (prev === "login" ? "register" : "login"));
+            setError("");
+          }}
         >
-          {isSubmitting ? "Please wait..." : mode === "login" ? "Login" : "Create account"}
+          {mode === "login"
+            ? "Need an account? Register here."
+            : "Already have an account? Sign in."}
         </button>
-      </form>
-
-      <button
-        className="mt-4 w-full text-sm text-slate-600"
-        type="button"
-        onClick={() => {
-          setMode((prev) => (prev === "login" ? "register" : "login"));
-          setError("");
-        }}
-      >
-        {mode === "login"
-          ? "Need an account? Register here."
-          : "Already have an account? Sign in."}
-      </button>
+      )}
     </section>
   );
 }

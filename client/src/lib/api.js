@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_BASE = import.meta.env.VITE_API_URL || "";
 
 async function apiFetch(path, { method = "GET", body, token } = {}) {
   const headers = { "Content-Type": "application/json" };
@@ -36,6 +36,14 @@ export function registerUser(payload) {
   return apiFetch("/api/auth/register", { method: "POST", body: payload });
 }
 
+export function verifyRegistration(payload) {
+  return apiFetch("/api/auth/verify", { method: "POST", body: payload });
+}
+
+export function resendVerification(payload) {
+  return apiFetch("/api/auth/resend", { method: "POST", body: payload });
+}
+
 export function fetchEvents() {
   return apiFetch("/api/events");
 }
@@ -56,6 +64,22 @@ export function createEvent(payload, token) {
   return apiFetch("/api/events", { method: "POST", body: payload, token });
 }
 
+export function updateEvent(eventId, payload, token) {
+  return apiFetch(`/api/events/${eventId}`, { method: "PUT", body: payload, token });
+}
+
+export function deleteEvent(eventId, token) {
+  return apiFetch(`/api/events/${eventId}`, { method: "DELETE", token });
+}
+
 export function registerForEvent(eventId, token) {
   return apiFetch(`/api/events/${eventId}/register`, { method: "POST", token });
+}
+
+export function fetchProfile(token) {
+  return apiFetch("/api/auth/profile", { token });
+}
+
+export function updateProfile(payload, token) {
+  return apiFetch("/api/auth/profile", { method: "PUT", body: payload, token });
 }
