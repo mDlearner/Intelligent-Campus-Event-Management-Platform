@@ -110,59 +110,59 @@ export default function Dashboard() {
   return (
     <section className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)]">
       <aside className="space-y-4">
-        <div className="glass-panel rounded-3xl p-4">
+        <div className="bento-tile rounded-2xl p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">
-            Organizer Hub
+            My Dashboard
           </p>
           <div className="mt-4 space-y-2 text-sm text-slate-600">
-            <button className="flex w-full items-center justify-between rounded-xl bg-slate-900 px-3 py-2 text-white" type="button">
-              Dashboard
+            <button className="flex w-full items-center justify-between rounded-xl bg-slate-900 px-3 py-2 font-semibold text-white" type="button">
+              Overview
               <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px]">Live</span>
             </button>
-            <button className="flex w-full items-center justify-between rounded-xl px-3 py-2 hover:bg-slate-100/70" type="button" onClick={() => navigate("/events")}>
-              Event Creation
-              <span className="text-xs text-slate-400">+ New</span>
+            <button className="flex w-full items-center justify-between rounded-xl px-3 py-2 transition hover:bg-slate-100/70" type="button" onClick={() => navigate("/events")}>
+              Browse Events
+              <span className="text-xs text-slate-400">Discover</span>
             </button>
-            <button className="flex w-full items-center justify-between rounded-xl px-3 py-2 hover:bg-slate-100/70" type="button">
-              Venue Booking
-              <span className="text-xs text-slate-400">3</span>
+            <button className="flex w-full items-center justify-between rounded-xl px-3 py-2 transition hover:bg-slate-100/70" type="button">
+              Registrations
+              <span className="text-xs text-slate-400">{registrations.length}</span>
             </button>
-            <button className="flex w-full items-center justify-between rounded-xl px-3 py-2 hover:bg-slate-100/70" type="button">
-              Analytics
-              <span className="text-xs text-slate-400">Beta</span>
+            <button className="flex w-full items-center justify-between rounded-xl px-3 py-2 transition hover:bg-slate-100/70" type="button">
+              Calendar
+              <span className="text-xs text-slate-500">View</span>
             </button>
           </div>
         </div>
-        <div className="bento-tile rounded-3xl p-4">
-          <h3 className="text-sm font-semibold">Quick Actions</h3>
+        <div className="bento-tile rounded-2xl p-4">
+          <h3 className="text-sm font-semibold text-slate-700">Actions</h3>
           {notice && (
-            <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
+            <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
               {notice}
             </div>
           )}
           <div className="mt-4 space-y-2">
             {canCreate && (
               <button
-                className="w-full rounded-full bg-[color:var(--primary)] px-3 py-2 text-xs font-semibold text-white"
+                className="w-full rounded-full bg-[color:var(--primary)] px-3 py-2 text-xs font-semibold text-white transition hover:shadow-lg"
                 type="button"
                 onClick={() => navigate("/events")}
               >
-                Create Event
+                + Create Event
               </button>
             )}
             <button
-              className="w-full rounded-full border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600"
+              className="w-full rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
               type="button"
               onClick={() => navigate("/events")}
             >
               View Calendar
             </button>
             <button
-              className="w-full rounded-full border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600"
+              className="w-full rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
               type="button"
               onClick={handleSendReminders}
             >
-              Send Reminder
+              Send Reminders
             </button>
           </div>
         </div>
@@ -170,36 +170,36 @@ export default function Dashboard() {
 
       <div className="space-y-6">
         <div className="grid gap-4 md:grid-cols-3">
-          <div className="bento-tile rounded-3xl p-4">
-            <p className="text-xs text-slate-500">Registered Events</p>
-            <p className="mt-2 text-3xl font-semibold">
+          <div className="bento-tile rounded-2xl p-4">
+            <p className="text-xs font-semibold text-slate-500">Registered Events</p>
+            <p className="mt-3 text-3xl font-bold text-slate-900">
               {loading ? "…" : registrations.length}
             </p>
           </div>
-          <div className="bento-tile rounded-3xl p-4">
-            <p className="text-xs text-slate-500">Upcoming This Week</p>
-            <p className="mt-2 text-3xl font-semibold">
+          <div className="bento-tile rounded-2xl p-4">
+            <p className="text-xs font-semibold text-slate-500">This Week</p>
+            <p className="mt-3 text-3xl font-bold text-slate-900">
               {loading ? "…" : upcomingThisWeek}
             </p>
           </div>
-          <div className="bento-tile rounded-3xl p-4">
-            <p className="text-xs text-slate-500">Notifications</p>
-            <p className="mt-2 text-3xl font-semibold">
+          <div className="bento-tile rounded-2xl p-4">
+            <p className="text-xs font-semibold text-slate-500">Notifications</p>
+            <p className="mt-3 text-3xl font-bold text-slate-900">
               {loading ? "…" : notifications.length}
             </p>
           </div>
         </div>
 
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <div className="bento-tile rounded-3xl p-6">
+          <div className="bento-tile rounded-2xl p-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Live Attendance</h2>
-              <span className="rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-semibold text-emerald-600">
+              <h2 className="text-lg font-semibold text-slate-900">Dashboard</h2>
+              <span className="rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-semibold text-emerald-700">
                 Live
               </span>
             </div>
-            <p className="mt-2 text-sm text-slate-500">
-              Attendance predicted from registration velocity and check-ins.
+            <p className="mt-2 text-sm text-slate-600">
+              Overview of your registered events and activity.
             </p>
             <div className="mt-6 rounded-2xl border border-slate-200 bg-white/60 p-4">
               <svg viewBox="0 0 400 140" className="h-32 w-full">
@@ -221,27 +221,27 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="glass-panel rounded-3xl p-6">
-            <h3 className="text-sm font-semibold">Smart Notification Center</h3>
+          <div className="glass-panel rounded-2xl p-6">
+            <h3 className="text-sm font-semibold text-slate-900">Notifications</h3>
             <div className="mt-4 space-y-3 text-xs">
               <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-red-700">
-                <p className="font-semibold">Urgent</p>
-                <p>Two overlapping events in Auditorium A.</p>
+                <p className="font-semibold">Alerts</p>
+                <p>Check your registrations and calendar.</p>
               </div>
               <div className="rounded-xl border border-slate-200 bg-white/60 px-3 py-2 text-slate-600">
                 <p className="font-semibold">Updates</p>
-                <p>3 events trending above forecasted attendance.</p>
+                <p>Stay tuned for new events and opportunities.</p>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bento-tile rounded-3xl p-6">
+        <div className="bento-tile rounded-2xl p-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">My Registered Events</h2>
+            <h2 className="text-lg font-semibold text-slate-900">My Registered Events</h2>
             {registrations.length > 0 && (
               <button
-                className="rounded-full bg-[color:var(--accent)] px-3 py-1 text-xs font-semibold text-white"
+                className="rounded-full bg-[color:var(--primary)] px-3 py-1 text-xs font-semibold text-white"
                 type="button"
                 onClick={() => {
                   setSelectedRegistration(registrations[0]);
@@ -288,7 +288,7 @@ export default function Dashboard() {
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/50 px-4 py-6">
           <div className="bento-tile w-full max-w-md rounded-3xl p-6 text-center">
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">QR Pass</p>
-            <h3 className="mt-2 text-xl font-semibold">Ready for check-in</h3>
+            <h3 className="mt-2 text-xl font-semibold text-slate-900">Ready for check-in</h3>
             <div className="mt-6 flex items-center justify-center">
               <div className="grid h-40 w-40 place-items-center rounded-2xl border border-slate-200 bg-white">
                 <div className="grid h-28 w-28 grid-cols-6 gap-1">

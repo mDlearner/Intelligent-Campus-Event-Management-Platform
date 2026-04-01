@@ -104,8 +104,11 @@ export default function Login() {
   }
 
   return (
-    <section className="mx-auto max-w-md rounded-lg border border-slate-200 bg-white/80 p-6">
-      <h1 className="text-2xl font-semibold">
+    <section className="mx-auto max-w-md rounded-3xl border border-white/40 bg-white/70 p-8">
+      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[color:var(--primary)] text-white text-lg font-bold shadow">
+        EM
+      </div>
+      <h1 className="mt-4 text-2xl font-semibold text-slate-900">
         {mode === "login" ? "Sign in" : "Create account"}
       </h1>
       <p className="mt-2 text-sm text-slate-600">
@@ -118,9 +121,9 @@ export default function Login() {
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
           {mode === "register" && (
           <div>
-            <label className="text-sm font-medium">Full name</label>
+            <label className="text-xs font-semibold text-slate-500">Full name</label>
             <input
-              className="mt-1 w-full rounded border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-500"
+              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400"
               type="text"
               name="name"
               value={form.name}
@@ -131,9 +134,9 @@ export default function Login() {
           </div>
         )}
           <div>
-            <label className="text-sm font-medium">Email</label>
+            <label className="text-xs font-semibold text-slate-500">Email</label>
             <input
-              className="mt-1 w-full rounded border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-500"
+              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400"
               type="email"
               name="email"
               value={form.email}
@@ -143,9 +146,9 @@ export default function Login() {
             />
           </div>
           <div>
-            <label className="text-sm font-medium">Password</label>
+            <label className="text-xs font-semibold text-slate-500">Password</label>
             <input
-              className="mt-1 w-full rounded border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-500"
+              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400"
               type="password"
               name="password"
               value={form.password}
@@ -157,9 +160,9 @@ export default function Login() {
           {mode === "register" && (
             <>
               <div>
-                <label className="text-sm font-medium">Role</label>
+                <label className="text-xs font-semibold text-slate-500">Role</label>
                 <select
-                  className="mt-1 w-full rounded border border-slate-300 bg-white px-3 py-2 text-slate-900"
+                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-slate-900"
                   name="role"
                   value={form.role}
                   onChange={handleChange}
@@ -170,9 +173,9 @@ export default function Login() {
                 </select>
               </div>
               <div>
-                <label className="text-sm font-medium">Department (optional)</label>
+                <label className="text-xs font-semibold text-slate-500">Department (Optional)</label>
                 <input
-                  className="mt-1 w-full rounded border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-500"
+                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400"
                   type="text"
                   name="department"
                   value={form.department}
@@ -183,9 +186,9 @@ export default function Login() {
               {form.role === "student" && (
                 <div className="grid gap-3 md:grid-cols-2">
                   <div>
-                    <label className="text-sm font-medium">Student ID</label>
+                    <label className="text-xs font-semibold text-slate-500">Student ID</label>
                     <input
-                      className="mt-1 w-full rounded border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-500"
+                      className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400"
                       type="text"
                       name="studentId"
                       value={form.studentId}
@@ -194,9 +197,9 @@ export default function Login() {
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium">Year</label>
+                    <label className="text-xs font-semibold text-slate-500">Year</label>
                     <input
-                      className="mt-1 w-full rounded border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-500"
+                      className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400"
                       type="text"
                       name="year"
                       value={form.year}
@@ -210,34 +213,34 @@ export default function Login() {
           )}
 
           {error && (
-            <div className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            <div className="rounded-2xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
               {error}
             </div>
           )}
 
           <button
-            className="w-full rounded bg-slate-900 px-3 py-2 text-white disabled:opacity-70"
+            className="w-full rounded-full bg-[color:var(--primary)] px-3 py-2 font-semibold text-white transition hover:shadow-lg disabled:opacity-70"
             type="submit"
             disabled={isSubmitting}
           >
-            {isSubmitting ? "Please wait..." : mode === "login" ? "Login" : "Create account"}
+            {isSubmitting ? "Please wait..." : mode === "login" ? "Sign In" : "Create Account"}
           </button>
         </form>
       ) : (
         <form className="mt-6 space-y-4" onSubmit={handleVerify}>
           <div>
-            <label className="text-sm font-medium">Verification email</label>
+            <label className="text-xs font-semibold text-slate-500">Verification Email</label>
             <input
-              className="mt-1 w-full rounded border border-slate-300 bg-slate-100 px-3 py-2 text-slate-500"
+              className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-slate-500"
               type="email"
               value={verificationEmail}
               disabled
             />
           </div>
           <div>
-            <label className="text-sm font-medium">6-digit code</label>
+            <label className="text-xs font-semibold text-slate-500">6-digit Code</label>
             <input
-              className="mt-1 w-full rounded border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-500"
+              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400"
               type="text"
               value={verificationCode}
               onChange={(event) => setVerificationCode(event.target.value)}
@@ -246,37 +249,37 @@ export default function Login() {
               required
             />
             <p className="mt-2 text-xs text-slate-500">
-              The code was sent to mdgames.21128@gmail.com. It is valid for 7 days.
+              The code was sent to {verificationEmail}. It is valid for 7 days.
             </p>
           </div>
 
           {error && (
-            <div className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            <div className="rounded-2xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
               {error}
             </div>
           )}
 
           <button
-            className="w-full rounded bg-slate-900 px-3 py-2 text-white disabled:opacity-70"
+            className="w-full rounded-full bg-[color:var(--primary)] px-3 py-2 font-semibold text-white transition hover:shadow-lg disabled:opacity-70"
             type="submit"
             disabled={isSubmitting}
           >
-            {isSubmitting ? "Verifying..." : "Verify & complete"}
+            {isSubmitting ? "Verifying..." : "Verify & Complete"}
           </button>
           <button
-            className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 disabled:opacity-70"
+            className="w-full rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 disabled:opacity-70"
             type="button"
             onClick={handleResend}
             disabled={isResending}
           >
-            {isResending ? "Resending..." : "Resend code"}
+            {isResending ? "Resending..." : "Resend Code"}
           </button>
         </form>
       )}
 
       {!verificationRequired && (
         <button
-          className="mt-4 w-full text-sm text-slate-600"
+          className="mt-4 w-full text-sm font-semibold text-slate-600 transition hover:text-slate-900"
           type="button"
           onClick={() => {
             setMode((prev) => (prev === "login" ? "register" : "login"));
@@ -284,8 +287,8 @@ export default function Login() {
           }}
         >
           {mode === "login"
-            ? "Need an account? Register here."
-            : "Already have an account? Sign in."}
+            ? "Need an account? Register here"
+            : "Already have an account? Sign in"}
         </button>
       )}
     </section>

@@ -12,8 +12,159 @@ const initialEventForm = {
   registrationCloseDate: "",
   registrationCloseTime: "",
   venue: "",
-  maxSeats: ""
+  maxSeats: "",
+  imageUrl: "",
+  categories: [],
+  speakers: [],
+  sponsors: []
 };
+
+const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+const TIME_REGEX = /^([01]\d|2[0-3]):([0-5]\d)$/;
+
+function parseDateTime(dateValue, timeValue) {
+  if (!DATE_REGEX.test(dateValue) || !TIME_REGEX.test(timeValue)) {
+    return null;
+  }
+
+  const [year, month, day] = dateValue.split("-").map(Number);
+  const [hours, minutes] = timeValue.split(":").map(Number);
+  const parsed = new Date(year, month - 1, day, hours, minutes, 0, 0);
+
+  if (
+    parsed.getFullYear() !== year ||
+    parsed.getMonth() !== month - 1 ||
+    parsed.getDate() !== day
+  ) {
+    return null;
+  }
+
+  return parsed;
+}
+
+function formatDateInputValue(value) {
+  const year = value.getFullYear();
+  const month = String(value.getMonth() + 1).padStart(2, "0");
+  const day = String(value.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function truncateText(text, length = 100) {
+  if (!text) return "";
+  return text.length > length ? text.substring(0, length) + "..." : text;
+}
+
+function getCategoryTone(tag) {
+  if (tag === "Workshop") {
+    return "border-indigo-200 bg-indigo-50 text-indigo-700";
+  }
+  if (tag === "Hackathon") {
+    return "border-purple-200 bg-purple-50 text-purple-700";
+  }
+  if (tag === "Cultural") {
+    return "border-pink-200 bg-pink-50 text-pink-700";
+  }
+  if (tag === "Social Impact") {
+    return "border-green-200 bg-green-50 text-green-700";
+  }
+  if (tag === "Innovation & Research") {
+    return "border-blue-200 bg-blue-50 text-blue-700";
+  }
+  if (tag === "Academic Seminar") {
+    return "border-amber-200 bg-amber-50 text-amber-700";
+  }
+  if (tag === "Competition") {
+    return "border-red-200 bg-red-50 text-red-700";
+  }
+  return "border-slate-200 bg-slate-50 text-slate-700";
+}
+
+function validateEventForm(form) {
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  if (!form.title.trim()) {
+    return "Title is required";
+  }
+
+  if (!form.venue.trim()) {
+    return "Venue is required";
+  }
+
+  if (!Array.isArray(form.categories) || form.categories.length === 0) {
+    return "At least one category is required";
+  }
+
+  if (!DATE_REGEX.test(form.date || "")) {
+    return "Event date is required";
+  }
+
+  if (!TIME_REGEX.test(form.startTime || "")) {
+    return "Event start time is required";
+  }
+
+  if (!TIME_REGEX.test(form.endTime || "")) {
+    return "Event end time is required";
+  }
+
+  const maxSeats = Number(form.maxSeats);
+  if (!Number.isInteger(maxSeats) || maxSeats <= 0) {
+    return "Max seats must be an integer greater than 0";
+  }
+
+  const startDateTime = parseDateTime(form.date, form.startTime);
+  const endDateTime = parseDateTime(form.date, form.endTime);
+  const eventDayStart = parseDateTime(form.date, "00:00");
+
+  if (eventDayStart && eventDayStart < todayStart) {
+    return "Event date cannot be before today";
+  }
+
+  if (!startDateTime || !endDateTime) {
+    return "Event date/time values are invalid";
+  }
+
+  if (endDateTime <= startDateTime) {
+    return "Event end time must be after start time";
+  }
+
+  if (form.registrationCloseTime && !form.registrationCloseDate) {
+    return "Registration close date is required when close time is provided";
+  }
+
+  if (form.registrationCloseDate) {
+    if (!DATE_REGEX.test(form.registrationCloseDate)) {
+      return "Registration close date is invalid";
+    }
+
+    if (form.registrationCloseTime && !TIME_REGEX.test(form.registrationCloseTime)) {
+      return "Registration close time is invalid";
+    }
+
+    const closeDateTime = parseDateTime(
+      form.registrationCloseDate,
+      form.registrationCloseTime || "23:59"
+    );
+    if (!closeDateTime) {
+      return "Registration close date/time is invalid";
+    }
+
+    if (
+      closeDateTime.getFullYear() === now.getFullYear() &&
+      closeDateTime.getMonth() === now.getMonth() &&
+      closeDateTime.getDate() === now.getDate() &&
+      closeDateTime <= now
+    ) {
+      return "Registration close time must be greater than current time for today";
+    }
+
+    if (closeDateTime >= startDateTime) {
+      return "Registration must close before event start";
+    }
+  }
+
+  return "";
+}
 
 export default function Events() {
   const navigate = useNavigate();
@@ -33,6 +184,7 @@ export default function Events() {
   const [auth, setAuth] = useState(() => getAuth());
   const canCreate = auth?.user?.role === "club" || auth?.user?.role === "admin";
   const isAdmin = auth?.user?.role === "admin";
+  const todayDateValue = formatDateInputValue(new Date());
 
   useEffect(() => {
     function handleAuthChange() {
@@ -92,6 +244,12 @@ export default function Events() {
     setIsSubmitting(true);
 
     try {
+      const validationError = validateEventForm(form);
+      if (validationError) {
+        setFormError(validationError);
+        return;
+      }
+
       const token = getToken();
       if (!token) {
         navigate("/login");
@@ -107,7 +265,11 @@ export default function Events() {
         registrationCloseDate: form.registrationCloseDate || null,
         registrationCloseTime: form.registrationCloseTime || null,
         venue: form.venue,
-        maxSeats: form.maxSeats ? Number(form.maxSeats) : 0
+        imageUrl: form.imageUrl || null,
+        maxSeats: Number(form.maxSeats),
+        categories: form.categories,
+        speakers: form.speakers.filter((s) => s.name),
+        sponsors: form.sponsors.filter((s) => s.name)
       };
 
       if (editingEventId) {
@@ -137,7 +299,11 @@ export default function Events() {
       registrationCloseDate: event.registrationCloseDate || "",
       registrationCloseTime: event.registrationCloseTime || "",
       venue: event.venue || "",
-      maxSeats: event.maxSeats ? String(event.maxSeats) : ""
+      imageUrl: event.imageUrl || "",
+      maxSeats: event.maxSeats ? String(event.maxSeats) : "",
+      categories: event.categories || [],
+      speakers: event.speakers || [],
+      sponsors: event.sponsors || []
     });
   }
 
@@ -353,13 +519,66 @@ export default function Events() {
       <div className="glass-panel rounded-3xl p-6 md:p-8">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-              Student Discovery
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
+              Events & Registrations
             </p>
-            <h1 className="mt-2 text-3xl font-semibold">Upcoming Events</h1>
-            <p className="mt-2 text-sm text-slate-600">
-              Search, filter, and register without leaving the feed.
+            <h1 className="mt-2 text-3xl font-semibold leading-tight md:text-4xl">
+              What's happening next?
+            </h1>
+            <p className="mt-3 max-w-2xl text-sm text-slate-600">
+              Discover, filter, and register for campus events in real time.
             </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {canCreate && (
+              <button
+                className="rounded-full border border-white/60 bg-white/70 px-5 py-2 text-sm font-semibold text-slate-700"
+                type="button"
+                onClick={() => {
+                  setEditingEventId(null);
+                  setForm(initialEventForm);
+                }}
+              >
+                + Create Event
+              </button>
+            )}
+          </div>
+        </div>
+        <div className="mt-6 flex flex-col gap-4 lg:flex-row lg:items-center">
+          <div className="glass-panel flex flex-1 items-center gap-3 rounded-full px-4 py-3">
+            <span className="text-slate-500">
+              <svg
+                aria-hidden="true"
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="1.5"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M21 21l-4.35-4.35m1.6-5.15a6.75 6.75 0 11-13.5 0 6.75 6.75 0 0113.5 0z"
+                />
+              </svg>
+            </span>
+            <input
+              className="w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
+              placeholder="Search events by name, club, or venue…"
+              type="search"
+              value={searchQuery}
+              onChange={(event) => {
+                const nextValue = event.target.value;
+                setSearchQuery(nextValue);
+                const nextParams = new URLSearchParams(searchParams);
+                if (nextValue.trim()) {
+                  nextParams.set("search", nextValue.trim());
+                } else {
+                  nextParams.delete("search");
+                }
+                setSearchParams(nextParams, { replace: true });
+              }}
+            />
           </div>
           <div className="flex flex-wrap gap-2">
             {["All", "Happening Now", "This Week", "Workshops", "Free Food"].map((filter) => (
@@ -367,7 +586,7 @@ export default function Events() {
                 key={filter}
                 className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
                   activeFilter === filter
-                    ? "bg-[color:var(--primary)] text-white"
+                    ? "bg-[color:var(--accent)] text-white"
                     : "border border-white/60 bg-white/60 text-slate-600"
                 }`}
                 type="button"
@@ -377,47 +596,6 @@ export default function Events() {
               </button>
             ))}
           </div>
-        </div>
-        <div className="mt-5 glass-panel flex items-center gap-3 rounded-full px-4 py-3">
-          <span className="text-slate-500">
-            <svg
-              aria-hidden="true"
-              className="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth="1.5"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M21 21l-4.35-4.35m1.6-5.15a6.75 6.75 0 11-13.5 0 6.75 6.75 0 0113.5 0z"
-              />
-            </svg>
-          </span>
-          <input
-            className="w-full bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-500"
-            placeholder="Search by event name, club, or venue"
-            type="search"
-            value={searchQuery}
-            onChange={(event) => {
-              const nextValue = event.target.value;
-              setSearchQuery(nextValue);
-              const nextParams = new URLSearchParams(searchParams);
-              if (nextValue.trim()) {
-                nextParams.set("search", nextValue.trim());
-              } else {
-                nextParams.delete("search");
-              }
-              setSearchParams(nextParams, { replace: true });
-            }}
-          />
-        </div>
-        <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-slate-500">
-          <span className="rounded-full border border-white/60 bg-white/60 px-3 py-1">
-            Showing {displayedEvents.length} events
-          </span>
-          <span>Search applies to the calendar and feed.</span>
         </div>
       </div>
 
@@ -449,19 +627,41 @@ export default function Events() {
               {filteredEvents.map((event, index) => (
                 <article
                   key={event._id}
-                  className="bento-tile flex flex-col justify-between rounded-3xl p-4 transition hover:-translate-y-1"
+                  className="bento-tile flex flex-col justify-between rounded-3xl p-4 transition hover:-translate-y-1 cursor-pointer overflow-hidden"
+                  onClick={() => navigate(`/events/${event._id}`)}
                 >
                   <div
-                    className={`flex h-28 items-end justify-between rounded-2xl bg-gradient-to-br p-4 text-white ${
-                      index % 2 === 0
-                        ? "from-indigo-500/80 via-slate-900/80 to-slate-900"
-                        : "from-orange-400/80 via-rose-500/80 to-slate-900"
+                    className={`relative flex h-28 items-end justify-between overflow-hidden rounded-2xl p-4 text-white ${
+                      event.imageUrl
+                        ? "bg-slate-900"
+                        : index % 2 === 0
+                        ? "bg-gradient-to-br from-indigo-500/80 via-slate-900/80 to-slate-900"
+                        : "bg-gradient-to-br from-orange-400/80 via-rose-500/80 to-slate-900"
                     }`}
                   >
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em]">{event.status}</p>
-                    <span className="rounded-full bg-white/20 px-2 py-1 text-[10px]">
-                      {event.maxSeats ? `${event.maxSeats} seats` : "Open"}
-                    </span>
+                    {event.imageUrl && (
+                      <>
+                        <img
+                          src={event.imageUrl}
+                          alt={event.title}
+                          className="absolute inset-0 h-full w-full object-cover opacity-60"
+                        />
+                        <div className="absolute inset-0 bg-slate-900/45" />
+                      </>
+                    )}
+                    <div>
+                      <p className="relative z-10 text-xs font-semibold uppercase tracking-[0.2em]">{event.status}</p>
+                    </div>
+                    <div className="relative z-10 flex flex-col items-end gap-2">
+                      {event.categories && event.categories.length > 0 && (
+                        <span className={`rounded-full border px-3 py-1 text-[10px] font-semibold ${getCategoryTone(event.categories[0])}`}>
+                          {event.categories[0]}
+                        </span>
+                      )}
+                      <span className="rounded-full bg-white/20 px-2 py-1 text-[10px]">
+                        {event.maxSeats ? `${event.maxSeats} seats` : "Open"}
+                      </span>
+                    </div>
                   </div>
                   <div className="mt-4">
                     <div className="flex flex-wrap gap-2">
@@ -492,7 +692,7 @@ export default function Events() {
                       </p>
                     )}
                     {event.description && (
-                      <p className="mt-3 text-sm text-slate-600">{event.description}</p>
+                      <p className="mt-3 text-sm text-slate-600">{truncateText(event.description, 100)}</p>
                     )}
                   </div>
                   <div className="mt-4 flex items-center justify-between text-xs text-slate-500">
@@ -512,7 +712,8 @@ export default function Events() {
                     <button
                       className="mt-4 w-full rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white"
                       type="button"
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         setSelectedEvent(event);
                         setIsDrawerOpen(true);
                       }}
@@ -525,14 +726,20 @@ export default function Events() {
                       <button
                         className="flex-1 rounded-full border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600"
                         type="button"
-                        onClick={() => handleEdit(event)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEdit(event);
+                        }}
                       >
                         Edit
                       </button>
                       <button
                         className="flex-1 rounded-full border border-red-200 px-3 py-2 text-xs font-semibold text-red-600"
                         type="button"
-                        onClick={() => handleDelete(event._id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(event._id);
+                        }}
                       >
                         Delete
                       </button>
@@ -657,6 +864,7 @@ export default function Events() {
                       name="date"
                       value={form.date}
                       onChange={handleChange}
+                      min={todayDateValue}
                       required
                     />
                   </div>
@@ -668,7 +876,9 @@ export default function Events() {
                       name="maxSeats"
                       value={form.maxSeats}
                       onChange={handleChange}
-                      min="0"
+                      min="1"
+                      step="1"
+                      required
                     />
                   </div>
                 </div>
@@ -705,6 +915,7 @@ export default function Events() {
                       name="registrationCloseDate"
                       value={form.registrationCloseDate}
                       onChange={handleChange}
+                      min={todayDateValue}
                     />
                   </div>
                   <div>
@@ -727,6 +938,247 @@ export default function Events() {
                     onChange={handleChange}
                     rows="3"
                   />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-500">Event Image URL</label>
+                  <input
+                    className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-500 focus:border-[color:var(--primary)]"
+                    type="text"
+                    name="imageUrl"
+                    value={form.imageUrl}
+                    onChange={handleChange}
+                    placeholder="https://example.com/image.jpg"
+                  />
+                  {form.imageUrl && (
+                    <div className="mt-2 rounded-lg overflow-hidden">
+                      <img src={form.imageUrl} alt="Event preview" className="h-32 w-full object-cover rounded-lg" />
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-500">Categories</label>
+                  <div className="mt-2 space-y-2">
+                    {["Workshop", "Hackathon", "Cultural", "Social Impact", "Innovation & Research", "Academic Seminar", "Competition"].map((cat) => (
+                      <label key={cat} className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={form.categories.includes(cat)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setForm((prev) => ({
+                                ...prev,
+                                categories: [...prev.categories, cat]
+                              }));
+                            } else {
+                              setForm((prev) => ({
+                                ...prev,
+                                categories: prev.categories.filter((c) => c !== cat)
+                              }));
+                            }
+                          }}
+                          className="h-4 w-4 rounded border-slate-300"
+                        />
+                        <span className="text-sm text-slate-600">{cat}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <div className="mb-3 flex items-center justify-between">
+                    <label className="text-xs font-semibold text-slate-500">Speakers</label>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setForm((prev) => ({
+                          ...prev,
+                          speakers: [...prev.speakers, { name: "", title: "", bio: "", imageUrl: "", socialLinks: { linkedin: "", twitter: "", github: "", website: "" } }]
+                        }))
+                      }
+                      className="text-xs font-semibold text-[color:var(--primary)] hover:underline"
+                    >
+                      + Add Speaker
+                    </button>
+                  </div>
+                  <div className="space-y-3">
+                    {form.speakers.map((speaker, idx) => (
+                      <div key={idx} className="space-y-2 rounded-xl border border-slate-200 p-3">
+                        <input
+                          type="text"
+                          placeholder="Speaker name"
+                          value={speaker.name || ""}
+                          onChange={(e) => {
+                            const updated = [...form.speakers];
+                            updated[idx].name = e.target.value;
+                            setForm((prev) => ({ ...prev, speakers: updated }));
+                          }}
+                          className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs outline-none placeholder:text-slate-400 focus:border-[color:var(--primary)]"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Title/Position"
+                          value={speaker.title || ""}
+                          onChange={(e) => {
+                            const updated = [...form.speakers];
+                            updated[idx].title = e.target.value;
+                            setForm((prev) => ({ ...prev, speakers: updated }));
+                          }}
+                          className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs outline-none placeholder:text-slate-400 focus:border-[color:var(--primary)]"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Photo URL"
+                          value={speaker.imageUrl || ""}
+                          onChange={(e) => {
+                            const updated = [...form.speakers];
+                            updated[idx].imageUrl = e.target.value;
+                            setForm((prev) => ({ ...prev, speakers: updated }));
+                          }}
+                          className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs outline-none placeholder:text-slate-400 focus:border-[color:var(--primary)]"
+                        />
+                        <textarea
+                          placeholder="Bio"
+                          value={speaker.bio || ""}
+                          onChange={(e) => {
+                            const updated = [...form.speakers];
+                            updated[idx].bio = e.target.value;
+                            setForm((prev) => ({ ...prev, speakers: updated }));
+                          }}
+                          rows="2"
+                          className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs outline-none placeholder:text-slate-400 focus:border-[color:var(--primary)]"
+                        />
+                        <div className="grid gap-2 sm:grid-cols-2">
+                          <input
+                            type="text"
+                            placeholder="LinkedIn URL"
+                            value={speaker.socialLinks?.linkedin || ""}
+                            onChange={(e) => {
+                              const updated = [...form.speakers];
+                              if (!updated[idx].socialLinks) updated[idx].socialLinks = {};
+                              updated[idx].socialLinks.linkedin = e.target.value;
+                              setForm((prev) => ({ ...prev, speakers: updated }));
+                            }}
+                            className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs outline-none placeholder:text-slate-400 focus:border-[color:var(--primary)]"
+                          />
+                          <input
+                            type="text"
+                            placeholder="Twitter URL"
+                            value={speaker.socialLinks?.twitter || ""}
+                            onChange={(e) => {
+                              const updated = [...form.speakers];
+                              if (!updated[idx].socialLinks) updated[idx].socialLinks = {};
+                              updated[idx].socialLinks.twitter = e.target.value;
+                              setForm((prev) => ({ ...prev, speakers: updated }));
+                            }}
+                            className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs outline-none placeholder:text-slate-400 focus:border-[color:var(--primary)]"
+                          />
+                          <input
+                            type="text"
+                            placeholder="GitHub URL"
+                            value={speaker.socialLinks?.github || ""}
+                            onChange={(e) => {
+                              const updated = [...form.speakers];
+                              if (!updated[idx].socialLinks) updated[idx].socialLinks = {};
+                              updated[idx].socialLinks.github = e.target.value;
+                              setForm((prev) => ({ ...prev, speakers: updated }));
+                            }}
+                            className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs outline-none placeholder:text-slate-400 focus:border-[color:var(--primary)]"
+                          />
+                          <input
+                            type="text"
+                            placeholder="Website URL"
+                            value={speaker.socialLinks?.website || ""}
+                            onChange={(e) => {
+                              const updated = [...form.speakers];
+                              if (!updated[idx].socialLinks) updated[idx].socialLinks = {};
+                              updated[idx].socialLinks.website = e.target.value;
+                              setForm((prev) => ({ ...prev, speakers: updated }));
+                            }}
+                            className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs outline-none placeholder:text-slate-400 focus:border-[color:var(--primary)]"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setForm((prev) => ({
+                              ...prev,
+                              speakers: prev.speakers.filter((_, i) => i !== idx)
+                            }));
+                          }}
+                          className="text-xs text-red-600 hover:underline"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <div className="mb-3 flex items-center justify-between">
+                    <label className="text-xs font-semibold text-slate-500">Sponsors</label>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setForm((prev) => ({
+                          ...prev,
+                          sponsors: [...prev.sponsors, { name: "", logo: "", website: "" }]
+                        }))
+                      }
+                      className="text-xs font-semibold text-[color:var(--primary)] hover:underline"
+                    >
+                      + Add Sponsor
+                    </button>
+                  </div>
+                  <div className="space-y-3">
+                    {form.sponsors.map((sponsor, idx) => (
+                      <div key={idx} className="space-y-2 rounded-xl border border-slate-200 p-3">
+                        <input
+                          type="text"
+                          placeholder="Sponsor name"
+                          value={sponsor.name || ""}
+                          onChange={(e) => {
+                            const updated = [...form.sponsors];
+                            updated[idx].name = e.target.value;
+                            setForm((prev) => ({ ...prev, sponsors: updated }));
+                          }}
+                          className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs outline-none placeholder:text-slate-400 focus:border-[color:var(--primary)]"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Logo URL"
+                          value={sponsor.logo || ""}
+                          onChange={(e) => {
+                            const updated = [...form.sponsors];
+                            updated[idx].logo = e.target.value;
+                            setForm((prev) => ({ ...prev, sponsors: updated }));
+                          }}
+                          className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs outline-none placeholder:text-slate-400 focus:border-[color:var(--primary)]"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Website URL"
+                          value={sponsor.website || ""}
+                          onChange={(e) => {
+                            const updated = [...form.sponsors];
+                            updated[idx].website = e.target.value;
+                            setForm((prev) => ({ ...prev, sponsors: updated }));
+                          }}
+                          className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs outline-none placeholder:text-slate-400 focus:border-[color:var(--primary)]"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setForm((prev) => ({
+                              ...prev,
+                              sponsors: prev.sponsors.filter((_, i) => i !== idx)
+                            }));
+                          }}
+                          className="text-xs text-red-600 hover:underline"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
                 {formError && (
                   <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">

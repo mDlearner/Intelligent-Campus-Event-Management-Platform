@@ -85,21 +85,21 @@ export default function Profile() {
   return (
     <section className="mx-auto max-w-xl space-y-6">
       <div className="glass-panel rounded-3xl p-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-          Profile
+        <p className="text-sm font-semibold text-slate-500">
+          Account
         </p>
-        <h1 className="mt-2 text-2xl font-semibold">Update your details</h1>
+        <h1 className="mt-2 text-2xl font-semibold leading-tight text-slate-900">Update Your Profile</h1>
         <p className="mt-2 text-sm text-slate-600">
-          Keep your student info current for check-ins and tickets.
+          Keep your information current for check-ins and event management.
         </p>
       </div>
 
-      <form className="bento-tile rounded-3xl p-6" onSubmit={handleSubmit}>
+      <form className="glass-panel rounded-3xl p-6" onSubmit={handleSubmit}>
         <div className="space-y-4">
           <div>
-            <label className="text-sm font-medium">Full name</label>
+            <label className="text-xs font-semibold text-slate-500">Full Name</label>
             <input
-              className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500"
+              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
               type="text"
               name="name"
               value={profile.name}
@@ -108,27 +108,27 @@ export default function Profile() {
             />
           </div>
           <div>
-            <label className="text-sm font-medium">Email</label>
+            <label className="text-xs font-semibold text-slate-500">Email</label>
             <input
-              className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-500"
+              className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500"
               type="email"
               value={profile.email}
               disabled
             />
           </div>
           <div>
-            <label className="text-sm font-medium">Role</label>
+            <label className="text-xs font-semibold text-slate-500">Role</label>
             <input
-              className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-500"
+              className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500"
               type="text"
               value={profile.role}
               disabled
             />
           </div>
           <div>
-            <label className="text-sm font-medium">Department</label>
+            <label className="text-xs font-semibold text-slate-500">Department</label>
             <input
-              className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500"
+              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
               type="text"
               name="department"
               value={profile.department}
@@ -139,9 +139,9 @@ export default function Profile() {
           {profile.role === "student" && (
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="text-sm font-medium">Student ID</label>
+                <label className="text-xs font-semibold text-slate-500">Student ID</label>
                 <input
-                  className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500"
+                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
                   type="text"
                   name="studentId"
                   value={profile.studentId}
@@ -150,9 +150,9 @@ export default function Profile() {
                 />
               </div>
               <div>
-                <label className="text-sm font-medium">Year</label>
+                <label className="text-xs font-semibold text-slate-500">Year</label>
                 <input
-                  className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500"
+                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
                   type="text"
                   name="year"
                   value={profile.year}
@@ -172,14 +172,14 @@ export default function Profile() {
 
         <div className="mt-6 flex flex-wrap items-center gap-3">
           <button
-            className="rounded-full bg-[color:var(--primary)] px-5 py-2 text-sm font-semibold text-white disabled:opacity-70"
+            className="rounded-full bg-[color:var(--primary)] px-5 py-2 text-sm font-semibold text-white transition hover:shadow-lg disabled:opacity-70"
             type="submit"
             disabled={status === "saving"}
           >
-            {status === "saving" ? "Saving..." : "Save changes"}
+            {status === "saving" ? "Saving..." : "Save Changes"}
           </button>
           {status === "saved" && (
-            <span className="text-sm text-emerald-600">Profile updated.</span>
+            <span className="text-sm font-semibold text-emerald-600">Profile updated ✓</span>
           )}
         </div>
       </form>
