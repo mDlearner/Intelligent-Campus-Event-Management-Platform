@@ -48,6 +48,10 @@ export function fetchEvents() {
   return apiFetch("/api/events");
 }
 
+export function fetchEventById(eventId) {
+  return apiFetch(`/api/events/${eventId}`);
+}
+
 export function fetchMyRegistrations(token) {
   return apiFetch("/api/events/registrations/me", { token });
 }

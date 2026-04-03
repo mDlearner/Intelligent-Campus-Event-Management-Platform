@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { createEvent, deleteEvent, fetchEvents, registerForEvent, updateEvent } from "../lib/api.js";
-import { getAuth, getToken } from "../lib/auth.js";
+import { useState, useEffect, useMemo } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { fetchEvents, createEvent, updateEvent, deleteEvent, registerForEvent } from '../lib/api.js';
+import { getAuth, getToken } from '../lib/auth.js';
+import Timeline from '../components/Timeline';
 
 const initialEventForm = {
   title: "",
@@ -56,27 +57,27 @@ function truncateText(text, length = 100) {
 
 function getCategoryTone(tag) {
   if (tag === "Workshop") {
-    return "border-indigo-200 bg-indigo-50 text-indigo-700";
+    return "border-[var(--blue)]/30 bg-[rgba(77,159,255,0.1)] text-[var(--blue)]";
   }
   if (tag === "Hackathon") {
-    return "border-purple-200 bg-purple-50 text-purple-700";
+    return "border-purple-500/30 bg-[rgba(168,85,247,0.1)] text-purple-400";
   }
   if (tag === "Cultural") {
-    return "border-pink-200 bg-pink-50 text-pink-700";
+    return "border-[var(--rose)]/30 bg-[rgba(255,107,138,0.1)] text-[var(--rose)]";
   }
   if (tag === "Social Impact") {
-    return "border-green-200 bg-green-50 text-green-700";
+    return "border-[var(--teal)]/30 bg-[rgba(0,212,170,0.1)] text-[var(--teal)]";
   }
   if (tag === "Innovation & Research") {
-    return "border-blue-200 bg-blue-50 text-blue-700";
+    return "border-[var(--blue)]/30 bg-[rgba(77,159,255,0.1)] text-[var(--blue)]";
   }
   if (tag === "Academic Seminar") {
-    return "border-amber-200 bg-amber-50 text-amber-700";
+    return "border-[var(--gold)]/30 bg-[rgba(240,192,64,0.1)] text-[var(--gold)]";
   }
   if (tag === "Competition") {
-    return "border-red-200 bg-red-50 text-red-700";
+    return "border-[var(--rose)]/30 bg-[rgba(255,107,138,0.1)] text-[var(--rose)]";
   }
-  return "border-slate-200 bg-slate-50 text-slate-700";
+  return "border-[var(--border2)] bg-[var(--surface2)] text-[var(--text2)]";
 }
 
 function validateEventForm(form) {
@@ -399,15 +400,15 @@ export default function Events() {
 
   function getCategoryTone(tag) {
     if (tag === "Workshop") {
-      return "border-indigo-200 bg-indigo-50 text-indigo-700";
+      return "border-[var(--blue)]/30 bg-[rgba(77,159,255,0.1)] text-[var(--blue)]";
     }
     if (tag === "Free Food") {
-      return "border-orange-200 bg-orange-50 text-orange-700";
+      return "border-[var(--gold)]/30 bg-[rgba(240,192,64,0.1)] text-[var(--gold)]";
     }
     if (tag === "Career") {
-      return "border-emerald-200 bg-emerald-50 text-emerald-700";
+      return "border-[var(--teal)]/30 bg-[rgba(0,212,170,0.1)] text-[var(--teal)]";
     }
-    return "border-slate-200 bg-slate-50 text-slate-700";
+    return "border-[var(--border2)] bg-[var(--surface2)] text-[var(--text2)]";
   }
 
   function getRegistrationCloseLabel(event) {
@@ -519,20 +520,20 @@ export default function Events() {
       <div className="glass-panel rounded-3xl p-6 md:p-8">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--text3)]">
               Events & Registrations
             </p>
-            <h1 className="mt-2 text-3xl font-semibold leading-tight md:text-4xl">
+            <h1 className="mt-2 text-3xl font-semibold leading-tight md:text-4xl text-[var(--text)]">
               What's happening next?
             </h1>
-            <p className="mt-3 max-w-2xl text-sm text-slate-600">
+            <p className="mt-3 max-w-2xl text-sm text-[var(--text2)]">
               Discover, filter, and register for campus events in real time.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
             {canCreate && (
               <button
-                className="rounded-full border border-white/60 bg-white/70 px-5 py-2 text-sm font-semibold text-slate-700"
+                className="rounded-full border border-[var(--border2)] bg-[var(--gold)] px-5 py-2 text-sm font-semibold text-[var(--bg)] transition hover:bg-[var(--gold2)]"
                 type="button"
                 onClick={() => {
                   setEditingEventId(null);
@@ -546,7 +547,7 @@ export default function Events() {
         </div>
         <div className="mt-6 flex flex-col gap-4 lg:flex-row lg:items-center">
           <div className="glass-panel flex flex-1 items-center gap-3 rounded-full px-4 py-3">
-            <span className="text-slate-500">
+            <span className="text-[var(--text3)]">
               <svg
                 aria-hidden="true"
                 className="h-4 w-4"
@@ -563,7 +564,7 @@ export default function Events() {
               </svg>
             </span>
             <input
-              className="w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
+              className="w-full bg-transparent text-sm text-[var(--text)] outline-none placeholder:text-[var(--text3)]"
               placeholder="Search events by name, club, or venue…"
               type="search"
               value={searchQuery}
@@ -586,8 +587,8 @@ export default function Events() {
                 key={filter}
                 className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
                   activeFilter === filter
-                    ? "bg-[color:var(--accent)] text-white"
-                    : "border border-white/60 bg-white/60 text-slate-600"
+                    ? "bg-[var(--gold)] text-[var(--bg)]"
+                    : "border border-[var(--border2)] bg-[var(--surface2)]/50 text-[var(--text2)] hover:bg-[var(--surface2)] hover:text-[var(--text)]"
                 }`}
                 type="button"
                 onClick={() => setActiveFilter(filter)}
@@ -605,20 +606,20 @@ export default function Events() {
             <div className="grid gap-4 md:grid-cols-2">
               {Array.from({ length: 4 }).map((_, index) => (
                 <div key={`event-skeleton-${index}`} className="bento-tile animate-pulse rounded-3xl p-4">
-                  <div className="h-32 rounded-2xl bg-slate-200/70" />
-                  <div className="mt-4 h-4 w-2/3 rounded-full bg-slate-200/70" />
-                  <div className="mt-3 h-3 w-1/2 rounded-full bg-slate-200/70" />
+                  <div className="h-32 rounded-2xl bg-[var(--surface2)]/70" />
+                  <div className="mt-4 h-4 w-2/3 rounded-full bg-[var(--surface2)]/70" />
+                  <div className="mt-3 h-3 w-1/2 rounded-full bg-[var(--surface2)]/70" />
                 </div>
               ))}
             </div>
           )}
           {error && (
-            <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className="rounded-2xl border border-[var(--rose)]/30 bg-[rgba(255,107,138,0.1)] px-4 py-3 text-sm text-[var(--rose)]">
               {error}
             </div>
           )}
           {!loading && !error && filteredEvents.length === 0 && (
-            <div className="glass-panel rounded-2xl p-6 text-sm text-slate-600">
+            <div className="glass-panel rounded-2xl p-6 text-sm text-[var(--text2)]">
               No events match your search. Try clearing a filter.
             </div>
           )}
@@ -627,16 +628,16 @@ export default function Events() {
               {filteredEvents.map((event, index) => (
                 <article
                   key={event._id}
-                  className="bento-tile flex flex-col justify-between rounded-3xl p-4 transition hover:-translate-y-1 cursor-pointer overflow-hidden"
+                  className="bento-tile flex flex-col justify-between rounded-3xl p-4 transition hover:-translate-y-1 hover:border-[var(--gold2)] hover:shadow-lg hover:shadow-[rgba(240,192,64,0.1)] cursor-pointer overflow-hidden"
                   onClick={() => navigate(`/events/${event._id}`)}
                 >
                   <div
                     className={`relative flex h-28 items-end justify-between overflow-hidden rounded-2xl p-4 text-white ${
                       event.imageUrl
-                        ? "bg-slate-900"
+                        ? "bg-[var(--surface2)]"
                         : index % 2 === 0
-                        ? "bg-gradient-to-br from-indigo-500/80 via-slate-900/80 to-slate-900"
-                        : "bg-gradient-to-br from-orange-400/80 via-rose-500/80 to-slate-900"
+                        ? "bg-gradient-to-br from-[var(--blue)]/60 via-[var(--surface2)]/60 to-[var(--surface2)]"
+                        : "bg-gradient-to-br from-[var(--gold)]/60 via-[var(--rose)]/40 to-[var(--surface2)]"
                     }`}
                   >
                     {event.imageUrl && (
@@ -646,19 +647,19 @@ export default function Events() {
                           alt={event.title}
                           className="absolute inset-0 h-full w-full object-cover opacity-60"
                         />
-                        <div className="absolute inset-0 bg-slate-900/45" />
+                        <div className="absolute inset-0 bg-[var(--bg)]/45" />
                       </>
                     )}
                     <div>
-                      <p className="relative z-10 text-xs font-semibold uppercase tracking-[0.2em]">{event.status}</p>
+                      <p className="relative z-10 text-xs font-bold uppercase tracking-[0.2em]">{event.status}</p>
                     </div>
                     <div className="relative z-10 flex flex-col items-end gap-2">
                       {event.categories && event.categories.length > 0 && (
-                        <span className={`rounded-full border px-3 py-1 text-[10px] font-semibold ${getCategoryTone(event.categories[0])}`}>
+                        <span className={`rounded-full border px-3 py-1 text-[10px] font-bold ${getCategoryTone(event.categories[0])}`}>
                           {event.categories[0]}
                         </span>
                       )}
-                      <span className="rounded-full bg-white/20 px-2 py-1 text-[10px]">
+                      <span className="rounded-full bg-[var(--gold)]/20 px-2 py-1 text-[10px] font-semibold text-[var(--gold)]">
                         {event.maxSeats ? `${event.maxSeats} seats` : "Open"}
                       </span>
                     </div>
@@ -668,16 +669,14 @@ export default function Events() {
                       {getTags(event).map((tag) => (
                         <span
                           key={`${event._id}-${tag}`}
-                          className={`rounded-full px-3 py-1 text-[11px] font-semibold ${
-                            tag === "Free Food" ? "warm-chip" : "accent-chip"
-                          }`}
+                          className={`rounded-full px-3 py-1 text-[11px] font-bold ${getCategoryTone(tag)}`}
                         >
                           #{tag}
                         </span>
                       ))}
                     </div>
-                    <h2 className="mt-3 text-lg font-semibold">{event.title}</h2>
-                    <p className="mt-2 text-xs text-slate-500">
+                    <h2 className="mt-3 text-lg font-bold text-[var(--text)]">{event.title}</h2>
+                    <p className="mt-2 text-xs font-semibold text-[var(--text2)]">
                       {event.date}
                       {event.startTime && event.endTime
                         ? ` · ${event.startTime} - ${event.endTime}`
@@ -687,30 +686,30 @@ export default function Events() {
                       {event.venue ? ` · ${event.venue}` : ""}
                     </p>
                     {getRegistrationCloseLabel(event) && (
-                      <p className="mt-2 text-xs font-semibold text-slate-500">
+                      <p className="mt-2 text-xs font-bold text-[var(--text3)]">
                         {getRegistrationCloseLabel(event)}
                       </p>
                     )}
                     {event.description && (
-                      <p className="mt-3 text-sm text-slate-600">{truncateText(event.description, 100)}</p>
+                      <p className="mt-3 text-sm font-semibold text-[var(--text2)]">{truncateText(event.description, 100)}</p>
                     )}
                   </div>
-                  <div className="mt-4 flex items-center justify-between text-xs text-slate-500">
+                  <div className="mt-4 flex items-center justify-between text-xs font-semibold text-[var(--text3)]">
                     <span>
                       {event.maxSeats
                         ? `${event.seatsRemaining ?? event.maxSeats} seats left`
                         : "Open capacity"}
                     </span>
-                    <span className={event.registrationOpen === false ? "text-red-500" : "text-green-500"}>
+                    <span className={event.registrationOpen === false ? "font-semibold text-[var(--rose)]" : "font-semibold text-[var(--teal)]"}>
                       {event.registrationOpen === false ? "Registration closed" : "Registration open"}
                     </span>
                   </div>
-                  <div className="mt-2 h-2 rounded-full bg-slate-100">
-                    <div className="h-2 w-full rounded-full bg-gradient-to-r from-indigo-400 to-orange-400" />
+                  <div className="mt-2 h-2 rounded-full bg-[var(--surface2)]">
+                    <div className="h-2 w-full rounded-full bg-gradient-to-r from-[var(--blue)] to-[var(--gold)]" />
                   </div>
                   {!isHappeningNow(event) && event.registrationOpen !== false && (
                     <button
-                      className="mt-4 w-full rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white"
+                      className="mt-4 w-full rounded-full bg-[var(--gold)] px-4 py-2 text-sm font-semibold text-[var(--bg)] transition hover:bg-[var(--gold2)]"
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -724,7 +723,7 @@ export default function Events() {
                   {isAdmin && (
                     <div className="mt-3 flex gap-2">
                       <button
-                        className="flex-1 rounded-full border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600"
+                        className="flex-1 rounded-full border border-[var(--border2)] bg-[var(--surface2)]/50 px-3 py-2 text-xs font-bold text-[var(--text2)] transition hover:bg-[var(--surface2)]"
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
@@ -734,7 +733,7 @@ export default function Events() {
                         Edit
                       </button>
                       <button
-                        className="flex-1 rounded-full border border-red-200 px-3 py-2 text-xs font-semibold text-red-600"
+                        className="flex-1 rounded-full border border-[var(--rose)]/30 bg-[rgba(255,107,138,0.1)] px-3 py-2 text-xs font-bold text-[var(--rose)] transition hover:bg-[rgba(255,107,138,0.2)]"
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
@@ -752,10 +751,10 @@ export default function Events() {
 
           <div className="glass-panel rounded-3xl p-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Intelligent Calendar</h2>
-              <p className="text-xs text-slate-500">Conflicts highlighted automatically</p>
+              <h2 className="text-lg font-semibold text-[var(--text)]">Intelligent Calendar</h2>
+              <p className="text-xs text-[var(--text3)]">Conflicts highlighted automatically</p>
             </div>
-            <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-slate-500">
+            <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-[var(--text3)]">
               {["Workshop", "Free Food", "Career", "Campus"].map((tag) => (
                 <span
                   key={`legend-${tag}`}
@@ -774,10 +773,10 @@ export default function Events() {
                 const dateKey = formatDateKey(date);
                 const dayEvents = displayedEvents.filter((event) => event?.date === dateKey);
                 return (
-                  <div key={dateKey} className="relative rounded-2xl border border-white/60 bg-white/60 p-3">
-                    <p className="text-xs font-semibold text-slate-500">{dateLabel}</p>
+                  <div key={dateKey} className="relative rounded-2xl border border-[var(--border2)] bg-[var(--surface2)]/30 p-3">
+                    <p className="text-xs font-semibold text-[var(--text3)]">{dateLabel}</p>
                     {dayEvents.length === 0 && (
-                      <p className="mt-3 text-xs text-slate-400">No events</p>
+                      <p className="mt-3 text-xs text-[var(--text3)]">No events</p>
                     )}
                     {dayEvents.length > 0 && (
                       <div className="mt-3 space-y-2">
@@ -790,17 +789,17 @@ export default function Events() {
                             key={`calendar-${event._id}`}
                             className={`group relative rounded-xl border px-3 py-2 text-xs ${
                               conflictIds.has(event._id)
-                                ? "border-red-300 bg-red-50 text-red-700"
+                                ? "border-[var(--rose)]/30 bg-[rgba(255,107,138,0.1)] text-[var(--rose)]"
                                 : tone
                             }`}
                           >
-                            <p className="font-semibold">{event.title}</p>
-                            <p className="mt-1">
+                            <p className="font-bold">{event.title}</p>
+                            <p className="mt-1 font-semibold">
                               {event.startTime} - {event.endTime}
                               {event.venue ? ` · ${event.venue}` : ""}
                             </p>
-                            <div className="pointer-events-none absolute left-0 top-full z-20 mt-2 w-56 rounded-xl border border-slate-200 bg-white p-3 text-xs text-slate-600 opacity-0 shadow transition group-hover:opacity-100">
-                              <p className="text-sm font-semibold text-slate-800">{event.title}</p>
+                            <div className="pointer-events-none absolute left-0 top-full z-20 mt-2 w-56 rounded-xl border border-[var(--border2)] bg-[var(--surface)] p-3 text-xs text-[var(--text2)] opacity-0 shadow transition group-hover:opacity-100">
+                              <p className="text-sm font-semibold text-[var(--text)]">{event.title}</p>
                               <p className="mt-1">
                                 {event.date}
                                 {event.startTime ? ` · ${event.startTime}` : ""}
@@ -834,9 +833,9 @@ export default function Events() {
               </div>
               <div className="mt-4 space-y-3">
                 <div>
-                  <label className="text-xs font-semibold text-slate-500">Title</label>
+                  <label className="text-sm font-bold text-slate-700">Title</label>
                   <input
-                    className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-500 focus:border-[color:var(--primary)]"
+                    className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 outline-none placeholder:text-slate-600 focus:border-[color:var(--primary)]"
                     type="text"
                     name="title"
                     value={form.title}
@@ -845,9 +844,9 @@ export default function Events() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-500">Venue</label>
+                  <label className="text-sm font-bold text-slate-700">Venue</label>
                   <input
-                    className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-500 focus:border-[color:var(--primary)]"
+                    className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 outline-none placeholder:text-slate-600 focus:border-[color:var(--primary)]"
                     type="text"
                     name="venue"
                     value={form.venue}
@@ -857,9 +856,9 @@ export default function Events() {
                 </div>
                 <div className="grid gap-3 md:grid-cols-2">
                   <div>
-                    <label className="text-xs font-semibold text-slate-500">Date</label>
+                    <label className="text-sm font-bold text-slate-700">Date</label>
                     <input
-                      className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-500 focus:border-[color:var(--primary)]"
+                      className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 outline-none placeholder:text-slate-600 focus:border-[color:var(--primary)]"
                       type="date"
                       name="date"
                       value={form.date}
@@ -869,9 +868,9 @@ export default function Events() {
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-semibold text-slate-500">Max seats</label>
+                    <label className="text-sm font-bold text-slate-700">Max seats</label>
                     <input
-                      className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-500 focus:border-[color:var(--primary)]"
+                      className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 outline-none placeholder:text-slate-600 focus:border-[color:var(--primary)]"
                       type="number"
                       name="maxSeats"
                       value={form.maxSeats}
@@ -884,9 +883,9 @@ export default function Events() {
                 </div>
                 <div className="grid gap-3 md:grid-cols-2">
                   <div>
-                    <label className="text-xs font-semibold text-slate-500">Event start</label>
+                    <label className="text-sm font-bold text-slate-700">Event start</label>
                     <input
-                      className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-500 focus:border-[color:var(--primary)]"
+                      className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 outline-none placeholder:text-slate-600 focus:border-[color:var(--primary)]"
                       type="time"
                       name="startTime"
                       value={form.startTime}
@@ -895,9 +894,9 @@ export default function Events() {
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-semibold text-slate-500">Event end</label>
+                    <label className="text-sm font-bold text-slate-700">Event end</label>
                     <input
-                      className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-500 focus:border-[color:var(--primary)]"
+                      className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 outline-none placeholder:text-slate-600 focus:border-[color:var(--primary)]"
                       type="time"
                       name="endTime"
                       value={form.endTime}
@@ -908,9 +907,9 @@ export default function Events() {
                 </div>
                 <div className="grid gap-3 md:grid-cols-2">
                   <div>
-                    <label className="text-xs font-semibold text-slate-500">Registration closes</label>
+                    <label className="text-sm font-bold text-slate-700">Registration closes</label>
                     <input
-                      className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-500 focus:border-[color:var(--primary)]"
+                      className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 outline-none placeholder:text-slate-600 focus:border-[color:var(--primary)]"
                       type="date"
                       name="registrationCloseDate"
                       value={form.registrationCloseDate}
@@ -919,9 +918,9 @@ export default function Events() {
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-semibold text-slate-500">Close time</label>
+                    <label className="text-sm font-bold text-slate-700">Close time</label>
                     <input
-                      className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-500 focus:border-[color:var(--primary)]"
+                      className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 outline-none placeholder:text-slate-600 focus:border-[color:var(--primary)]"
                       type="time"
                       name="registrationCloseTime"
                       value={form.registrationCloseTime}
@@ -930,9 +929,9 @@ export default function Events() {
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-500">Description</label>
+                  <label className="text-sm font-bold text-slate-700">Description</label>
                   <textarea
-                    className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-500 focus:border-[color:var(--primary)]"
+                    className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 outline-none placeholder:text-slate-600 focus:border-[color:var(--primary)]"
                     name="description"
                     value={form.description}
                     onChange={handleChange}
@@ -940,9 +939,9 @@ export default function Events() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-500">Event Image URL</label>
+                  <label className="text-sm font-bold text-slate-700">Event Image URL</label>
                   <input
-                    className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-500 focus:border-[color:var(--primary)]"
+                    className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 outline-none placeholder:text-slate-600 focus:border-[color:var(--primary)]"
                     type="text"
                     name="imageUrl"
                     value={form.imageUrl}
@@ -956,7 +955,7 @@ export default function Events() {
                   )}
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-500">Categories</label>
+                  <label className="text-sm font-bold text-slate-700">Categories</label>
                   <div className="mt-2 space-y-2">
                     {["Workshop", "Hackathon", "Cultural", "Social Impact", "Innovation & Research", "Academic Seminar", "Competition"].map((cat) => (
                       <label key={cat} className="flex items-center gap-2">
@@ -984,8 +983,8 @@ export default function Events() {
                   </div>
                 </div>
                 <div>
-                  <div className="mb-3 flex items-center justify-between">
-                    <label className="text-xs font-semibold text-slate-500">Speakers</label>
+                  <div className="mb-4 flex items-center justify-between">
+                    <label className="text-sm font-bold text-slate-800">Speakers</label>
                     <button
                       type="button"
                       onClick={() =>
@@ -994,14 +993,14 @@ export default function Events() {
                           speakers: [...prev.speakers, { name: "", title: "", bio: "", imageUrl: "", socialLinks: { linkedin: "", twitter: "", github: "", website: "" } }]
                         }))
                       }
-                      className="text-xs font-semibold text-[color:var(--primary)] hover:underline"
+                      className="text-sm font-semibold text-blue-600 hover:text-blue-700 hover:underline"
                     >
                       + Add Speaker
                     </button>
                   </div>
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     {form.speakers.map((speaker, idx) => (
-                      <div key={idx} className="space-y-2 rounded-xl border border-slate-200 p-3">
+                      <div key={idx} className="space-y-3 rounded-xl border border-slate-300 bg-slate-50 p-4">
                         <input
                           type="text"
                           placeholder="Speaker name"
@@ -1011,7 +1010,7 @@ export default function Events() {
                             updated[idx].name = e.target.value;
                             setForm((prev) => ({ ...prev, speakers: updated }));
                           }}
-                          className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs outline-none placeholder:text-slate-400 focus:border-[color:var(--primary)]"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 placeholder:text-slate-600 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
                         />
                         <input
                           type="text"
@@ -1022,7 +1021,7 @@ export default function Events() {
                             updated[idx].title = e.target.value;
                             setForm((prev) => ({ ...prev, speakers: updated }));
                           }}
-                          className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs outline-none placeholder:text-slate-400 focus:border-[color:var(--primary)]"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 placeholder:text-slate-600 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
                         />
                         <input
                           type="text"
@@ -1033,7 +1032,7 @@ export default function Events() {
                             updated[idx].imageUrl = e.target.value;
                             setForm((prev) => ({ ...prev, speakers: updated }));
                           }}
-                          className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs outline-none placeholder:text-slate-400 focus:border-[color:var(--primary)]"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 placeholder:text-slate-600 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
                         />
                         <textarea
                           placeholder="Bio"
@@ -1043,10 +1042,10 @@ export default function Events() {
                             updated[idx].bio = e.target.value;
                             setForm((prev) => ({ ...prev, speakers: updated }));
                           }}
-                          rows="2"
-                          className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs outline-none placeholder:text-slate-400 focus:border-[color:var(--primary)]"
+                          rows="3"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 placeholder:text-slate-600 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
                         />
-                        <div className="grid gap-2 sm:grid-cols-2">
+                        <div className="grid gap-3 sm:grid-cols-2">
                           <input
                             type="text"
                             placeholder="LinkedIn URL"
@@ -1057,7 +1056,7 @@ export default function Events() {
                               updated[idx].socialLinks.linkedin = e.target.value;
                               setForm((prev) => ({ ...prev, speakers: updated }));
                             }}
-                            className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs outline-none placeholder:text-slate-400 focus:border-[color:var(--primary)]"
+                            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 placeholder:text-slate-600 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
                           />
                           <input
                             type="text"
@@ -1069,7 +1068,7 @@ export default function Events() {
                               updated[idx].socialLinks.twitter = e.target.value;
                               setForm((prev) => ({ ...prev, speakers: updated }));
                             }}
-                            className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs outline-none placeholder:text-slate-400 focus:border-[color:var(--primary)]"
+                            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 placeholder:text-slate-600 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
                           />
                           <input
                             type="text"
@@ -1081,7 +1080,7 @@ export default function Events() {
                               updated[idx].socialLinks.github = e.target.value;
                               setForm((prev) => ({ ...prev, speakers: updated }));
                             }}
-                            className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs outline-none placeholder:text-slate-400 focus:border-[color:var(--primary)]"
+                            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 placeholder:text-slate-600 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
                           />
                           <input
                             type="text"
@@ -1093,7 +1092,7 @@ export default function Events() {
                               updated[idx].socialLinks.website = e.target.value;
                               setForm((prev) => ({ ...prev, speakers: updated }));
                             }}
-                            className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs outline-none placeholder:text-slate-400 focus:border-[color:var(--primary)]"
+                            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 placeholder:text-slate-600 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
                           />
                         </div>
                         <button
@@ -1104,17 +1103,17 @@ export default function Events() {
                               speakers: prev.speakers.filter((_, i) => i !== idx)
                             }));
                           }}
-                          className="text-xs text-red-600 hover:underline"
+                          className="text-sm font-medium text-red-600 hover:text-red-700 hover:underline"
                         >
-                          Remove
+                          Remove Speaker
                         </button>
                       </div>
                     ))}
                   </div>
                 </div>
                 <div>
-                  <div className="mb-3 flex items-center justify-between">
-                    <label className="text-xs font-semibold text-slate-500">Sponsors</label>
+                  <div className="mb-4 flex items-center justify-between">
+                    <label className="text-sm font-bold text-slate-800">Sponsors</label>
                     <button
                       type="button"
                       onClick={() =>
@@ -1123,14 +1122,14 @@ export default function Events() {
                           sponsors: [...prev.sponsors, { name: "", logo: "", website: "" }]
                         }))
                       }
-                      className="text-xs font-semibold text-[color:var(--primary)] hover:underline"
+                      className="text-sm font-semibold text-blue-600 hover:text-blue-700 hover:underline"
                     >
                       + Add Sponsor
                     </button>
                   </div>
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     {form.sponsors.map((sponsor, idx) => (
-                      <div key={idx} className="space-y-2 rounded-xl border border-slate-200 p-3">
+                      <div key={idx} className="space-y-3 rounded-xl border border-slate-300 bg-slate-50 p-4">
                         <input
                           type="text"
                           placeholder="Sponsor name"
@@ -1140,7 +1139,7 @@ export default function Events() {
                             updated[idx].name = e.target.value;
                             setForm((prev) => ({ ...prev, sponsors: updated }));
                           }}
-                          className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs outline-none placeholder:text-slate-400 focus:border-[color:var(--primary)]"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 placeholder:text-slate-600 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
                         />
                         <input
                           type="text"
@@ -1151,7 +1150,7 @@ export default function Events() {
                             updated[idx].logo = e.target.value;
                             setForm((prev) => ({ ...prev, sponsors: updated }));
                           }}
-                          className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs outline-none placeholder:text-slate-400 focus:border-[color:var(--primary)]"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 placeholder:text-slate-600 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
                         />
                         <input
                           type="text"
@@ -1162,7 +1161,7 @@ export default function Events() {
                             updated[idx].website = e.target.value;
                             setForm((prev) => ({ ...prev, sponsors: updated }));
                           }}
-                          className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs outline-none placeholder:text-slate-400 focus:border-[color:var(--primary)]"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 placeholder:text-slate-600 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
                         />
                         <button
                           type="button"
@@ -1172,9 +1171,9 @@ export default function Events() {
                               sponsors: prev.sponsors.filter((_, i) => i !== idx)
                             }));
                           }}
-                          className="text-xs text-red-600 hover:underline"
+                          className="text-sm font-medium text-red-600 hover:text-red-700 hover:underline"
                         >
-                          Remove
+                          Remove Sponsor
                         </button>
                       </div>
                     ))}

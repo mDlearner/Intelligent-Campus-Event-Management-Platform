@@ -179,6 +179,19 @@ function isRegistrationClosed(event, registeredCount) {
   return false;
 }
 
+function enrichEventWithRegistration(event, registeredCount) {
+  const seatsRemaining =
+    event.maxSeats > 0 ? Math.max(event.maxSeats - registeredCount, 0) : null;
+  const registrationClosed = isRegistrationClosed(event, registeredCount);
+
+  return {
+    ...event,
+    registeredCount,
+    seatsRemaining,
+    registrationOpen: !registrationClosed
+  };
+}
+
 router.get("/", async (req, res, next) => {
   try {
     const events = await Event.find().sort({ date: 1, startTime: 1 }).lean();
@@ -199,16 +212,7 @@ router.get("/", async (req, res, next) => {
 
     const enriched = events.map((event) => {
       const registeredCount = countMap[event._id.toString()] || 0;
-      const seatsRemaining =
-        event.maxSeats > 0 ? Math.max(event.maxSeats - registeredCount, 0) : null;
-      const registrationClosed = isRegistrationClosed(event, registeredCount);
-
-      return {
-        ...event,
-        registeredCount,
-        seatsRemaining,
-        registrationOpen: !registrationClosed
-      };
+      return enrichEventWithRegistration(event, registeredCount);
     });
 
     return res.json(enriched);
@@ -264,11 +268,17 @@ router.post("/", authRequired, requireRole(["admin", "club"]), async (req, res, 
 
 router.get("/:id", async (req, res, next) => {
   try {
-    const event = await Event.findById(req.params.id);
+    const event = await Event.findById(req.params.id).lean();
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
     }
-    return res.json(event);
+
+    const registeredCount = await Registration.countDocuments({
+      event: event._id,
+      status: "registered"
+    });
+
+    return res.json(enrichEventWithRegistration(event, registeredCount));
   } catch (err) {
     return next(err);
   }

@@ -1,6 +1,7 @@
-import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { fetchEvents } from "../lib/api.js";
+import { useNavigate, useParams } from "react-router-dom";
+import { fetchEventById, registerForEvent } from "../lib/api.js";
+import { getToken } from "../lib/auth.js";
 
 export default function EventDetail() {
   const { eventId } = useParams();
@@ -8,17 +9,14 @@ export default function EventDetail() {
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [notice, setNotice] = useState("");
 
   useEffect(() => {
     async function loadEvent() {
       try {
-        const events = await fetchEvents();
-        const found = events.find((e) => e._id === eventId);
-        if (found) {
-          setEvent(found);
-        } else {
-          setError("Event not found");
-        }
+        const data = await fetchEventById(eventId);
+        setEvent(data);
       } catch (err) {
         setError(err.message || "Failed to load event");
       } finally {
@@ -47,35 +45,68 @@ export default function EventDetail() {
     );
   }
 
+  async function handleRegister() {
+    const token = getToken();
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    try {
+      setIsRegistering(true);
+      setNotice("");
+      await registerForEvent(event._id, token);
+      setNotice("Registration confirmed. Your dashboard has been updated.");
+      window.dispatchEvent(new Event("registrations-updated"));
+      setEvent((prev) => {
+        if (!prev) {
+          return prev;
+        }
+        const nextRegistered = Number(prev.registeredCount || 0) + 1;
+        const seats = Number(prev.maxSeats || 0);
+        return {
+          ...prev,
+          registeredCount: nextRegistered,
+          seatsRemaining: seats > 0 ? Math.max(seats - nextRegistered, 0) : null,
+          registrationOpen: seats > 0 ? nextRegistered < seats : true
+        };
+      });
+    } catch (err) {
+      setNotice(err.message || "Unable to register for this event");
+    } finally {
+      setIsRegistering(false);
+    }
+  }
+
   function getCategoryTone(tag) {
     if (tag === "Workshop") {
-      return "border-indigo-200 bg-indigo-50 text-indigo-700";
+      return "border-[var(--blue)]/30 bg-[rgba(77,159,255,0.1)] text-[var(--blue)]";
     }
     if (tag === "Hackathon") {
-      return "border-purple-200 bg-purple-50 text-purple-700";
+      return "border-purple-500/30 bg-[rgba(168,85,247,0.1)] text-purple-400";
     }
     if (tag === "Cultural") {
-      return "border-pink-200 bg-pink-50 text-pink-700";
+      return "border-[var(--rose)]/30 bg-[rgba(255,107,138,0.1)] text-[var(--rose)]";
     }
     if (tag === "Social Impact") {
-      return "border-green-200 bg-green-50 text-green-700";
+      return "border-[var(--teal)]/30 bg-[rgba(0,212,170,0.1)] text-[var(--teal)]";
     }
     if (tag === "Innovation & Research") {
-      return "border-blue-200 bg-blue-50 text-blue-700";
+      return "border-[var(--blue)]/30 bg-[rgba(77,159,255,0.1)] text-[var(--blue)]";
     }
     if (tag === "Academic Seminar") {
-      return "border-amber-200 bg-amber-50 text-amber-700";
+      return "border-[var(--gold)]/30 bg-[rgba(240,192,64,0.1)] text-[var(--gold)]";
     }
     if (tag === "Competition") {
-      return "border-red-200 bg-red-50 text-red-700";
+      return "border-[var(--rose)]/30 bg-[rgba(255,107,138,0.1)] text-[var(--rose)]";
     }
-    return "border-slate-200 bg-slate-50 text-slate-700";
+    return "border-[var(--border2)] bg-[var(--surface2)] text-[var(--text2)]";
   }
 
   return (
     <section className="space-y-6">
       <button
-        className="flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100"
+        className="flex items-center gap-2 rounded-full border border-[var(--border2)] bg-[var(--surface)]/50 px-4 py-2 text-xs font-semibold text-[var(--text2)] hover:bg-[var(--surface)] hover:text-[var(--text)]"
         type="button"
         onClick={() => navigate("/events")}
       >
@@ -84,25 +115,37 @@ export default function EventDetail() {
       </button>
 
       <div className="glass-panel rounded-3xl p-8">
-        <div className="mb-6 flex items-start justify-between">
+        <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
           <div className="flex-1">
-            <h1 className="text-4xl font-bold">{event.title}</h1>
-            <p className="mt-3 text-lg text-slate-600">{event.venue}</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[var(--text3)]">Event Detail</p>
+            <h1 className="mt-2 text-3xl font-semibold md:text-4xl text-[var(--text)]">{event.title}</h1>
+            <p className="mt-3 text-sm text-[var(--text2)]">{event.venue}</p>
           </div>
-          <span className="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-600">
-            {event.status}
-          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-full bg-[var(--surface2)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--text2)]">
+              {event.status || "upcoming"}
+            </span>
+            <span
+              className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] ${
+                event.registrationOpen === false
+                  ? "bg-[rgba(255,107,138,0.2)] text-[var(--rose)]"
+                  : "bg-[rgba(0,212,170,0.2)] text-[var(--teal)]"
+              }`}
+            >
+              {event.registrationOpen === false ? "Registration Closed" : "Registration Open"}
+            </span>
+          </div>
         </div>
 
         {event.imageUrl && (
-          <div className="relative mb-8 -mx-8 h-[320px] overflow-hidden rounded-2xl bg-slate-900 md:h-[360px]">
+          <div className="relative mb-8 -mx-8 h-[320px] overflow-hidden rounded-2xl bg-[var(--surface2)] md:h-[360px]">
             <img
               src={event.imageUrl}
               alt=""
               aria-hidden="true"
               className="absolute inset-0 h-full w-full scale-105 object-cover opacity-35 blur-sm"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-slate-900/35 to-slate-900/10" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg)]/70 via-[var(--bg)]/35 to-[var(--bg)]/10" />
             <img
               src={event.imageUrl}
               alt={event.title}
@@ -116,7 +159,7 @@ export default function EventDetail() {
             {event.categories.map((cat) => (
               <span
                 key={cat}
-                className={`rounded-full border px-4 py-2 text-sm font-semibold ${getCategoryTone(cat)}`}
+                className={`rounded-full border px-4 py-2 text-sm font-bold ${getCategoryTone(cat)}`}
               >
                 {cat}
               </span>
@@ -124,59 +167,100 @@ export default function EventDetail() {
           </div>
         )}
 
-        <div className="mb-8 grid gap-6 md:grid-cols-3">
+        <div className="mb-8 grid gap-6 md:grid-cols-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Date</p>
-            <p className="mt-2 text-lg font-semibold">{event.date}</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-[var(--text3)]">Date</p>
+            <p className="mt-2 text-lg font-semibold text-[var(--text)]">{event.date}</p>
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Time</p>
-            <p className="mt-2 text-lg font-semibold">
+            <p className="text-xs font-semibold uppercase tracking-widest text-[var(--text3)]">Time</p>
+            <p className="mt-2 text-lg font-semibold text-[var(--text)]">
               {event.startTime} - {event.endTime}
             </p>
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Seats Available</p>
-            <p className="mt-2 text-lg font-semibold">{event.maxSeats}</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-[var(--text3)]">Seats Available</p>
+            <p className="mt-2 text-lg font-semibold text-[var(--text)]">
+              {event.seatsRemaining ?? event.maxSeats}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-[var(--text3)]">Registered</p>
+            <p className="mt-2 text-lg font-semibold text-[var(--gold)]">{event.registeredCount || 0}</p>
           </div>
         </div>
 
         {event.registrationCloseDate && (
-          <div className="mb-8 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-            <p className="font-semibold text-amber-900">Registration closes:</p>
-            <p className="mt-1 text-amber-700">
+          <div className="mb-8 rounded-2xl border border-[var(--gold)]/30 bg-[rgba(240,192,64,0.08)] p-4">
+            <p className="font-semibold text-[var(--gold)]">Registration closes:</p>
+            <p className="mt-1 text-[var(--text2)]">
               {event.registrationCloseDate}
               {event.registrationCloseTime ? ` at ${event.registrationCloseTime}` : ""}
             </p>
           </div>
         )}
 
-        <div className="mb-8 border-t border-slate-200 pt-8">
-          <h2 className="mb-4 text-2xl font-semibold">Description</h2>
-          <p className="whitespace-pre-wrap text-lg leading-relaxed text-slate-700">
+        <div className="mb-8 border-t border-[var(--border)] pt-8">
+          <h2 className="mb-4 text-2xl font-bold text-[var(--text)]">Description</h2>
+          <p className="whitespace-pre-wrap text-lg font-semibold leading-relaxed text-[var(--text2)]">
             {event.description || "No description provided"}
           </p>
         </div>
 
+        <div className="mb-8 border-t border-[var(--border)] pt-8">
+          <h2 className="mb-4 text-2xl font-semibold text-[var(--text)]">Registration</h2>
+          <p className="text-sm text-[var(--text2)]">
+            Reserve your spot now. Your registration will appear in Dashboard instantly.
+          </p>
+          {notice && (
+            <div
+              className={`mt-4 rounded-2xl border px-4 py-3 text-sm ${
+                notice.toLowerCase().includes("confirmed")
+                  ? "border-[var(--teal)]/30 bg-[rgba(0,212,170,0.1)] text-[var(--teal)]"
+                  : "border-[var(--rose)]/30 bg-[rgba(255,107,138,0.1)] text-[var(--rose)]"
+              }`}
+            >
+              {notice}
+            </div>
+          )}
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+            <button
+              className="rounded-full bg-[var(--gold)] px-5 py-2 text-sm font-semibold text-[var(--bg)] disabled:opacity-60 transition hover:bg-[var(--gold2)]"
+              type="button"
+              onClick={handleRegister}
+              disabled={isRegistering || event.registrationOpen === false}
+            >
+              {isRegistering ? "Registering..." : "Register For This Event"}
+            </button>
+            <button
+              className="rounded-full border border-[var(--border2)] bg-[var(--surface)]/50 px-5 py-2 text-sm font-semibold text-[var(--text2)] hover:bg-[var(--surface)] hover:text-[var(--text)]"
+              type="button"
+              onClick={() => navigate("/dashboard")}
+            >
+              Open Dashboard
+            </button>
+          </div>
+        </div>
+
         {event.speakers && event.speakers.length > 0 && (
-          <div className="mb-8 border-t border-slate-200 pt-8">
-            <h2 className="mb-6 text-2xl font-semibold">Speakers</h2>
+          <div className="mb-8 border-t border-[var(--border)] pt-8">
+            <h2 className="mb-6 text-2xl font-semibold text-[var(--text)]">Speakers</h2>
             <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
               {event.speakers.map((speaker, index) => (
-                <div key={index} className="glass-panel relative overflow-hidden rounded-3xl border border-white/40 p-6 text-center backdrop-blur-xl">
-                  <div className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-[color:var(--primary)]/20 blur-2xl" />
+                <div key={index} className="glass-panel relative overflow-hidden rounded-3xl border border-[var(--border2)] p-6 text-center backdrop-blur-xl transition hover:border-[var(--gold2)] hover:shadow-lg hover:shadow-[rgba(240,192,64,0.1)]">
+                  <div className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-[var(--gold)]/10 blur-2xl" />
                   {speaker.imageUrl && (
                     <div className="mb-4 flex justify-center">
                       <img
                         src={speaker.imageUrl}
                         alt={speaker.name}
-                        className="h-32 w-32 rounded-full border-4 border-white/80 object-cover shadow-xl"
+                        className="h-32 w-32 rounded-full border-4 border-[var(--border2)] object-cover shadow-xl"
                       />
                     </div>
                   )}
-                  <h3 className="text-lg font-semibold text-slate-900">{speaker.name || "Speaker"}</h3>
-                  {speaker.title && <p className="mt-1 text-sm font-medium text-slate-700">{speaker.title}</p>}
-                  {speaker.bio && <p className="mt-3 text-sm text-slate-600">{speaker.bio}</p>}
+                  <h3 className="text-lg font-bold text-[var(--text)]">{speaker.name || "Speaker"}</h3>
+                  {speaker.title && <p className="mt-1 text-sm font-bold text-[var(--text2)]">{speaker.title}</p>}
+                  {speaker.bio && <p className="mt-3 text-sm font-semibold text-[var(--text3)]">{speaker.bio}</p>}
                   
                   {speaker.socialLinks && (
                     <div className="mt-4 flex justify-center gap-3">
@@ -185,7 +269,7 @@ export default function EventDetail() {
                           href={speaker.socialLinks.linkedin}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/60 bg-white/70 text-blue-700 transition hover:bg-white"
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border2)] bg-[var(--surface2)] text-[var(--blue)] transition hover:border-[var(--blue)] hover:bg-[var(--surface)]"
                           title="LinkedIn"
                         >
                           <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
@@ -198,7 +282,7 @@ export default function EventDetail() {
                           href={speaker.socialLinks.twitter}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/60 bg-white/70 text-sky-600 transition hover:bg-white"
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border2)] bg-[var(--surface2)] text-[var(--blue)] transition hover:border-[var(--blue)] hover:bg-[var(--surface)]"
                           title="Twitter"
                         >
                           <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
@@ -211,7 +295,7 @@ export default function EventDetail() {
                           href={speaker.socialLinks.github}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/60 bg-white/70 text-slate-700 transition hover:bg-white"
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border2)] bg-[var(--surface2)] text-[var(--text2)] transition hover:border-[var(--text2)] hover:bg-[var(--surface)]"
                           title="GitHub"
                         >
                           <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
@@ -224,7 +308,7 @@ export default function EventDetail() {
                           href={speaker.socialLinks.website}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/60 bg-white/70 text-[color:var(--primary)] transition hover:bg-white"
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border2)] bg-[var(--surface2)] text-[var(--gold)] transition hover:border-[var(--gold)] hover:bg-[var(--surface)]"
                           title="Website"
                         >
                           <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
@@ -241,41 +325,41 @@ export default function EventDetail() {
         )}
 
         {event.sponsors && event.sponsors.length > 0 && (
-          <div className="border-t border-slate-200 pt-8">
-            <h2 className="mb-6 text-2xl font-semibold">Sponsors</h2>
+          <div className="border-t border-[var(--border)] pt-8">
+            <h2 className="mb-6 text-2xl font-bold text-[var(--text)]">Sponsors</h2>
             <div className="grid gap-6 md:grid-cols-2">
               {event.sponsors.map((sponsor, index) => (
                 <div
                   key={index}
-                  className="glass-panel relative flex min-h-[176px] items-center gap-5 overflow-hidden rounded-3xl border border-white/40 p-6 backdrop-blur-xl"
+                  className="glass-panel relative flex min-h-[176px] items-center gap-5 overflow-hidden rounded-3xl border border-[var(--border2)] p-6 backdrop-blur-xl transition hover:border-[var(--gold2)]"
                 >
-                  <div className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-[color:var(--primary)]/20 blur-2xl" />
+                  <div className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-[var(--gold)]/10 blur-2xl" />
 
                   <div className="relative z-10 flex h-32 w-32 shrink-0 items-center justify-center">
                     {sponsor.logo ? (
                       <img
                         src={sponsor.logo}
                         alt={sponsor.name}
-                        className="h-32 w-32 rounded-full border-4 border-white/80 object-cover shadow-xl"
+                        className="h-32 w-32 rounded-full border-4 border-[var(--border2)] object-cover shadow-xl"
                       />
                     ) : (
-                      <div className="flex h-32 w-32 items-center justify-center rounded-full border-4 border-white/80 bg-white/70 shadow-xl">
-                        <span className="text-xs font-semibold text-slate-500">No Logo</span>
+                      <div className="flex h-32 w-32 items-center justify-center rounded-full border-4 border-[var(--border2)] bg-[var(--surface2)] shadow-xl">
+                        <span className="text-xs font-bold text-[var(--text3)]">No Logo</span>
                       </div>
                     )}
                   </div>
 
                   <div className="relative z-10 min-w-0 flex-1 text-left">
-                    <h3 className="truncate text-lg font-semibold text-slate-900">
+                    <h3 className="truncate text-lg font-bold text-[var(--text)]">
                       {sponsor.name || "Sponsor"}
                     </h3>
-                    <p className="mt-1 text-sm text-slate-700">Official Sponsor</p>
+                    <p className="mt-1 text-sm font-semibold text-[var(--text2)]">Official Sponsor</p>
                     {sponsor.website && (
                       <a
                         href={sponsor.website}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="mt-4 inline-flex rounded-full border border-white/60 bg-white/70 px-3 py-1 text-xs font-semibold text-[color:var(--primary)] transition hover:bg-white"
+                        className="mt-4 inline-flex rounded-full border border-[var(--gold)]/40 bg-[rgba(240,192,64,0.1)] px-3 py-1 text-xs font-semibold text-[var(--gold)] transition hover:border-[var(--gold)] hover:bg-[rgba(240,192,64,0.2)]"
                       >
                         Visit website
                       </a>
@@ -286,6 +370,16 @@ export default function EventDetail() {
             </div>
           </div>
         )}
+
+        <div className="mt-8 border-t border-[var(--border)] pt-8">
+          <button
+            className="rounded-full border border-[var(--border2)] bg-[var(--gold)] px-5 py-2 text-sm font-semibold text-[var(--bg)] transition hover:bg-[var(--gold2)]"
+            type="button"
+            onClick={() => navigate("/events")}
+          >
+            Browse More Events
+          </button>
+        </div>
       </div>
     </section>
   );

@@ -222,20 +222,20 @@ export default function Home() {
       <div className="glass-panel rounded-3xl p-6 md:p-8">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--text3)]">
               Campus Pulse
             </p>
-            <h1 className="mt-2 text-3xl font-semibold leading-tight md:text-4xl">
+            <h1 className="mt-2 text-3xl font-semibold leading-tight md:text-4xl text-[var(--text)]">
               Events that matter right now.
             </h1>
-            <p className="mt-3 max-w-2xl text-sm text-slate-600">
+            <p className="mt-3 max-w-2xl text-sm text-[var(--text2)]">
               Home now focuses on the next events first. If there are no upcoming events,
               you will see the latest completed ones instead.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
             <button
-              className="rounded-full bg-[color:var(--primary)] px-5 py-2 text-sm font-semibold text-white shadow"
+              className="rounded-full bg-[var(--gold)] px-5 py-2 text-sm font-semibold text-[var(--bg)] shadow transition hover:bg-[var(--gold2)]"
               type="button"
               onClick={() => navigate("/events")}
             >
@@ -243,7 +243,7 @@ export default function Home() {
             </button>
             {canCreate && (
               <button
-                className="rounded-full border border-white/60 bg-white/70 px-5 py-2 text-sm font-semibold text-slate-700"
+                className="rounded-full border border-[var(--border2)] bg-[var(--surface)]/50 px-5 py-2 text-sm font-semibold text-[var(--text2)] hover:bg-[var(--surface)] hover:text-[var(--text)]"
                 type="button"
                 onClick={() => navigate("/events")}
               >
@@ -256,9 +256,9 @@ export default function Home() {
 
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">{primaryLabel}</h2>
+          <h2 className="text-lg font-semibold text-[var(--text)]">{primaryLabel}</h2>
           {!loading && !error && (
-            <p className="text-xs text-slate-500">{primaryEvents.length} events</p>
+            <p className="text-xs text-[var(--text3)]">{primaryEvents.length} events</p>
           )}
         </div>
 
@@ -266,22 +266,22 @@ export default function Home() {
           <div className="grid gap-4 md:grid-cols-2">
             {Array.from({ length: 4 }).map((_, index) => (
               <div key={`skeleton-${index}`} className="bento-tile animate-pulse rounded-2xl p-4">
-                <div className="h-5 w-2/3 rounded-full bg-slate-200/70" />
-                <div className="mt-3 h-4 w-1/2 rounded-full bg-slate-200/70" />
-                <div className="mt-3 h-4 w-1/3 rounded-full bg-slate-200/70" />
+                <div className="h-5 w-2/3 rounded-full bg-[var(--surface2)]/70" />
+                <div className="mt-3 h-4 w-1/2 rounded-full bg-[var(--surface2)]/70" />
+                <div className="mt-3 h-4 w-1/3 rounded-full bg-[var(--surface2)]/70" />
               </div>
             ))}
           </div>
         )}
 
         {error && (
-          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="rounded-2xl border border-[var(--rose)]/30 bg-[rgba(255,107,138,0.1)] px-4 py-3 text-sm text-[var(--rose)]">
             {error}
           </div>
         )}
 
         {!loading && !error && primaryEvents.length === 0 && (
-          <div className="glass-panel rounded-2xl p-6 text-sm text-slate-600">
+          <div className="glass-panel rounded-2xl p-6 text-sm text-[var(--text2)]">
             No events are available yet.
           </div>
         )}
@@ -289,18 +289,25 @@ export default function Home() {
         {!loading && !error && primaryEvents.length > 0 && (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {primaryEvents.map((event) => (
-              <article key={event._id} className="bento-tile rounded-2xl p-4">
-                <h3 className="text-base font-semibold text-slate-900">{event.title}</h3>
-                <p className="mt-2 text-xs text-slate-600">
+              <article key={event._id} className="bento-tile rounded-2xl p-4 transition hover:border-[var(--gold2)] hover:shadow-lg hover:shadow-[rgba(240,192,64,0.1)]">
+                <h3 className="text-base font-semibold text-[var(--text)]">{event.title}</h3>
+                <p className="mt-2 text-xs text-[var(--text2)]">
                   {event.date}
                   {event.startTime ? ` | ${event.startTime}` : ""}
                   {event.endTime ? ` - ${event.endTime}` : ""}
                 </p>
-                <p className="mt-2 text-xs text-slate-600">Venue: {event.venue || "TBA"}</p>
-                <p className="mt-1 text-xs text-slate-600">Speaker: {getSpeakerLabel(event)}</p>
+                <p className="mt-2 text-xs text-[var(--text2)]">Venue: {event.venue || "TBA"}</p>
+                <p className="mt-1 text-xs text-[var(--text2)]">Speaker: {getSpeakerLabel(event)}</p>
                 {event.description && (
-                  <p className="mt-3 line-clamp-3 text-sm text-slate-600">{event.description}</p>
+                  <p className="mt-3 line-clamp-3 text-sm text-[var(--text2)]">{event.description}</p>
                 )}
+                <button
+                  className="mt-4 rounded-full bg-[var(--gold)] px-4 py-2 text-xs font-semibold text-[var(--bg)] transition hover:bg-[var(--gold2)]"
+                  type="button"
+                  onClick={() => navigate(`/events/${event._id}`)}
+                >
+                  View Details
+                </button>
               </article>
             ))}
           </div>
@@ -310,15 +317,15 @@ export default function Home() {
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         <section className="glass-panel rounded-3xl p-5 md:p-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">Whole-Day Schedule</h3>
-            <p className="text-xs text-slate-500">{selectedDateDisplay}</p>
+            <h3 className="text-lg font-semibold text-[var(--text)]">Whole-Day Schedule</h3>
+            <p className="text-xs text-[var(--text3)]">{selectedDateDisplay}</p>
           </div>
-          <p className="mt-2 text-xs text-slate-500">
+          <p className="mt-2 text-xs text-[var(--text2)]">
             Click any date in the calendar to load that day schedule.
           </p>
 
           {scheduleEvents.length === 0 ? (
-            <div className="mt-5 rounded-2xl border border-dashed border-slate-300 px-4 py-6 text-sm text-slate-500">
+            <div className="mt-5 rounded-2xl border border-dashed border-[var(--border2)] px-4 py-6 text-sm text-[var(--text2)]">
               No events scheduled for this day.
             </div>
           ) : (
@@ -326,16 +333,23 @@ export default function Home() {
               {scheduleEvents.map((event) => (
                 <div
                   key={`schedule-${event._id}`}
-                  className="bento-tile grid gap-2 rounded-2xl p-4 md:grid-cols-[120px_minmax(0,1fr)]"
+                  className="bento-tile grid gap-2 rounded-2xl p-4 md:grid-cols-[120px_minmax(0,1fr)] transition hover:border-[var(--gold2)]"
                 >
-                  <div className="text-sm font-semibold text-slate-800">
+                  <div className="text-sm font-semibold text-[var(--gold)]">
                     {event.startTime || "00:00"}
                     {event.endTime ? ` - ${event.endTime}` : ""}
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-slate-900">{event.title}</p>
-                    <p className="mt-1 text-xs text-slate-600">Speaker: {getSpeakerLabel(event)}</p>
-                    <p className="mt-1 text-xs text-slate-600">Venue: {event.venue || "TBA"}</p>
+                    <p className="text-sm font-semibold text-[var(--text)]">{event.title}</p>
+                    <p className="mt-1 text-xs text-[var(--text2)]">Speaker: {getSpeakerLabel(event)}</p>
+                    <p className="mt-1 text-xs text-[var(--text2)]">Venue: {event.venue || "TBA"}</p>
+                    <button
+                      className="mt-3 rounded-full border border-[var(--border2)] bg-[var(--surface2)]/50 px-3 py-1 text-xs font-semibold text-[var(--text2)] transition hover:bg-[var(--surface2)] hover:text-[var(--gold)]"
+                      type="button"
+                      onClick={() => navigate(`/events/${event._id}`)}
+                    >
+                      Open Event
+                    </button>
                   </div>
                 </div>
               ))}
@@ -345,21 +359,21 @@ export default function Home() {
 
         <section className="glass-panel rounded-3xl p-5 md:p-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-base font-semibold">Monthly Calendar</h3>
+            <h3 className="text-base font-semibold text-[var(--text)]">Monthly Calendar</h3>
             <div className="flex items-center gap-2">
               <button
-                className="rounded-lg border border-white/60 bg-white/70 px-2 py-1 text-sm text-slate-700"
+                className="rounded-lg border border-[var(--border2)] bg-[var(--surface2)]/50 px-2 py-1 text-sm text-[var(--text2)] transition hover:bg-[var(--surface2)] hover:text-[var(--text)]"
                 type="button"
                 onClick={showPreviousMonth}
                 aria-label="Previous month"
               >
                 {"<"}
               </button>
-              <p className="min-w-[120px] text-center text-sm font-semibold text-slate-700">
+              <p className="min-w-[120px] text-center text-sm font-semibold text-[var(--text)]">
                 {monthLabel(calendarMonth)}
               </p>
               <button
-                className="rounded-lg border border-white/60 bg-white/70 px-2 py-1 text-sm text-slate-700"
+                className="rounded-lg border border-[var(--border2)] bg-[var(--surface2)]/50 px-2 py-1 text-sm text-[var(--text2)] transition hover:bg-[var(--surface2)] hover:text-[var(--text)]"
                 type="button"
                 onClick={showNextMonth}
                 aria-label="Next month"
@@ -369,7 +383,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="mt-4 grid grid-cols-7 gap-2 text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+          <div className="mt-4 grid grid-cols-7 gap-2 text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--text3)]">
             <span>Sun</span>
             <span>Mon</span>
             <span>Tue</span>
@@ -391,32 +405,32 @@ export default function Home() {
                   onClick={() => setSelectedDate(day.key)}
                   className={`group relative min-h-[66px] rounded-xl border px-2 py-2 text-left transition ${
                     day.inCurrentMonth
-                      ? "border-slate-200 bg-white/80"
-                      : "border-transparent bg-slate-100/60 text-slate-400"
-                  } ${isSelected ? "ring-2 ring-[color:var(--primary)]" : ""}`}
+                      ? "border-[var(--border2)] bg-[var(--surface2)]/30"
+                      : "border-transparent bg-[var(--surface2)]/10 text-[var(--text3)]"
+                  } ${isSelected ? "ring-2 ring-[var(--gold)]" : ""}`}
                 >
-                  <span className="text-xs font-semibold">{day.dayNumber}</span>
+                  <span className="text-xs font-semibold text-[var(--text)]">{day.dayNumber}</span>
                   {hasEvents && (
-                    <span className="absolute bottom-2 left-1/2 h-2 w-2 -translate-x-1/2 rounded-full bg-[color:var(--accent)]" />
+                    <span className="absolute bottom-2 left-1/2 h-2 w-2 -translate-x-1/2 rounded-full bg-[var(--gold)]" />
                   )}
 
                   {hasEvents && (
-                    <div className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 hidden w-52 -translate-x-1/2 rounded-xl border border-slate-200 bg-white p-3 text-left shadow-xl group-hover:block">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+                    <div className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 hidden w-52 -translate-x-1/2 rounded-xl border border-[var(--border2)] bg-[var(--surface)] p-3 text-left shadow-xl group-hover:block">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--text3)]">
                         {day.key}
                       </p>
                       <ul className="mt-2 space-y-2">
                         {day.dayEvents.slice(0, 3).map((event) => (
-                          <li key={`popover-${event._id}`} className="text-xs text-slate-700">
-                            <p className="font-semibold">{event.title}</p>
-                            <p className="text-[11px] text-slate-500">
+                          <li key={`popover-${event._id}`} className="text-xs text-[var(--text2)]">
+                            <p className="font-semibold text-[var(--text)]">{event.title}</p>
+                            <p className="text-[11px] text-[var(--text3)]">
                               {event.startTime || "00:00"}
                               {event.endTime ? ` - ${event.endTime}` : ""}
                             </p>
                           </li>
                         ))}
                         {day.dayEvents.length > 3 && (
-                          <li className="text-[11px] text-slate-500">
+                          <li className="text-[11px] text-[var(--text3)]">
                             +{day.dayEvents.length - 3} more
                           </li>
                         )}

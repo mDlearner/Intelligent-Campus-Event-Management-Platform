@@ -111,39 +111,39 @@ export default function Dashboard() {
     <section className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)]">
       <aside className="space-y-4">
         <div className="bento-tile rounded-2xl p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">
+          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[var(--text3)]">
             My Dashboard
           </p>
-          <div className="mt-4 space-y-2 text-sm text-slate-600">
-            <button className="flex w-full items-center justify-between rounded-xl bg-slate-900 px-3 py-2 font-semibold text-white" type="button">
+          <div className="mt-4 space-y-2 text-sm text-[var(--text2)]">
+            <button className="flex w-full items-center justify-between rounded-xl bg-[var(--gold)] px-3 py-2 font-semibold text-[var(--bg)]" type="button">
               Overview
-              <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px]">Live</span>
+              <span className="rounded-full bg-[var(--gold2)]/20 px-2 py-0.5 text-[10px]">Live</span>
             </button>
-            <button className="flex w-full items-center justify-between rounded-xl px-3 py-2 transition hover:bg-slate-100/70" type="button" onClick={() => navigate("/events")}>
+            <button className="flex w-full items-center justify-between rounded-xl px-3 py-2 transition hover:bg-[var(--surface2)]" type="button" onClick={() => navigate("/events")}>
               Browse Events
-              <span className="text-xs text-slate-400">Discover</span>
+              <span className="text-xs text-[var(--text3)]">Discover</span>
             </button>
-            <button className="flex w-full items-center justify-between rounded-xl px-3 py-2 transition hover:bg-slate-100/70" type="button">
+            <button className="flex w-full items-center justify-between rounded-xl px-3 py-2 transition hover:bg-[var(--surface2)]" type="button">
               Registrations
-              <span className="text-xs text-slate-400">{registrations.length}</span>
+              <span className="text-xs text-[var(--text3)]">{registrations.length}</span>
             </button>
-            <button className="flex w-full items-center justify-between rounded-xl px-3 py-2 transition hover:bg-slate-100/70" type="button">
+            <button className="flex w-full items-center justify-between rounded-xl px-3 py-2 transition hover:bg-[var(--surface2)]" type="button">
               Calendar
-              <span className="text-xs text-slate-500">View</span>
+              <span className="text-xs text-[var(--text3)]">View</span>
             </button>
           </div>
         </div>
         <div className="bento-tile rounded-2xl p-4">
-          <h3 className="text-sm font-semibold text-slate-700">Actions</h3>
+          <h3 className="text-sm font-semibold text-[var(--text)]">Actions</h3>
           {notice && (
-            <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
+            <div className="mt-3 rounded-xl border border-[var(--teal)]/30 bg-[rgba(0,212,170,0.1)] px-3 py-2 text-xs text-[var(--teal)]">
               {notice}
             </div>
           )}
           <div className="mt-4 space-y-2">
             {canCreate && (
               <button
-                className="w-full rounded-full bg-[color:var(--primary)] px-3 py-2 text-xs font-semibold text-white transition hover:shadow-lg"
+                className="w-full rounded-full bg-[var(--gold)] px-3 py-2 text-xs font-semibold text-[var(--bg)] transition hover:shadow-lg hover:bg-[var(--gold2)]"
                 type="button"
                 onClick={() => navigate("/events")}
               >
@@ -151,14 +151,14 @@ export default function Dashboard() {
               </button>
             )}
             <button
-              className="w-full rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
+              className="w-full rounded-full border border-[var(--border2)] bg-[var(--surface2)]/50 px-3 py-2 text-xs font-semibold text-[var(--text2)] transition hover:bg-[var(--surface2)]"
               type="button"
               onClick={() => navigate("/events")}
             >
               View Calendar
             </button>
             <button
-              className="w-full rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
+              className="w-full rounded-full border border-[var(--border2)] bg-[var(--surface2)]/50 px-3 py-2 text-xs font-semibold text-[var(--text2)] transition hover:bg-[var(--surface2)]"
               type="button"
               onClick={handleSendReminders}
             >
@@ -171,20 +171,20 @@ export default function Dashboard() {
       <div className="space-y-6">
         <div className="grid gap-4 md:grid-cols-3">
           <div className="bento-tile rounded-2xl p-4">
-            <p className="text-xs font-semibold text-slate-500">Registered Events</p>
-            <p className="mt-3 text-3xl font-bold text-slate-900">
+            <p className="text-xs font-semibold text-[var(--text3)]">Registered Events</p>
+            <p className="mt-3 text-3xl font-bold text-[var(--gold)]">
               {loading ? "…" : registrations.length}
             </p>
           </div>
           <div className="bento-tile rounded-2xl p-4">
-            <p className="text-xs font-semibold text-slate-500">This Week</p>
-            <p className="mt-3 text-3xl font-bold text-slate-900">
+            <p className="text-xs font-semibold text-[var(--text3)]">This Week</p>
+            <p className="mt-3 text-3xl font-bold text-[var(--teal)]">
               {loading ? "…" : upcomingThisWeek}
             </p>
           </div>
           <div className="bento-tile rounded-2xl p-4">
-            <p className="text-xs font-semibold text-slate-500">Notifications</p>
-            <p className="mt-3 text-3xl font-bold text-slate-900">
+            <p className="text-xs font-semibold text-[var(--text3)]">Notifications</p>
+            <p className="mt-3 text-3xl font-bold text-[var(--blue)]">
               {loading ? "…" : notifications.length}
             </p>
           </div>
@@ -238,10 +238,10 @@ export default function Dashboard() {
 
         <div className="bento-tile rounded-2xl p-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-slate-900">My Registered Events</h2>
+            <h2 className="text-lg font-semibold text-[var(--text)]">My Registered Events</h2>
             {registrations.length > 0 && (
               <button
-                className="rounded-full bg-[color:var(--primary)] px-3 py-1 text-xs font-semibold text-white"
+                className="rounded-full bg-[var(--gold)] px-3 py-1 text-xs font-semibold text-[var(--bg)]"
                 type="button"
                 onClick={() => {
                   setSelectedRegistration(registrations[0]);
@@ -252,32 +252,47 @@ export default function Dashboard() {
               </button>
             )}
           </div>
-          {loading && <p className="mt-3 text-sm text-slate-600">Loading events...</p>}
+          {loading && <p className="mt-3 text-sm text-[var(--text2)]">Loading events...</p>}
           {!loading && registrations.length === 0 && (
-            <div className="mt-4 rounded-2xl border border-slate-200 bg-white/60 px-4 py-6 text-sm text-slate-600">
+            <div className="mt-4 rounded-2xl border border-[var(--border2)] bg-[var(--surface2)]/30 px-4 py-6 text-sm text-[var(--text2)]">
               No registrations yet. Find your first event and unlock your QR pass.
             </div>
           )}
           {!loading && registrations.length > 0 && (
             <div className="mt-4 grid gap-3 md:grid-cols-2">
               {registrations.map((registration) => (
-                <button
+                <div
                   key={registration._id}
-                  className="rounded-2xl border border-slate-200 bg-white/60 p-4 text-left transition hover:-translate-y-0.5 hover:border-[color:var(--primary)]"
-                  type="button"
-                  onClick={() => {
-                    setSelectedRegistration(registration);
-                    setShowQrPass(true);
-                  }}
+                  className="rounded-2xl border border-[var(--border2)] bg-[var(--surface2)]/30 p-4 transition hover:-translate-y-0.5 hover:border-[var(--gold2)]"
                 >
-                  <p className="text-sm font-semibold text-slate-800">
+                  <p className="text-sm font-bold text-[var(--text)]">
                     {registration.event?.title || "Untitled event"}
                   </p>
-                  <p className="mt-1 text-xs text-slate-600">
+                  <p className="mt-1 text-xs font-semibold text-[var(--text2)]">
                     {registration.event?.date || "TBA"}
                     {registration.event?.venue ? ` · ${registration.event.venue}` : ""}
                   </p>
-                </button>
+                  <div className="mt-3 flex gap-2">
+                    <button
+                      className="rounded-full bg-[var(--gold)] px-3 py-1 text-xs font-semibold text-[var(--bg)]"
+                      type="button"
+                      onClick={() => {
+                        setSelectedRegistration(registration);
+                        setShowQrPass(true);
+                      }}
+                    >
+                      Show QR
+                    </button>
+                    <button
+                      className="rounded-full border border-[var(--border2)] bg-[var(--surface2)]/50 px-3 py-1 text-xs font-semibold text-[var(--text2)]"
+                      type="button"
+                      onClick={() => navigate(`/events/${registration.event?._id}`)}
+                      disabled={!registration.event?._id}
+                    >
+                      Event Details
+                    </button>
+                  </div>
+                </div>
               ))}
             </div>
           )}
