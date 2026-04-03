@@ -79,26 +79,36 @@ export default function EventDetail() {
   }
 
   function getCategoryTone(tag) {
-    if (tag === "Workshop") {
-      return "border-[var(--blue)]/30 bg-[rgba(77,159,255,0.1)] text-[var(--blue)]";
-    }
-    if (tag === "Hackathon") {
-      return "border-purple-500/30 bg-[rgba(168,85,247,0.1)] text-purple-400";
-    }
-    if (tag === "Cultural") {
-      return "border-[var(--rose)]/30 bg-[rgba(255,107,138,0.1)] text-[var(--rose)]";
-    }
-    if (tag === "Social Impact") {
-      return "border-[var(--teal)]/30 bg-[rgba(0,212,170,0.1)] text-[var(--teal)]";
-    }
-    if (tag === "Innovation & Research") {
-      return "border-[var(--blue)]/30 bg-[rgba(77,159,255,0.1)] text-[var(--blue)]";
-    }
-    if (tag === "Academic Seminar") {
+    const key = String(tag || "").toLowerCase();
+    if (key.includes("academic") || key.includes("seminar")) {
       return "border-[var(--gold)]/30 bg-[rgba(240,192,64,0.1)] text-[var(--gold)]";
     }
-    if (tag === "Competition") {
+    if (key.includes("workshop")) {
+      return "border-[var(--blue)]/30 bg-[rgba(77,159,255,0.1)] text-[var(--blue)]";
+    }
+    if (key.includes("hackathon")) {
+      return "border-purple-500/30 bg-[rgba(168,85,247,0.1)] text-purple-400";
+    }
+    if (key.includes("cultural")) {
       return "border-[var(--rose)]/30 bg-[rgba(255,107,138,0.1)] text-[var(--rose)]";
+    }
+    if (key.includes("competition")) {
+      return "border-orange-500/30 bg-[rgba(249,115,22,0.1)] text-orange-400";
+    }
+    if (key.includes("social impact")) {
+      return "border-[var(--teal)]/30 bg-[rgba(0,212,170,0.1)] text-[var(--teal)]";
+    }
+    if (key.includes("sport")) {
+      return "border-emerald-500/30 bg-[rgba(16,185,129,0.1)] text-emerald-400";
+    }
+    if (key.includes("innovation") || key.includes("research")) {
+      return "border-cyan-500/30 bg-[rgba(34,211,238,0.1)] text-cyan-400";
+    }
+    if (key.includes("free food")) {
+      return "border-lime-500/30 bg-[rgba(132,204,22,0.1)] text-lime-400";
+    }
+    if (key.includes("career")) {
+      return "border-indigo-500/30 bg-[rgba(99,102,241,0.1)] text-indigo-400";
     }
     return "border-[var(--border2)] bg-[var(--surface2)] text-[var(--text2)]";
   }
@@ -269,7 +279,7 @@ export default function EventDetail() {
                           href={speaker.socialLinks.linkedin}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border2)] bg-[var(--surface2)] text-[var(--blue)] transition hover:border-[var(--blue)] hover:bg-[var(--surface)]"
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border2)] bg-[var(--surface2)] text-[var(--text)] transition hover:border-[var(--blue)] hover:bg-[var(--surface)] hover:text-[var(--blue)]"
                           title="LinkedIn"
                         >
                           <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
@@ -282,7 +292,7 @@ export default function EventDetail() {
                           href={speaker.socialLinks.twitter}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border2)] bg-[var(--surface2)] text-[var(--blue)] transition hover:border-[var(--blue)] hover:bg-[var(--surface)]"
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border2)] bg-[var(--surface2)] text-[var(--text)] transition hover:border-[var(--blue)] hover:bg-[var(--surface)] hover:text-[var(--blue)]"
                           title="Twitter"
                         >
                           <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
@@ -295,7 +305,7 @@ export default function EventDetail() {
                           href={speaker.socialLinks.github}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border2)] bg-[var(--surface2)] text-[var(--text2)] transition hover:border-[var(--text2)] hover:bg-[var(--surface)]"
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border2)] bg-[var(--surface2)] text-[var(--text)] transition hover:border-[var(--text2)] hover:bg-[var(--surface)] hover:text-[var(--text2)]"
                           title="GitHub"
                         >
                           <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
@@ -308,7 +318,7 @@ export default function EventDetail() {
                           href={speaker.socialLinks.website}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border2)] bg-[var(--surface2)] text-[var(--gold)] transition hover:border-[var(--gold)] hover:bg-[var(--surface)]"
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border2)] bg-[var(--surface2)] text-[var(--text)] transition hover:border-[var(--gold)] hover:bg-[var(--surface)] hover:text-[var(--gold)]"
                           title="Website"
                         >
                           <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">

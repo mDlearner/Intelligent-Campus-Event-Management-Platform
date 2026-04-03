@@ -104,26 +104,27 @@ export default function Login() {
   }
 
   return (
-    <section className="mx-auto max-w-md rounded-3xl border border-white/40 bg-white/70 p-8">
-      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[color:var(--primary)] text-white text-lg font-bold shadow">
-        EM
-      </div>
-      <h1 className="mt-4 text-2xl font-semibold text-slate-900">
+    <section className="mx-auto max-w-lg space-y-6">
+      <div className="glass-panel rounded-3xl p-8">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--gold)] text-[var(--bg)] text-lg font-bold shadow-[0_10px_24px_rgba(240,192,64,0.22)]">
+          EM
+        </div>
+        <h1 className="mt-4 text-3xl font-semibold text-[var(--text)]">
         {mode === "login" ? "Sign in" : "Create account"}
-      </h1>
-      <p className="mt-2 text-sm text-slate-600">
-        {mode === "login"
-          ? "Use your campus email and password."
-          : "Create an account to register or host events."}
-      </p>
+        </h1>
+        <p className="mt-2 text-sm text-[var(--text2)]">
+          {mode === "login"
+            ? "Use your campus email and password."
+            : "Create an account to register or host events."}
+        </p>
 
-      {!verificationRequired ? (
+        {!verificationRequired ? (
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
           {mode === "register" && (
           <div>
-            <label className="text-xs font-semibold text-slate-500">Full name</label>
+            <label className="text-xs font-semibold text-[var(--text3)]">Full name</label>
             <input
-              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400"
+              className="neo-input mt-2"
               type="text"
               name="name"
               value={form.name}
@@ -134,9 +135,9 @@ export default function Login() {
           </div>
         )}
           <div>
-            <label className="text-xs font-semibold text-slate-500">Email</label>
+            <label className="text-xs font-semibold text-[var(--text3)]">Email</label>
             <input
-              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400"
+              className="neo-input mt-2"
               type="email"
               name="email"
               value={form.email}
@@ -146,9 +147,9 @@ export default function Login() {
             />
           </div>
           <div>
-            <label className="text-xs font-semibold text-slate-500">Password</label>
+            <label className="text-xs font-semibold text-[var(--text3)]">Password</label>
             <input
-              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400"
+              className="neo-input mt-2"
               type="password"
               name="password"
               value={form.password}
@@ -160,9 +161,9 @@ export default function Login() {
           {mode === "register" && (
             <>
               <div>
-                <label className="text-xs font-semibold text-slate-500">Role</label>
+                <label className="text-xs font-semibold text-[var(--text3)]">Role</label>
                 <select
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-slate-900"
+                  className="neo-input mt-2"
                   name="role"
                   value={form.role}
                   onChange={handleChange}
@@ -173,9 +174,9 @@ export default function Login() {
                 </select>
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-500">Department (Optional)</label>
+                <label className="text-xs font-semibold text-[var(--text3)]">Department (Optional)</label>
                 <input
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400"
+                  className="neo-input mt-2"
                   type="text"
                   name="department"
                   value={form.department}
@@ -186,9 +187,9 @@ export default function Login() {
               {form.role === "student" && (
                 <div className="grid gap-3 md:grid-cols-2">
                   <div>
-                    <label className="text-xs font-semibold text-slate-500">Student ID</label>
+                    <label className="text-xs font-semibold text-[var(--text3)]">Student ID</label>
                     <input
-                      className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400"
+                      className="neo-input mt-2"
                       type="text"
                       name="studentId"
                       value={form.studentId}
@@ -197,9 +198,9 @@ export default function Login() {
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-semibold text-slate-500">Year</label>
+                    <label className="text-xs font-semibold text-[var(--text3)]">Year</label>
                     <input
-                      className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400"
+                      className="neo-input mt-2"
                       type="text"
                       name="year"
                       value={form.year}
@@ -213,13 +214,13 @@ export default function Login() {
           )}
 
           {error && (
-            <div className="rounded-2xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            <div className="rounded-2xl border border-[var(--rose)]/30 bg-[rgba(255,107,138,0.1)] px-3 py-2 text-sm text-[var(--rose)]">
               {error}
             </div>
           )}
 
           <button
-            className="w-full rounded-full bg-[color:var(--primary)] px-3 py-2 font-semibold text-white transition hover:shadow-lg disabled:opacity-70"
+            className="neo-btn w-full px-3 py-2"
             type="submit"
             disabled={isSubmitting}
           >
@@ -229,18 +230,18 @@ export default function Login() {
       ) : (
         <form className="mt-6 space-y-4" onSubmit={handleVerify}>
           <div>
-            <label className="text-xs font-semibold text-slate-500">Verification Email</label>
+            <label className="text-xs font-semibold text-[var(--text3)]">Verification Email</label>
             <input
-              className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-slate-500"
+              className="neo-input mt-2 opacity-80"
               type="email"
               value={verificationEmail}
               disabled
             />
           </div>
           <div>
-            <label className="text-xs font-semibold text-slate-500">6-digit Code</label>
+            <label className="text-xs font-semibold text-[var(--text3)]">6-digit Code</label>
             <input
-              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400"
+              className="neo-input mt-2"
               type="text"
               value={verificationCode}
               onChange={(event) => setVerificationCode(event.target.value)}
@@ -248,26 +249,26 @@ export default function Login() {
               maxLength={6}
               required
             />
-            <p className="mt-2 text-xs text-slate-500">
+            <p className="mt-2 text-xs text-[var(--text3)]">
               The code was sent to {verificationEmail}. It is valid for 7 days.
             </p>
           </div>
 
           {error && (
-            <div className="rounded-2xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            <div className="rounded-2xl border border-[var(--rose)]/30 bg-[rgba(255,107,138,0.1)] px-3 py-2 text-sm text-[var(--rose)]">
               {error}
             </div>
           )}
 
           <button
-            className="w-full rounded-full bg-[color:var(--primary)] px-3 py-2 font-semibold text-white transition hover:shadow-lg disabled:opacity-70"
+            className="neo-btn w-full px-3 py-2"
             type="submit"
             disabled={isSubmitting}
           >
             {isSubmitting ? "Verifying..." : "Verify & Complete"}
           </button>
           <button
-            className="w-full rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 disabled:opacity-70"
+            className="neo-btn-ghost w-full px-3 py-2 text-sm disabled:opacity-70"
             type="button"
             onClick={handleResend}
             disabled={isResending}
@@ -279,7 +280,7 @@ export default function Login() {
 
       {!verificationRequired && (
         <button
-          className="mt-4 w-full text-sm font-semibold text-slate-600 transition hover:text-slate-900"
+          className="mt-4 w-full text-sm font-semibold text-[var(--text2)] transition hover:text-[var(--text)]"
           type="button"
           onClick={() => {
             setMode((prev) => (prev === "login" ? "register" : "login"));
@@ -291,6 +292,7 @@ export default function Login() {
             : "Already have an account? Sign in"}
         </button>
       )}
+      </div>
     </section>
   );
 }

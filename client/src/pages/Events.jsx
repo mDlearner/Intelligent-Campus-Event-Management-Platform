@@ -56,26 +56,36 @@ function truncateText(text, length = 100) {
 }
 
 function getCategoryTone(tag) {
-  if (tag === "Workshop") {
-    return "border-[var(--blue)]/30 bg-[rgba(77,159,255,0.1)] text-[var(--blue)]";
-  }
-  if (tag === "Hackathon") {
-    return "border-purple-500/30 bg-[rgba(168,85,247,0.1)] text-purple-400";
-  }
-  if (tag === "Cultural") {
-    return "border-[var(--rose)]/30 bg-[rgba(255,107,138,0.1)] text-[var(--rose)]";
-  }
-  if (tag === "Social Impact") {
-    return "border-[var(--teal)]/30 bg-[rgba(0,212,170,0.1)] text-[var(--teal)]";
-  }
-  if (tag === "Innovation & Research") {
-    return "border-[var(--blue)]/30 bg-[rgba(77,159,255,0.1)] text-[var(--blue)]";
-  }
-  if (tag === "Academic Seminar") {
+  const key = String(tag || "").toLowerCase();
+  if (key.includes("academic") || key.includes("seminar")) {
     return "border-[var(--gold)]/30 bg-[rgba(240,192,64,0.1)] text-[var(--gold)]";
   }
-  if (tag === "Competition") {
+  if (key.includes("workshop")) {
+    return "border-[var(--blue)]/30 bg-[rgba(77,159,255,0.1)] text-[var(--blue)]";
+  }
+  if (key.includes("hackathon")) {
+    return "border-purple-500/30 bg-[rgba(168,85,247,0.1)] text-purple-400";
+  }
+  if (key.includes("cultural")) {
     return "border-[var(--rose)]/30 bg-[rgba(255,107,138,0.1)] text-[var(--rose)]";
+  }
+  if (key.includes("competition")) {
+    return "border-orange-500/30 bg-[rgba(249,115,22,0.1)] text-orange-400";
+  }
+  if (key.includes("social impact")) {
+    return "border-[var(--teal)]/30 bg-[rgba(0,212,170,0.1)] text-[var(--teal)]";
+  }
+  if (key.includes("sport")) {
+    return "border-emerald-500/30 bg-[rgba(16,185,129,0.1)] text-emerald-400";
+  }
+  if (key.includes("innovation") || key.includes("research")) {
+    return "border-cyan-500/30 bg-[rgba(34,211,238,0.1)] text-cyan-400";
+  }
+  if (key.includes("free food")) {
+    return "border-lime-500/30 bg-[rgba(132,204,22,0.1)] text-lime-400";
+  }
+  if (key.includes("career")) {
+    return "border-indigo-500/30 bg-[rgba(99,102,241,0.1)] text-indigo-400";
   }
   return "border-[var(--border2)] bg-[var(--surface2)] text-[var(--text2)]";
 }
@@ -167,7 +177,7 @@ function validateEventForm(form) {
   return "";
 }
 
-export default function Events() {
+export default function Events({ showEnded = false }) {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [events, setEvents] = useState([]);
@@ -380,6 +390,36 @@ export default function Events() {
     return today >= start && today <= end;
   }
 
+  function isEventEnded(event) {
+    if (!event?.date || !DATE_REGEX.test(event.date)) {
+      return false;
+    }
+
+    const [year, month, day] = event.date.split("-").map(Number);
+    const now = new Date();
+    const eventDayStart = new Date(year, month - 1, day, 0, 0, 0, 0);
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+
+    if (eventDayStart < todayStart) {
+      return true;
+    }
+
+    if (eventDayStart > todayStart) {
+      return false;
+    }
+
+    if (!TIME_REGEX.test(event.endTime || "")) {
+      return false;
+    }
+
+    const endDateTime = parseDateTime(event.date, event.endTime);
+    if (!endDateTime) {
+      return false;
+    }
+
+    return endDateTime < now;
+  }
+
   function getTags(event) {
     const title = `${event?.title || ""} ${event?.description || ""}`.toLowerCase();
     const tags = [];
@@ -399,14 +439,36 @@ export default function Events() {
   }
 
   function getCategoryTone(tag) {
-    if (tag === "Workshop") {
-      return "border-[var(--blue)]/30 bg-[rgba(77,159,255,0.1)] text-[var(--blue)]";
-    }
-    if (tag === "Free Food") {
+    const key = String(tag || "").toLowerCase();
+    if (key.includes("academic") || key.includes("seminar")) {
       return "border-[var(--gold)]/30 bg-[rgba(240,192,64,0.1)] text-[var(--gold)]";
     }
-    if (tag === "Career") {
+    if (key.includes("workshop")) {
+      return "border-[var(--blue)]/30 bg-[rgba(77,159,255,0.1)] text-[var(--blue)]";
+    }
+    if (key.includes("hackathon")) {
+      return "border-purple-500/30 bg-[rgba(168,85,247,0.1)] text-purple-400";
+    }
+    if (key.includes("cultural")) {
+      return "border-[var(--rose)]/30 bg-[rgba(255,107,138,0.1)] text-[var(--rose)]";
+    }
+    if (key.includes("competition")) {
+      return "border-orange-500/30 bg-[rgba(249,115,22,0.1)] text-orange-400";
+    }
+    if (key.includes("social impact")) {
       return "border-[var(--teal)]/30 bg-[rgba(0,212,170,0.1)] text-[var(--teal)]";
+    }
+    if (key.includes("sport")) {
+      return "border-emerald-500/30 bg-[rgba(16,185,129,0.1)] text-emerald-400";
+    }
+    if (key.includes("innovation") || key.includes("research")) {
+      return "border-cyan-500/30 bg-[rgba(34,211,238,0.1)] text-cyan-400";
+    }
+    if (key.includes("free food")) {
+      return "border-lime-500/30 bg-[rgba(132,204,22,0.1)] text-lime-400";
+    }
+    if (key.includes("career")) {
+      return "border-indigo-500/30 bg-[rgba(99,102,241,0.1)] text-indigo-400";
     }
     return "border-[var(--border2)] bg-[var(--surface2)] text-[var(--text2)]";
   }
@@ -420,7 +482,12 @@ export default function Events() {
     return `Registration closes ${date}${time}`.trim();
   }
 
-  const filteredEvents = events.filter((event) => {
+  const scopedEvents = useMemo(
+    () => events.filter((event) => (showEnded ? isEventEnded(event) : !isEventEnded(event))),
+    [events, showEnded]
+  );
+
+  const filteredEvents = scopedEvents.filter((event) => {
     const query = searchQuery.trim().toLowerCase();
     const matchesQuery =
       !query ||
@@ -431,6 +498,10 @@ export default function Events() {
         .includes(query);
     if (!matchesQuery) {
       return false;
+    }
+
+    if (showEnded) {
+      return true;
     }
 
     if (activeFilter === "Happening Now") {
@@ -521,17 +592,19 @@ export default function Events() {
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--text3)]">
-              Events & Registrations
+              {showEnded ? "Event Archive" : "Events & Registrations"}
             </p>
             <h1 className="mt-2 text-3xl font-semibold leading-tight md:text-4xl text-[var(--text)]">
-              What's happening next?
+              {showEnded ? "Ended Events" : "What's happening next?"}
             </h1>
             <p className="mt-3 max-w-2xl text-sm text-[var(--text2)]">
-              Discover, filter, and register for campus events in real time.
+              {showEnded
+                ? "Browse completed events in one place."
+                : "Discover, filter, and register for campus events in real time."}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            {canCreate && (
+            {canCreate && !showEnded && (
               <button
                 className="rounded-full border border-[var(--border2)] bg-[var(--gold)] px-5 py-2 text-sm font-semibold text-[var(--bg)] transition hover:bg-[var(--gold2)]"
                 type="button"
@@ -543,6 +616,13 @@ export default function Events() {
                 + Create Event
               </button>
             )}
+            <button
+              className="rounded-full border border-[var(--border2)] bg-[var(--surface2)]/50 px-5 py-2 text-sm font-semibold text-[var(--text2)] transition hover:bg-[var(--surface2)] hover:text-[var(--text)]"
+              type="button"
+              onClick={() => navigate(showEnded ? "/events" : "/events/ended")}
+            >
+              {showEnded ? "View Active Events" : "View Ended Events"}
+            </button>
           </div>
         </div>
         <div className="mt-6 flex flex-col gap-4 lg:flex-row lg:items-center">
@@ -564,7 +644,7 @@ export default function Events() {
               </svg>
             </span>
             <input
-              className="w-full bg-transparent text-sm text-[var(--text)] outline-none placeholder:text-[var(--text3)]"
+              className="w-full bg-transparent text-sm font-medium text-[var(--text)] outline-none placeholder:text-[var(--text3)] transition-colors duration-300"
               placeholder="Search events by name, club, or venue…"
               type="search"
               value={searchQuery}
@@ -581,22 +661,24 @@ export default function Events() {
               }}
             />
           </div>
-          <div className="flex flex-wrap gap-2">
-            {["All", "Happening Now", "This Week", "Workshops", "Free Food"].map((filter) => (
-              <button
-                key={filter}
-                className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
-                  activeFilter === filter
-                    ? "bg-[var(--gold)] text-[var(--bg)]"
-                    : "border border-[var(--border2)] bg-[var(--surface2)]/50 text-[var(--text2)] hover:bg-[var(--surface2)] hover:text-[var(--text)]"
-                }`}
-                type="button"
-                onClick={() => setActiveFilter(filter)}
-              >
-                {filter}
-              </button>
-            ))}
-          </div>
+          {!showEnded && (
+            <div className="flex flex-wrap gap-2">
+              {["All", "Happening Now", "This Week", "Workshops", "Free Food"].map((filter) => (
+                <button
+                  key={filter}
+                  className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
+                    activeFilter === filter
+                      ? "bg-[var(--gold)] text-[var(--bg)]"
+                      : "border border-[var(--border2)] bg-[var(--surface2)]/50 text-[var(--text2)] hover:bg-[var(--surface2)] hover:text-[var(--text)]"
+                  }`}
+                  type="button"
+                  onClick={() => setActiveFilter(filter)}
+                >
+                  {filter}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -620,7 +702,9 @@ export default function Events() {
           )}
           {!loading && !error && filteredEvents.length === 0 && (
             <div className="glass-panel rounded-2xl p-6 text-sm text-[var(--text2)]">
-              No events match your search. Try clearing a filter.
+              {showEnded
+                ? "No ended events match your search."
+                : "No events match your search. Try clearing a filter."}
             </div>
           )}
           {!loading && !error && filteredEvents.length > 0 && (
@@ -650,8 +734,13 @@ export default function Events() {
                         <div className="absolute inset-0 bg-[var(--bg)]/45" />
                       </>
                     )}
-                    <div>
-                      <p className="relative z-10 text-xs font-bold uppercase tracking-[0.2em]">{event.status}</p>
+                    <div className="relative z-10 flex flex-col gap-2">
+                      <p className="text-xs font-bold uppercase tracking-[0.2em]">{event.status}</p>
+                      {showEnded && (
+                        <span className="w-fit rounded-full border border-[rgba(249,115,22,0.35)] bg-[rgba(249,115,22,0.14)] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-orange-300">
+                          Ended
+                        </span>
+                      )}
                     </div>
                     <div className="relative z-10 flex flex-col items-end gap-2">
                       {event.categories && event.categories.length > 0 && (
@@ -659,9 +748,13 @@ export default function Events() {
                           {event.categories[0]}
                         </span>
                       )}
-                      <span className="rounded-full bg-[var(--gold)]/20 px-2 py-1 text-[10px] font-semibold text-[var(--gold)]">
-                        {event.maxSeats ? `${event.maxSeats} seats` : "Open"}
-                      </span>
+                      {!showEnded && (
+                        <span className="rounded-full bg-[var(--gold)]/20 px-3 py-1 text-[10px] font-semibold text-[var(--gold)]">
+                          {event.maxSeats
+                            ? `Seats: ${event.seatsRemaining ?? event.maxSeats} / ${event.maxSeats}`
+                            : "Seats: Open"}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="mt-4">
@@ -694,20 +787,22 @@ export default function Events() {
                       <p className="mt-3 text-sm font-semibold text-[var(--text2)]">{truncateText(event.description, 100)}</p>
                     )}
                   </div>
-                  <div className="mt-4 flex items-center justify-between text-xs font-semibold text-[var(--text3)]">
-                    <span>
-                      {event.maxSeats
-                        ? `${event.seatsRemaining ?? event.maxSeats} seats left`
-                        : "Open capacity"}
-                    </span>
-                    <span className={event.registrationOpen === false ? "font-semibold text-[var(--rose)]" : "font-semibold text-[var(--teal)]"}>
-                      {event.registrationOpen === false ? "Registration closed" : "Registration open"}
-                    </span>
-                  </div>
+                  {!showEnded && (
+                    <div className="mt-4 flex items-center justify-between text-xs font-semibold text-[var(--text3)]">
+                      <span>
+                        {event.maxSeats
+                          ? `Seats left: ${event.seatsRemaining ?? event.maxSeats} of ${event.maxSeats}`
+                          : "Open capacity"}
+                      </span>
+                      <span className={event.registrationOpen === false ? "font-semibold text-[var(--rose)]" : "font-semibold text-[var(--teal)]"}>
+                        {event.registrationOpen === false ? "Registration closed" : "Registration open"}
+                      </span>
+                    </div>
+                  )}
                   <div className="mt-2 h-2 rounded-full bg-[var(--surface2)]">
                     <div className="h-2 w-full rounded-full bg-gradient-to-r from-[var(--blue)] to-[var(--gold)]" />
                   </div>
-                  {!isHappeningNow(event) && event.registrationOpen !== false && (
+                  {!showEnded && !isHappeningNow(event) && event.registrationOpen !== false && (
                     <button
                       className="mt-4 w-full rounded-full bg-[var(--gold)] px-4 py-2 text-sm font-semibold text-[var(--bg)] transition hover:bg-[var(--gold2)]"
                       type="button"
@@ -749,6 +844,7 @@ export default function Events() {
             </div>
           )}
 
+          {!showEnded && (
           <div className="glass-panel rounded-3xl p-6">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-[var(--text)]">Intelligent Calendar</h2>
@@ -818,24 +914,25 @@ export default function Events() {
               })}
             </div>
           </div>
+          )}
         </div>
 
         <div className="space-y-6">
-          {canCreate && (
+          {canCreate && !showEnded && (
             <form className="bento-tile rounded-3xl p-6" onSubmit={handleCreate}>
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold">
                   {editingEventId ? "Edit Event" : "Create Event"}
                 </h2>
-                <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] text-slate-500">
+                <span className="rounded-full border border-[var(--border2)] bg-[var(--surface2)]/45 px-2 py-1 text-[10px] text-[var(--text3)]">
                   Organizer
                 </span>
               </div>
               <div className="mt-4 space-y-3">
                 <div>
-                  <label className="text-sm font-bold text-slate-700">Title</label>
+                  <label className="text-sm font-bold text-[var(--text2)]">Title</label>
                   <input
-                    className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 outline-none placeholder:text-slate-600 focus:border-[color:var(--primary)]"
+                    className="neo-input mt-1 text-sm"
                     type="text"
                     name="title"
                     value={form.title}
@@ -844,9 +941,9 @@ export default function Events() {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-bold text-slate-700">Venue</label>
+                  <label className="text-sm font-bold text-[var(--text2)]">Venue</label>
                   <input
-                    className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 outline-none placeholder:text-slate-600 focus:border-[color:var(--primary)]"
+                    className="neo-input mt-1 text-sm"
                     type="text"
                     name="venue"
                     value={form.venue}
@@ -856,9 +953,9 @@ export default function Events() {
                 </div>
                 <div className="grid gap-3 md:grid-cols-2">
                   <div>
-                    <label className="text-sm font-bold text-slate-700">Date</label>
+                    <label className="text-sm font-bold text-[var(--text2)]">Date</label>
                     <input
-                      className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 outline-none placeholder:text-slate-600 focus:border-[color:var(--primary)]"
+                      className="neo-input mt-1 text-sm"
                       type="date"
                       name="date"
                       value={form.date}
@@ -868,9 +965,9 @@ export default function Events() {
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-bold text-slate-700">Max seats</label>
+                    <label className="text-sm font-bold text-[var(--text2)]">Max seats</label>
                     <input
-                      className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 outline-none placeholder:text-slate-600 focus:border-[color:var(--primary)]"
+                      className="neo-input mt-1 text-sm"
                       type="number"
                       name="maxSeats"
                       value={form.maxSeats}
@@ -883,9 +980,9 @@ export default function Events() {
                 </div>
                 <div className="grid gap-3 md:grid-cols-2">
                   <div>
-                    <label className="text-sm font-bold text-slate-700">Event start</label>
+                    <label className="text-sm font-bold text-[var(--text2)]">Event start</label>
                     <input
-                      className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 outline-none placeholder:text-slate-600 focus:border-[color:var(--primary)]"
+                      className="neo-input mt-1 text-sm"
                       type="time"
                       name="startTime"
                       value={form.startTime}
@@ -894,9 +991,9 @@ export default function Events() {
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-bold text-slate-700">Event end</label>
+                    <label className="text-sm font-bold text-[var(--text2)]">Event end</label>
                     <input
-                      className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 outline-none placeholder:text-slate-600 focus:border-[color:var(--primary)]"
+                      className="neo-input mt-1 text-sm"
                       type="time"
                       name="endTime"
                       value={form.endTime}
@@ -907,9 +1004,9 @@ export default function Events() {
                 </div>
                 <div className="grid gap-3 md:grid-cols-2">
                   <div>
-                    <label className="text-sm font-bold text-slate-700">Registration closes</label>
+                    <label className="text-sm font-bold text-[var(--text2)]">Registration closes</label>
                     <input
-                      className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 outline-none placeholder:text-slate-600 focus:border-[color:var(--primary)]"
+                      className="neo-input mt-1 text-sm"
                       type="date"
                       name="registrationCloseDate"
                       value={form.registrationCloseDate}
@@ -918,9 +1015,9 @@ export default function Events() {
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-bold text-slate-700">Close time</label>
+                    <label className="text-sm font-bold text-[var(--text2)]">Close time</label>
                     <input
-                      className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 outline-none placeholder:text-slate-600 focus:border-[color:var(--primary)]"
+                      className="neo-input mt-1 text-sm"
                       type="time"
                       name="registrationCloseTime"
                       value={form.registrationCloseTime}
@@ -929,9 +1026,9 @@ export default function Events() {
                   </div>
                 </div>
                 <div>
-                  <label className="text-sm font-bold text-slate-700">Description</label>
+                  <label className="text-sm font-bold text-[var(--text2)]">Description</label>
                   <textarea
-                    className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 outline-none placeholder:text-slate-600 focus:border-[color:var(--primary)]"
+                    className="neo-textarea mt-1 text-sm"
                     name="description"
                     value={form.description}
                     onChange={handleChange}
@@ -939,9 +1036,9 @@ export default function Events() {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-bold text-slate-700">Event Image URL</label>
+                  <label className="text-sm font-bold text-[var(--text2)]">Event Image URL</label>
                   <input
-                    className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 outline-none placeholder:text-slate-600 focus:border-[color:var(--primary)]"
+                    className="neo-input mt-1 text-sm"
                     type="text"
                     name="imageUrl"
                     value={form.imageUrl}
@@ -955,7 +1052,7 @@ export default function Events() {
                   )}
                 </div>
                 <div>
-                  <label className="text-sm font-bold text-slate-700">Categories</label>
+                  <label className="text-sm font-bold text-[var(--text2)]">Categories</label>
                   <div className="mt-2 space-y-2">
                     {["Workshop", "Hackathon", "Cultural", "Social Impact", "Innovation & Research", "Academic Seminar", "Competition"].map((cat) => (
                       <label key={cat} className="flex items-center gap-2">
@@ -975,16 +1072,16 @@ export default function Events() {
                               }));
                             }
                           }}
-                          className="h-4 w-4 rounded border-slate-300"
+                          className="h-4 w-4 rounded border-[var(--border2)]"
                         />
-                        <span className="text-sm text-slate-600">{cat}</span>
+                        <span className="text-sm text-[var(--text2)]">{cat}</span>
                       </label>
                     ))}
                   </div>
                 </div>
                 <div>
                   <div className="mb-4 flex items-center justify-between">
-                    <label className="text-sm font-bold text-slate-800">Speakers</label>
+                    <label className="text-sm font-bold text-[var(--text2)]">Speakers</label>
                     <button
                       type="button"
                       onClick={() =>
@@ -993,14 +1090,14 @@ export default function Events() {
                           speakers: [...prev.speakers, { name: "", title: "", bio: "", imageUrl: "", socialLinks: { linkedin: "", twitter: "", github: "", website: "" } }]
                         }))
                       }
-                      className="text-sm font-semibold text-blue-600 hover:text-blue-700 hover:underline"
+                      className="text-sm font-semibold text-[var(--blue)] hover:underline"
                     >
                       + Add Speaker
                     </button>
                   </div>
                   <div className="space-y-4">
                     {form.speakers.map((speaker, idx) => (
-                      <div key={idx} className="space-y-3 rounded-xl border border-slate-300 bg-slate-50 p-4">
+                      <div key={idx} className="space-y-3 rounded-xl border border-[var(--border2)] bg-[var(--surface2)]/35 p-4">
                         <input
                           type="text"
                           placeholder="Speaker name"
@@ -1010,7 +1107,7 @@ export default function Events() {
                             updated[idx].name = e.target.value;
                             setForm((prev) => ({ ...prev, speakers: updated }));
                           }}
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 placeholder:text-slate-600 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
+                          className="neo-input"
                         />
                         <input
                           type="text"
@@ -1021,7 +1118,7 @@ export default function Events() {
                             updated[idx].title = e.target.value;
                             setForm((prev) => ({ ...prev, speakers: updated }));
                           }}
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 placeholder:text-slate-600 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
+                          className="neo-input"
                         />
                         <input
                           type="text"
@@ -1032,7 +1129,7 @@ export default function Events() {
                             updated[idx].imageUrl = e.target.value;
                             setForm((prev) => ({ ...prev, speakers: updated }));
                           }}
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 placeholder:text-slate-600 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
+                          className="neo-input"
                         />
                         <textarea
                           placeholder="Bio"
@@ -1043,7 +1140,7 @@ export default function Events() {
                             setForm((prev) => ({ ...prev, speakers: updated }));
                           }}
                           rows="3"
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 placeholder:text-slate-600 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
+                          className="neo-textarea"
                         />
                         <div className="grid gap-3 sm:grid-cols-2">
                           <input
@@ -1056,7 +1153,7 @@ export default function Events() {
                               updated[idx].socialLinks.linkedin = e.target.value;
                               setForm((prev) => ({ ...prev, speakers: updated }));
                             }}
-                            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 placeholder:text-slate-600 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
+                            className="neo-input"
                           />
                           <input
                             type="text"
@@ -1068,7 +1165,7 @@ export default function Events() {
                               updated[idx].socialLinks.twitter = e.target.value;
                               setForm((prev) => ({ ...prev, speakers: updated }));
                             }}
-                            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 placeholder:text-slate-600 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
+                            className="neo-input"
                           />
                           <input
                             type="text"
@@ -1080,7 +1177,7 @@ export default function Events() {
                               updated[idx].socialLinks.github = e.target.value;
                               setForm((prev) => ({ ...prev, speakers: updated }));
                             }}
-                            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 placeholder:text-slate-600 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
+                            className="neo-input"
                           />
                           <input
                             type="text"
@@ -1092,7 +1189,7 @@ export default function Events() {
                               updated[idx].socialLinks.website = e.target.value;
                               setForm((prev) => ({ ...prev, speakers: updated }));
                             }}
-                            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 placeholder:text-slate-600 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
+                            className="neo-input"
                           />
                         </div>
                         <button
@@ -1103,7 +1200,7 @@ export default function Events() {
                               speakers: prev.speakers.filter((_, i) => i !== idx)
                             }));
                           }}
-                          className="text-sm font-medium text-red-600 hover:text-red-700 hover:underline"
+                          className="text-sm font-medium text-[var(--rose)] hover:underline"
                         >
                           Remove Speaker
                         </button>
@@ -1113,7 +1210,7 @@ export default function Events() {
                 </div>
                 <div>
                   <div className="mb-4 flex items-center justify-between">
-                    <label className="text-sm font-bold text-slate-800">Sponsors</label>
+                    <label className="text-sm font-bold text-[var(--text2)]">Sponsors</label>
                     <button
                       type="button"
                       onClick={() =>
@@ -1122,14 +1219,14 @@ export default function Events() {
                           sponsors: [...prev.sponsors, { name: "", logo: "", website: "" }]
                         }))
                       }
-                      className="text-sm font-semibold text-blue-600 hover:text-blue-700 hover:underline"
+                      className="text-sm font-semibold text-[var(--blue)] hover:underline"
                     >
                       + Add Sponsor
                     </button>
                   </div>
                   <div className="space-y-4">
                     {form.sponsors.map((sponsor, idx) => (
-                      <div key={idx} className="space-y-3 rounded-xl border border-slate-300 bg-slate-50 p-4">
+                      <div key={idx} className="space-y-3 rounded-xl border border-[var(--border2)] bg-[var(--surface2)]/35 p-4">
                         <input
                           type="text"
                           placeholder="Sponsor name"
@@ -1139,7 +1236,7 @@ export default function Events() {
                             updated[idx].name = e.target.value;
                             setForm((prev) => ({ ...prev, sponsors: updated }));
                           }}
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 placeholder:text-slate-600 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
+                          className="neo-input"
                         />
                         <input
                           type="text"
@@ -1150,7 +1247,7 @@ export default function Events() {
                             updated[idx].logo = e.target.value;
                             setForm((prev) => ({ ...prev, sponsors: updated }));
                           }}
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 placeholder:text-slate-600 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
+                          className="neo-input"
                         />
                         <input
                           type="text"
@@ -1161,7 +1258,7 @@ export default function Events() {
                             updated[idx].website = e.target.value;
                             setForm((prev) => ({ ...prev, sponsors: updated }));
                           }}
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 placeholder:text-slate-600 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
+                          className="neo-input"
                         />
                         <button
                           type="button"
@@ -1171,7 +1268,7 @@ export default function Events() {
                               sponsors: prev.sponsors.filter((_, i) => i !== idx)
                             }));
                           }}
-                          className="text-sm font-medium text-red-600 hover:text-red-700 hover:underline"
+                          className="text-sm font-medium text-[var(--rose)] hover:underline"
                         >
                           Remove Sponsor
                         </button>
@@ -1180,12 +1277,12 @@ export default function Events() {
                   </div>
                 </div>
                 {formError && (
-                  <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                  <div className="rounded-xl border border-[var(--rose)]/30 bg-[rgba(255,107,138,0.1)] px-3 py-2 text-xs text-[var(--rose)]">
                     {formError}
                   </div>
                 )}
                 <button
-                  className="w-full rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-70"
+                  className="neo-btn w-full px-4 py-2 text-sm disabled:opacity-70"
                   type="submit"
                   disabled={isSubmitting}
                 >
@@ -1199,7 +1296,7 @@ export default function Events() {
                 </button>
                 {editingEventId && (
                   <button
-                    className="w-full rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600"
+                    className="neo-btn-ghost w-full px-4 py-2 text-sm"
                     type="button"
                     onClick={() => {
                       setEditingEventId(null);
@@ -1220,7 +1317,7 @@ export default function Events() {
                 <p className="font-semibold">Urgent</p>
                 <p>Two venue conflicts detected next week.</p>
               </div>
-              <div className="rounded-xl border border-slate-200 bg-white/60 px-3 py-2 text-slate-600">
+              <div className="rounded-xl border border-[var(--border2)] bg-[var(--surface2)]/35 px-3 py-2 text-[var(--text2)]">
                 <p className="font-semibold">Updates</p>
                 <p>AI recommendations refreshed 5 minutes ago.</p>
               </div>
@@ -1230,34 +1327,34 @@ export default function Events() {
       </div>
 
       {isDrawerOpen && selectedEvent && (
-        <div className="fixed inset-0 z-40 flex items-end justify-center bg-slate-900/50 px-4 py-6 sm:items-center">
+        <div className="fixed inset-0 z-40 flex items-end justify-center bg-[rgba(8,11,18,0.75)] px-4 py-6 sm:items-center">
           <div className="bento-tile w-full max-w-lg rounded-3xl p-6">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--text3)]">
                   Registration
                 </p>
                 <h3 className="mt-2 text-xl font-semibold">{selectedEvent.title}</h3>
-                <p className="mt-2 text-sm text-slate-500">
+                <p className="mt-2 text-sm text-[var(--text2)]">
                   {selectedEvent.date}
                   {selectedEvent.startTime ? ` · ${selectedEvent.startTime}` : ""}
                   {selectedEvent.venue ? ` · ${selectedEvent.venue}` : ""}
                 </p>
                 {getRegistrationCloseLabel(selectedEvent) && (
-                  <p className="mt-2 text-xs font-semibold text-slate-500">
+                  <p className="mt-2 text-xs font-semibold text-[var(--text3)]">
                     {getRegistrationCloseLabel(selectedEvent)}
                   </p>
                 )}
               </div>
               <button
-                className="rounded-full border border-slate-200 px-3 py-1 text-xs text-slate-500"
+                className="neo-btn-ghost px-3 py-1 text-xs"
                 type="button"
                 onClick={() => setIsDrawerOpen(false)}
               >
                 Close
               </button>
             </div>
-            <p className="mt-4 text-sm text-slate-600">
+            <p className="mt-4 text-sm text-[var(--text2)]">
               Confirm your spot and receive a QR pass for fast check-in.
             </p>
             {selectedEvent.registrationOpen === false && (
@@ -1267,7 +1364,7 @@ export default function Events() {
             )}
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <button
-                className="flex-1 rounded-full bg-[color:var(--primary)] px-4 py-2 text-sm font-semibold text-white"
+                className="neo-btn flex-1 px-4 py-2 text-sm"
                 type="button"
                 onClick={handleConfirmRegistration}
                 disabled={isRegistering || selectedEvent.registrationOpen === false}
@@ -1275,7 +1372,7 @@ export default function Events() {
                 {isRegistering ? "Registering..." : "Confirm registration"}
               </button>
               <button
-                className="flex-1 rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600"
+                className="neo-btn-ghost flex-1 px-4 py-2 text-sm"
                 type="button"
                 onClick={() => setIsDrawerOpen(false)}
               >

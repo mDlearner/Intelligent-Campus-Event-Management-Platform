@@ -34,11 +34,11 @@ export default function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-30 border-b border-white/5 bg-[rgba(8,11,18,0.75)] backdrop-blur-2xl">
-      <nav className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-3 lg:px-8">
+    <header className="fixed inset-x-0 top-0 z-[70] border-b border-[var(--border)] bg-[rgba(8,11,18,0.78)] backdrop-blur-2xl">
+      <nav className="mx-auto flex max-w-8xl flex-wrap items-center justify-between gap-4 px-4 py-3 lg:px-8">
         {/* Logo */}
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--gold)] text-[var(--bg)] text-xs font-bold">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--gold)] text-[var(--bg)] text-xs font-bold shadow-[0_8px_24px_rgba(240,192,64,0.25)]">
             CE
           </div>
           <div>
@@ -52,7 +52,7 @@ export default function Navbar() {
           className="order-3 w-full lg:order-none lg:w-auto"
           onSubmit={handleSearchSubmit}
         >
-          <div className="glass-panel flex items-center gap-2 rounded-full px-3 py-1.5">
+          <div className="neo-panel flex items-center gap-2 rounded-full px-3 py-2">
             <span className="text-[var(--text3)]">
               <svg
                 className="h-4 w-4"
@@ -69,7 +69,7 @@ export default function Navbar() {
               </svg>
             </span>
             <input
-              className="bg-transparent text-sm text-[var(--text)] outline-none placeholder:text-[var(--text3)] lg:w-64"
+              className="bg-transparent text-sm font-medium text-[var(--text)] outline-none placeholder:text-[var(--text3)] transition-colors duration-300 lg:w-64"
               placeholder="Search events…"
               type="search"
               value={searchValue}
@@ -80,13 +80,13 @@ export default function Navbar() {
 
         {/* Nav Links & Auth */}
         <div className="flex items-center gap-3">
-          <div className="hidden items-center gap-1 rounded-full border border-[var(--border2)] bg-[var(--surface)] p-1 lg:flex">
+          <div className="hidden items-center gap-1 rounded-full border border-[var(--border2)] bg-[rgba(22,29,46,0.8)] p-1 lg:flex">
             <NavLink
               to="/"
               className={({ isActive }) =>
                 `rounded-full px-4 py-1.5 text-xs font-semibold transition ${
                   isActive
-                    ? "bg-[var(--surface2)] text-[var(--gold)]"
+                    ? "bg-[rgba(240,192,64,0.15)] text-[var(--gold)]"
                     : "text-[var(--text2)] hover:text-[var(--text)]"
                 }`
               }
@@ -95,10 +95,11 @@ export default function Navbar() {
             </NavLink>
             <NavLink
               to="/events"
+              end
               className={({ isActive }) =>
                 `rounded-full px-4 py-1.5 text-xs font-semibold transition ${
                   isActive
-                    ? "bg-[var(--surface2)] text-[var(--gold)]"
+                    ? "bg-[rgba(240,192,64,0.15)] text-[var(--gold)]"
                     : "text-[var(--text2)] hover:text-[var(--text)]"
                 }`
               }
@@ -106,22 +107,81 @@ export default function Navbar() {
               Events
             </NavLink>
             <NavLink
+              to="/events/ended"
+              className={({ isActive }) =>
+                `rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+                  isActive
+                    ? "bg-[rgba(240,192,64,0.15)] text-[var(--gold)]"
+                    : "text-[var(--text2)] hover:text-[var(--text)]"
+                }`
+              }
+            >
+              Ended
+            </NavLink>
+            <NavLink
               to="/dashboard"
               className={({ isActive }) =>
                 `rounded-full px-4 py-1.5 text-xs font-semibold transition ${
                   isActive
-                    ? "bg-[var(--surface2)] text-[var(--gold)]"
+                    ? "bg-[rgba(240,192,64,0.15)] text-[var(--gold)]"
                     : "text-[var(--text2)] hover:text-[var(--text)]"
                 }`
               }
             >
               Dashboard
             </NavLink>
+            <NavLink
+              to="/profile"
+              aria-label="Profile"
+              title="Profile"
+              className={({ isActive }) =>
+                `inline-flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold transition ${
+                  isActive
+                    ? "bg-[rgba(240,192,64,0.15)] text-[var(--gold)]"
+                    : "text-[var(--text2)] hover:bg-[var(--surface2)] hover:text-[var(--text)]"
+                }`
+              }
+            >
+              <svg
+                className="h-4 w-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M20 21a8 8 0 10-16 0" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+            </NavLink>
           </div>
+
+          <NavLink
+            to="/profile"
+            aria-label="Profile"
+            title="Profile"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border2)] bg-[var(--surface2)]/45 text-[var(--text2)] transition hover:text-[var(--text)] lg:hidden"
+          >
+            <svg
+              className="h-4 w-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M20 21a8 8 0 10-16 0" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+          </NavLink>
 
           {auth ? (
             <button
-              className="rounded-full bg-[var(--gold)] px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-[var(--bg)] transition hover:bg-[var(--gold2)]"
+              className="neo-btn px-4 py-1.5 text-xs uppercase tracking-wider"
               type="button"
               onClick={handleLogout}
             >
@@ -130,7 +190,7 @@ export default function Navbar() {
           ) : (
             <NavLink
               to="/login"
-              className="rounded-full bg-[var(--gold)] px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-[var(--bg)] transition hover:bg-[var(--gold2)]"
+              className="neo-btn px-4 py-1.5 text-xs uppercase tracking-wider"
             >
               Login
             </NavLink>

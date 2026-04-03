@@ -1,5 +1,5 @@
-import { Routes, Route } from "react-router-dom";
-import { useEffect } from "react";
+import { Routes, Route, useLocation } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
 import Navbar from "./components/Navbar.jsx";
 import Home from "./pages/Home.jsx";
 import Events from "./pages/Events.jsx";
@@ -9,6 +9,14 @@ import Dashboard from "./pages/Dashboard.jsx";
 import Profile from "./pages/Profile.jsx";
 
 export default function App() {
+  const location = useLocation();
+  const routeKey = useMemo(() => `${location.pathname}${location.search}`, [location.pathname, location.search]);
+  const [routeStack, setRouteStack] = useState({
+    previous: location,
+    current: location,
+    isTransitioning: false
+  });
+
   useEffect(() => {
     const cursor = document.createElement("div");
     cursor.id = "cursor";
@@ -60,23 +68,70 @@ export default function App() {
     };
   }, []);
 
+  useEffect(() => {
+    setRouteStack((previousState) => {
+      if (previousState.current.pathname === location.pathname && previousState.current.search === location.search) {
+        return previousState;
+      }
+
+      return {
+        previous: previousState.current,
+        current: location,
+        isTransitioning: true
+      };
+    });
+
+    const timeoutId = window.setTimeout(() => {
+      setRouteStack((previousState) => ({
+        previous: previousState.current,
+        current: previousState.current,
+        isTransitioning: false
+      }));
+    }, 340);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [location]);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [location.pathname, location.search]);
+
   return (
     <div className="min-h-screen text-[color:var(--text)] relative">
       {/* Ambient Glows */}
       <div className="ambient ambient-1" />
       <div className="ambient ambient-2" />
       <div className="ambient ambient-3" />
+      <div className="ambient ambient-4" />
 
       <Navbar />
-      <main className="relative z-1 mx-auto max-w-7xl px-4 pb-14 pt-8 lg:px-8">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/events" element={<Events />} />
-          <Route path="/events/:eventId" element={<EventDetail />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/profile" element={<Profile />} />
-        </Routes>
+      <main className="relative z-40 mx-auto max-w-8xl px-4 pb-14 pt-28 lg:px-8">
+        <div className="route-shell">
+          {routeStack.isTransitioning && (
+            <div className="route-layer route-layer-exit" aria-hidden="true">
+              <Routes location={routeStack.previous}>
+                <Route path="/" element={<Home />} />
+                <Route path="/events" element={<Events />} />
+                <Route path="/events/ended" element={<Events showEnded />} />
+                <Route path="/events/:eventId" element={<EventDetail />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/profile" element={<Profile />} />
+              </Routes>
+            </div>
+          )}
+          <div key={routeKey} className={`route-layer route-layer-enter ${routeStack.isTransitioning ? "route-layer-entering" : ""}`}>
+            <Routes location={routeStack.current}>
+              <Route path="/" element={<Home />} />
+              <Route path="/events" element={<Events />} />
+              <Route path="/events/ended" element={<Events showEnded />} />
+              <Route path="/events/:eventId" element={<EventDetail />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/profile" element={<Profile />} />
+            </Routes>
+          </div>
+        </div>
       </main>
     </div>
   );

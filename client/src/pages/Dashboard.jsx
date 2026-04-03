@@ -115,19 +115,19 @@ export default function Dashboard() {
             My Dashboard
           </p>
           <div className="mt-4 space-y-2 text-sm text-[var(--text2)]">
-            <button className="flex w-full items-center justify-between rounded-xl bg-[var(--gold)] px-3 py-2 font-semibold text-[var(--bg)]" type="button">
+            <button className="neo-btn flex w-full items-center justify-between px-3 py-2 font-semibold" type="button">
               Overview
               <span className="rounded-full bg-[var(--gold2)]/20 px-2 py-0.5 text-[10px]">Live</span>
             </button>
-            <button className="flex w-full items-center justify-between rounded-xl px-3 py-2 transition hover:bg-[var(--surface2)]" type="button" onClick={() => navigate("/events")}>
+            <button className="neo-btn-ghost flex w-full items-center justify-between px-3 py-2" type="button" onClick={() => navigate("/events")}>
               Browse Events
               <span className="text-xs text-[var(--text3)]">Discover</span>
             </button>
-            <button className="flex w-full items-center justify-between rounded-xl px-3 py-2 transition hover:bg-[var(--surface2)]" type="button">
+            <button className="neo-btn-ghost flex w-full items-center justify-between px-3 py-2" type="button">
               Registrations
               <span className="text-xs text-[var(--text3)]">{registrations.length}</span>
             </button>
-            <button className="flex w-full items-center justify-between rounded-xl px-3 py-2 transition hover:bg-[var(--surface2)]" type="button">
+            <button className="neo-btn-ghost flex w-full items-center justify-between px-3 py-2" type="button">
               Calendar
               <span className="text-xs text-[var(--text3)]">View</span>
             </button>
@@ -143,7 +143,7 @@ export default function Dashboard() {
           <div className="mt-4 space-y-2">
             {canCreate && (
               <button
-                className="w-full rounded-full bg-[var(--gold)] px-3 py-2 text-xs font-semibold text-[var(--bg)] transition hover:shadow-lg hover:bg-[var(--gold2)]"
+                className="neo-btn w-full px-3 py-2 text-xs"
                 type="button"
                 onClick={() => navigate("/events")}
               >
@@ -151,14 +151,14 @@ export default function Dashboard() {
               </button>
             )}
             <button
-              className="w-full rounded-full border border-[var(--border2)] bg-[var(--surface2)]/50 px-3 py-2 text-xs font-semibold text-[var(--text2)] transition hover:bg-[var(--surface2)]"
+              className="neo-btn-ghost w-full px-3 py-2 text-xs"
               type="button"
               onClick={() => navigate("/events")}
             >
               View Calendar
             </button>
             <button
-              className="w-full rounded-full border border-[var(--border2)] bg-[var(--surface2)]/50 px-3 py-2 text-xs font-semibold text-[var(--text2)] transition hover:bg-[var(--surface2)]"
+              className="neo-btn-ghost w-full px-3 py-2 text-xs"
               type="button"
               onClick={handleSendReminders}
             >
@@ -193,15 +193,15 @@ export default function Dashboard() {
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div className="bento-tile rounded-2xl p-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-slate-900">Dashboard</h2>
-              <span className="rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-semibold text-emerald-700">
+              <h2 className="text-lg font-semibold text-[var(--text)]">Dashboard</h2>
+              <span className="rounded-full bg-[rgba(0,212,170,0.12)] px-2 py-1 text-[10px] font-semibold text-[var(--teal)]">
                 Live
               </span>
             </div>
-            <p className="mt-2 text-sm text-slate-600">
+            <p className="mt-2 text-sm text-[var(--text2)]">
               Overview of your registered events and activity.
             </p>
-            <div className="mt-6 rounded-2xl border border-slate-200 bg-white/60 p-4">
+            <div className="mt-6 rounded-2xl border border-[var(--border2)] bg-[var(--surface2)]/35 p-4">
               <svg viewBox="0 0 400 140" className="h-32 w-full">
                 <defs>
                   <linearGradient id="lineGradient" x1="0" x2="1" y1="0" y2="0">
@@ -222,13 +222,13 @@ export default function Dashboard() {
           </div>
 
           <div className="glass-panel rounded-2xl p-6">
-            <h3 className="text-sm font-semibold text-slate-900">Notifications</h3>
+              <h3 className="text-sm font-semibold text-[var(--text)]">Notifications</h3>
             <div className="mt-4 space-y-3 text-xs">
-              <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-red-700">
+                <div className="rounded-xl border border-[var(--rose)]/30 bg-[rgba(255,107,138,0.1)] px-3 py-2 text-[var(--rose)]">
                 <p className="font-semibold">Alerts</p>
                 <p>Check your registrations and calendar.</p>
               </div>
-              <div className="rounded-xl border border-slate-200 bg-white/60 px-3 py-2 text-slate-600">
+                <div className="rounded-xl border border-[var(--border2)] bg-[var(--surface2)]/35 px-3 py-2 text-[var(--text2)]">
                 <p className="font-semibold">Updates</p>
                 <p>Stay tuned for new events and opportunities.</p>
               </div>
@@ -241,7 +241,7 @@ export default function Dashboard() {
             <h2 className="text-lg font-semibold text-[var(--text)]">My Registered Events</h2>
             {registrations.length > 0 && (
               <button
-                className="rounded-full bg-[var(--gold)] px-3 py-1 text-xs font-semibold text-[var(--bg)]"
+                className="neo-btn rounded-full px-3 py-1 text-xs"
                 type="button"
                 onClick={() => {
                   setSelectedRegistration(registrations[0]);
@@ -274,7 +274,7 @@ export default function Dashboard() {
                   </p>
                   <div className="mt-3 flex gap-2">
                     <button
-                      className="rounded-full bg-[var(--gold)] px-3 py-1 text-xs font-semibold text-[var(--bg)]"
+                      className="neo-btn rounded-full px-3 py-1 text-xs"
                       type="button"
                       onClick={() => {
                         setSelectedRegistration(registration);
@@ -284,7 +284,7 @@ export default function Dashboard() {
                       Show QR
                     </button>
                     <button
-                      className="rounded-full border border-[var(--border2)] bg-[var(--surface2)]/50 px-3 py-1 text-xs font-semibold text-[var(--text2)]"
+                      className="neo-btn-ghost rounded-full px-3 py-1 text-xs"
                       type="button"
                       onClick={() => navigate(`/events/${registration.event?._id}`)}
                       disabled={!registration.event?._id}
@@ -300,27 +300,27 @@ export default function Dashboard() {
       </div>
 
       {showQrPass && selectedRegistration && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/50 px-4 py-6">
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-[rgba(8,11,18,0.72)] px-4 py-6">
           <div className="bento-tile w-full max-w-md rounded-3xl p-6 text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">QR Pass</p>
-            <h3 className="mt-2 text-xl font-semibold text-slate-900">Ready for check-in</h3>
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--text3)]">QR Pass</p>
+            <h3 className="mt-2 text-xl font-semibold text-[var(--text)]">Ready for check-in</h3>
             <div className="mt-6 flex items-center justify-center">
-              <div className="grid h-40 w-40 place-items-center rounded-2xl border border-slate-200 bg-white">
+              <div className="grid h-40 w-40 place-items-center rounded-2xl border border-[var(--border2)] bg-[var(--surface2)]/35">
                 <div className="grid h-28 w-28 grid-cols-6 gap-1">
                   {Array.from({ length: 36 }).map((_, index) => (
                     <div
                       key={`qr-${index}`}
-                      className={`${index % 3 === 0 ? "bg-slate-900" : "bg-slate-200"} rounded-sm`}
+                      className={`${index % 3 === 0 ? "bg-[var(--text)]" : "bg-[var(--surface2)]"} rounded-sm`}
                     />
                   ))}
                 </div>
               </div>
             </div>
-            <div className="mt-4 rounded-2xl border border-slate-200 bg-white/60 px-4 py-3 text-left text-xs text-slate-600">
-              <p className="text-sm font-semibold text-slate-800">{auth?.user?.name || "Student"}</p>
+            <div className="mt-4 rounded-2xl border border-[var(--border2)] bg-[var(--surface2)]/35 px-4 py-3 text-left text-xs text-[var(--text2)]">
+              <p className="text-sm font-semibold text-[var(--text)]">{auth?.user?.name || "Student"}</p>
               <p className="mt-1">ID: {auth?.user?.studentId || "Not set"}</p>
               <p className="mt-1">Year: {auth?.user?.year || "Not set"}</p>
-              <p className="mt-3 text-sm font-semibold text-slate-800">Event details</p>
+              <p className="mt-3 text-sm font-semibold text-[var(--text)]">Event details</p>
               <p className="mt-1">{selectedRegistration?.event?.title || "Event"}</p>
               <p className="mt-1">
                 {selectedRegistration?.event?.date || "TBA"}
@@ -332,19 +332,19 @@ export default function Dashboard() {
                   : ""}
               </p>
             </div>
-            <p className="mt-4 text-sm text-slate-600">
+            <p className="mt-4 text-sm text-[var(--text2)]">
               Download to wallet for quick entry.
             </p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <button
-                className="flex-1 rounded-full bg-[color:var(--primary)] px-4 py-2 text-sm font-semibold text-white"
+                className="neo-btn flex-1 px-4 py-2 text-sm"
                 type="button"
                 onClick={() => setShowQrPass(false)}
               >
                 Download to Wallet
               </button>
               <button
-                className="flex-1 rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600"
+                className="neo-btn-ghost flex-1 px-4 py-2 text-sm"
                 type="button"
                 onClick={() => setShowQrPass(false)}
               >
