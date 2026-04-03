@@ -4,6 +4,7 @@ import Navbar from "./components/Navbar.jsx";
 import Home from "./pages/Home.jsx";
 import Events from "./pages/Events.jsx";
 import EventDetail from "./pages/EventDetail.jsx";
+import CreateEvent from "./pages/CreateEvent.jsx";
 import Login from "./pages/Login.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Profile from "./pages/Profile.jsx";
@@ -113,6 +114,7 @@ export default function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/events" element={<Events />} />
                 <Route path="/events/ended" element={<Events showEnded />} />
+                <Route path="/events/create" element={<CreateEvent />} />
                 <Route path="/events/:eventId" element={<EventDetail />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/dashboard" element={<Dashboard />} />
@@ -125,6 +127,7 @@ export default function App() {
               <Route path="/" element={<Home />} />
               <Route path="/events" element={<Events />} />
               <Route path="/events/ended" element={<Events showEnded />} />
+              <Route path="/events/create" element={<CreateEvent />} />
               <Route path="/events/:eventId" element={<EventDetail />} />
               <Route path="/login" element={<Login />} />
               <Route path="/dashboard" element={<Dashboard />} />

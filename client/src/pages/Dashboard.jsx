@@ -145,7 +145,7 @@ export default function Dashboard() {
               <button
                 className="neo-btn w-full px-3 py-2 text-xs"
                 type="button"
-                onClick={() => navigate("/events")}
+                onClick={() => navigate("/events/create")}
               >
                 + Create Event
               </button>
