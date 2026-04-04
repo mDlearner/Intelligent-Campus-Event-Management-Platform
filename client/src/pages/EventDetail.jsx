@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { fetchEventById, registerForEvent } from "../lib/api.js";
 import { getToken } from "../lib/auth.js";
+import { formatTime12h, formatTimeRange12h } from "../lib/time.js";
 
 export default function EventDetail() {
   const { eventId } = useParams();
@@ -185,7 +186,7 @@ export default function EventDetail() {
           <div>
             <p className="text-xs font-semibold uppercase tracking-widest text-[var(--text3)]">Time</p>
             <p className="mt-2 text-lg font-semibold text-[var(--text)]">
-              {event.startTime} - {event.endTime}
+              {formatTimeRange12h(event.startTime, event.endTime)}
             </p>
           </div>
           <div>
@@ -205,7 +206,7 @@ export default function EventDetail() {
             <p className="font-semibold text-[var(--gold)]">Registration closes:</p>
             <p className="mt-1 text-[var(--text2)]">
               {event.registrationCloseDate}
-              {event.registrationCloseTime ? ` at ${event.registrationCloseTime}` : ""}
+              {event.registrationCloseTime ? ` at ${formatTime12h(event.registrationCloseTime)}` : ""}
             </p>
           </div>
         )}

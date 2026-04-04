@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchMyNotifications, fetchMyRegistrations, sendReminders } from "../lib/api.js";
 import { getAuth, getToken } from "../lib/auth.js";
+import { formatTime12h } from "../lib/time.js";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -325,7 +326,7 @@ export default function Dashboard() {
               <p className="mt-1">
                 {selectedRegistration?.event?.date || "TBA"}
                 {selectedRegistration?.event?.startTime
-                  ? ` · ${selectedRegistration.event.startTime}`
+                    ? ` · ${formatTime12h(selectedRegistration.event.startTime)}`
                   : ""}
                 {selectedRegistration?.event?.venue
                   ? ` · ${selectedRegistration.event.venue}`

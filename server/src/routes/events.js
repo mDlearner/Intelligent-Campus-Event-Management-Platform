@@ -28,6 +28,26 @@ function parseDateTime(dateValue, timeValue) {
   return parsed;
 }
 
+function formatTime12h(timeValue) {
+  if (!TIME_REGEX.test(timeValue || "")) {
+    return timeValue || "";
+  }
+
+  const [hours24, minutes] = timeValue.split(":").map(Number);
+  const suffix = hours24 >= 12 ? "PM" : "AM";
+  const hours12 = hours24 % 12 || 12;
+  return `${hours12}:${String(minutes).padStart(2, "0")} ${suffix}`;
+}
+
+function formatTimeRange12h(startTime, endTime) {
+  const start = formatTime12h(startTime);
+  const end = formatTime12h(endTime);
+  if (start && end) {
+    return `${start} - ${end}`;
+  }
+  return start || end || "";
+}
+
 function validateEventPayload(payload) {
   const errors = [];
   const now = new Date();
@@ -137,7 +157,7 @@ async function checkVenueConflict(venue, date, startTime, endTime, excludeEventI
       return {
         conflictingEventId: event._id,
         conflictingEventTitle: event.title,
-        conflictingTime: `${event.startTime} - ${event.endTime}`
+        conflictingTime: formatTimeRange12h(event.startTime, event.endTime)
       };
     }
   }

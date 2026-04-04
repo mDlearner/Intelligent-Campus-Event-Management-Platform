@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchEvents } from "../lib/api.js";
 import { getAuth } from "../lib/auth.js";
+import { formatTimeRange12h } from "../lib/time.js";
 
 function parseEventDate(event) {
   if (!event?.date) {
@@ -188,7 +189,7 @@ export default function Home() {
     });
   }, [primaryEvents, searchQuery]);
 
-  const slideshowEvents = useMemo(() => filteredPrimaryEvents.slice(0, 8), [filteredPrimaryEvents]);
+  const slideshowEvents = useMemo(() => filteredPrimaryEvents.slice(0, 7), [filteredPrimaryEvents]);
 
   const renderedCarouselSlides = useMemo(() => {
     if (slideshowEvents.length <= 1) {
@@ -486,11 +487,7 @@ export default function Home() {
       return "Time TBA";
     }
 
-    if (event?.startTime && event?.endTime) {
-      return `${event.startTime} - ${event.endTime}`;
-    }
-
-    return event?.startTime || event?.endTime;
+    return formatTimeRange12h(event?.startTime, event?.endTime);
   }
 
   function showPreviousSlide() {

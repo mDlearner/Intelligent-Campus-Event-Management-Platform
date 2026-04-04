@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { fetchEvents, createEvent, updateEvent, deleteEvent, registerForEvent } from '../lib/api.js';
 import { getAuth, getToken } from '../lib/auth.js';
-import Timeline from '../components/Timeline';
+import { formatTime12h, formatTimeRange12h } from '../lib/time.js';
 
 const initialEventForm = {
   title: "",
@@ -188,6 +188,7 @@ export default function Events({ showEnded = false }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingEventId, setEditingEventId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [activeFilter, setActiveFilter] = useState("All");
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -216,7 +217,14 @@ export default function Events({ showEnded = false }) {
     if (query !== searchQuery) {
       setSearchQuery(query);
     }
-  }, [searchParams, searchQuery]);
+  }, [searchParams]);
+
+  useEffect(() => {
+    const category = searchParams.get("category") || "All Categories";
+    if (category !== selectedCategory) {
+      setSelectedCategory(category);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     let isMounted = true;
@@ -426,8 +434,14 @@ export default function Events({ showEnded = false }) {
     if (title.includes("workshop") || title.includes("learn")) {
       tags.push("Workshop");
     }
-    if (title.includes("food") || title.includes("pizza")) {
-      tags.push("Free Food");
+    if (
+      title.includes("paid") ||
+      title.includes("ticket") ||
+      title.includes("entry fee") ||
+      title.includes("registration fee") ||
+      title.includes("pass fee")
+    ) {
+      tags.push("Paid Events");
     }
     if (title.includes("career") || title.includes("intern")) {
       tags.push("Career");
@@ -464,8 +478,8 @@ export default function Events({ showEnded = false }) {
     if (key.includes("innovation") || key.includes("research")) {
       return "border-cyan-500/30 bg-[rgba(34,211,238,0.1)] text-cyan-400";
     }
-    if (key.includes("free food")) {
-      return "border-lime-500/30 bg-[rgba(132,204,22,0.1)] text-lime-400";
+    if (key.includes("paid event")) {
+      return "border-amber-500/30 bg-[rgba(245,158,11,0.12)] text-amber-300";
     }
     if (key.includes("career")) {
       return "border-indigo-500/30 bg-[rgba(99,102,241,0.1)] text-indigo-400";
@@ -478,7 +492,8 @@ export default function Events({ showEnded = false }) {
       return "";
     }
     const date = event.registrationCloseDate || "";
-    const time = event.registrationCloseTime ? ` · ${event.registrationCloseTime}` : "";
+    const formattedCloseTime = formatTime12h(event.registrationCloseTime);
+    const time = formattedCloseTime ? ` · ${formattedCloseTime}` : "";
     return `Registration closes ${date}${time}`.trim();
   }
 
@@ -487,16 +502,37 @@ export default function Events({ showEnded = false }) {
     [events, showEnded]
   );
 
+  const categoryOptions = useMemo(() => {
+    const categories = new Set();
+    scopedEvents.forEach((event) => {
+      (event?.categories || []).forEach((category) => {
+        if (typeof category === "string" && category.trim()) {
+          categories.add(category.trim());
+        }
+      });
+    });
+    return ["All Categories", ...Array.from(categories).sort((a, b) => a.localeCompare(b))];
+  }, [scopedEvents]);
+
   const filteredEvents = scopedEvents.filter((event) => {
     const query = searchQuery.trim().toLowerCase();
     const matchesQuery =
       !query ||
-      [event?.title, event?.venue, event?.description]
+      [event?.title, event?.venue, event?.description, ...(event?.categories || [])]
         .filter(Boolean)
         .join(" ")
         .toLowerCase()
         .includes(query);
     if (!matchesQuery) {
+      return false;
+    }
+
+    const matchesCategory =
+      selectedCategory === "All Categories" ||
+      (event?.categories || []).some(
+        (category) => String(category).toLowerCase() === selectedCategory.toLowerCase()
+      );
+    if (!matchesCategory) {
       return false;
     }
 
@@ -517,61 +553,10 @@ export default function Events({ showEnded = false }) {
     if (activeFilter === "Workshops") {
       return getTags(event).includes("Workshop");
     }
-    if (activeFilter === "Free Food") {
-      return getTags(event).includes("Free Food");
+    if (activeFilter === "Paid Events") {
+      return getTags(event).includes("Paid Events");
     }
     return true;
-  });
-
-  const displayedEvents = filteredEvents;
-
-  const calendarDays = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return Array.from({ length: 7 }).map((_, index) => {
-      const date = new Date(today);
-      date.setDate(today.getDate() + index);
-      return date;
-    });
-  }, []);
-
-  function parseMinutes(timeValue) {
-    if (!timeValue) {
-      return null;
-    }
-    const [hours, minutes] = timeValue.split(":").map(Number);
-    if (Number.isNaN(hours) || Number.isNaN(minutes)) {
-      return null;
-    }
-    return hours * 60 + minutes;
-  }
-
-  function formatDateKey(dateValue) {
-    return dateValue.toLocaleDateString("en-CA");
-  }
-
-  const conflictIds = new Set();
-  calendarDays.forEach((date) => {
-    const dayEvents = displayedEvents.filter((event) => event?.date === formatDateKey(date));
-    dayEvents.forEach((event, index) => {
-      for (let otherIndex = index + 1; otherIndex < dayEvents.length; otherIndex += 1) {
-        const other = dayEvents[otherIndex];
-        if (!event.venue || !other.venue || event.venue !== other.venue) {
-          continue;
-        }
-        const start = parseMinutes(event.startTime);
-        const end = parseMinutes(event.endTime);
-        const otherStart = parseMinutes(other.startTime);
-        const otherEnd = parseMinutes(other.endTime);
-        if ([start, end, otherStart, otherEnd].includes(null)) {
-          continue;
-        }
-        if (start < otherEnd && otherStart < end) {
-          conflictIds.add(event._id);
-          conflictIds.add(other._id);
-        }
-      }
-    });
   });
 
   async function handleConfirmRegistration() {
@@ -646,11 +631,26 @@ export default function Events({ showEnded = false }) {
               type="search"
               value={searchQuery}
               onChange={(event) => {
-                const nextValue = event.target.value;
-                setSearchQuery(nextValue);
+                setSearchQuery(event.target.value);
+              }}
+              onBlur={() => {
                 const nextParams = new URLSearchParams(searchParams);
-                if (nextValue.trim()) {
-                  nextParams.set("search", nextValue.trim());
+                const trimmedQuery = searchQuery.trim();
+                if (trimmedQuery) {
+                  nextParams.set("search", trimmedQuery);
+                } else {
+                  nextParams.delete("search");
+                }
+                setSearchParams(nextParams, { replace: true });
+              }}
+              onKeyDown={(event) => {
+                if (event.key !== "Enter") {
+                  return;
+                }
+                const nextParams = new URLSearchParams(searchParams);
+                const trimmedQuery = searchQuery.trim();
+                if (trimmedQuery) {
+                  nextParams.set("search", trimmedQuery);
                 } else {
                   nextParams.delete("search");
                 }
@@ -658,9 +658,32 @@ export default function Events({ showEnded = false }) {
               }}
             />
           </div>
+          <div className="glass-panel rounded-full px-4 py-3 lg:w-64">
+            <select
+              className="w-full bg-transparent text-sm font-semibold text-[var(--text)] outline-none"
+              value={selectedCategory}
+              onChange={(event) => {
+                const nextCategory = event.target.value;
+                setSelectedCategory(nextCategory);
+                const nextParams = new URLSearchParams(searchParams);
+                if (nextCategory && nextCategory !== "All Categories") {
+                  nextParams.set("category", nextCategory);
+                } else {
+                  nextParams.delete("category");
+                }
+                setSearchParams(nextParams, { replace: true });
+              }}
+            >
+              {categoryOptions.map((category) => (
+                <option key={category} value={category} className="bg-[var(--bg2)] text-[var(--text)]">
+                  {category}
+                </option>
+              ))}
+            </select>
+          </div>
           {!showEnded && (
             <div className="flex flex-wrap gap-2">
-              {["All", "Happening Now", "This Week", "Workshops", "Free Food"].map((filter) => (
+              {["All", "Happening Now", "This Week", "Workshops", "Paid Events"].map((filter) => (
                 <button
                   key={filter}
                   className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
@@ -676,16 +699,14 @@ export default function Events({ showEnded = false }) {
               ))}
             </div>
           )}
-        </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="space-y-6">
+      <div className="mt-3 space-y-6">
           {loading && (
             <div className="grid gap-4 md:grid-cols-2">
               {Array.from({ length: 4 }).map((_, index) => (
                 <div key={`event-skeleton-${index}`} className="bento-tile animate-pulse rounded-3xl p-4">
-                  <div className="h-32 rounded-2xl bg-[var(--surface2)]/70" />
+                  <div className="h-52 rounded-2xl bg-[var(--surface2)]/70" />
                   <div className="mt-4 h-4 w-2/3 rounded-full bg-[var(--surface2)]/70" />
                   <div className="mt-3 h-3 w-1/2 rounded-full bg-[var(--surface2)]/70" />
                 </div>
@@ -709,11 +730,11 @@ export default function Events({ showEnded = false }) {
               {filteredEvents.map((event, index) => (
                 <article
                   key={event._id}
-                  className="bento-tile flex flex-col justify-between rounded-3xl p-4 transition hover:-translate-y-1 hover:border-[var(--gold2)] hover:shadow-lg hover:shadow-[rgba(240,192,64,0.1)] cursor-pointer overflow-hidden"
+                  className="bento-tile flex flex-col justify-between rounded-3xl p-5 transition hover:-translate-y-1 hover:border-[var(--gold2)] hover:shadow-lg hover:shadow-[rgba(240,192,64,0.1)] cursor-pointer overflow-hidden"
                   onClick={() => navigate(`/events/${event._id}`)}
                 >
                   <div
-                    className={`relative flex h-28 items-end justify-between overflow-hidden rounded-2xl p-4 text-white ${
+                    className={`relative flex h-52 items-end justify-between overflow-hidden rounded-2xl p-4 text-white ${
                       event.imageUrl
                         ? "bg-[var(--surface2)]"
                         : index % 2 === 0
@@ -754,7 +775,7 @@ export default function Events({ showEnded = false }) {
                       )}
                     </div>
                   </div>
-                  <div className="mt-4">
+                  <div className="mt-5">
                     <div className="flex flex-wrap gap-2">
                       {getTags(event).map((tag) => (
                         <span
@@ -769,9 +790,9 @@ export default function Events({ showEnded = false }) {
                     <p className="mt-2 text-xs font-semibold text-[var(--text2)]">
                       {event.date}
                       {event.startTime && event.endTime
-                        ? ` · ${event.startTime} - ${event.endTime}`
+                        ? ` · ${formatTimeRange12h(event.startTime, event.endTime)}`
                         : event.startTime
-                        ? ` · ${event.startTime}`
+                        ? ` · ${formatTime12h(event.startTime)}`
                         : ""}
                       {event.venue ? ` · ${event.venue}` : ""}
                     </p>
@@ -796,7 +817,7 @@ export default function Events({ showEnded = false }) {
                       </span>
                     </div>
                   )}
-                  <div className="mt-2 h-2 rounded-full bg-[var(--surface2)]">
+                  <div className="mt-3 h-2 rounded-full bg-[var(--surface2)]">
                     <div className="h-2 w-full rounded-full bg-gradient-to-r from-[var(--blue)] to-[var(--gold)]" />
                   </div>
                   {!showEnded && !isHappeningNow(event) && event.registrationOpen !== false && (
@@ -831,93 +852,6 @@ export default function Events({ showEnded = false }) {
             </div>
           )}
 
-          {!showEnded && (
-          <div className="glass-panel rounded-3xl p-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-[var(--text)]">Intelligent Calendar</h2>
-              <p className="text-xs text-[var(--text3)]">Conflicts highlighted automatically</p>
-            </div>
-            <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-[var(--text3)]">
-              {["Workshop", "Free Food", "Career", "Campus"].map((tag) => (
-                <span
-                  key={`legend-${tag}`}
-                  className={`rounded-full border px-3 py-1 ${getCategoryTone(tag)}`}
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-            <div className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-              {calendarDays.map((date) => {
-                const dateLabel = date.toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric"
-                });
-                const dateKey = formatDateKey(date);
-                const dayEvents = displayedEvents.filter((event) => event?.date === dateKey);
-                return (
-                  <div key={dateKey} className="relative rounded-2xl border border-[var(--border2)] bg-[var(--surface2)]/30 p-3">
-                    <p className="text-xs font-semibold text-[var(--text3)]">{dateLabel}</p>
-                    {dayEvents.length === 0 && (
-                      <p className="mt-3 text-xs text-[var(--text3)]">No events</p>
-                    )}
-                    {dayEvents.length > 0 && (
-                      <div className="mt-3 space-y-2">
-                        {dayEvents.map((event) => {
-                          const primaryTag = getTags(event)[0];
-                          const tone = getCategoryTone(primaryTag);
-                          const closeLabel = getRegistrationCloseLabel(event);
-                          return (
-                          <div
-                            key={`calendar-${event._id}`}
-                            className={`group relative rounded-xl border px-3 py-2 text-xs ${
-                              conflictIds.has(event._id)
-                                ? "border-[var(--rose)]/30 bg-[rgba(255,107,138,0.1)] text-[var(--rose)]"
-                                : tone
-                            }`}
-                          >
-                            <p className="font-bold">{event.title}</p>
-                            <p className="mt-1 font-semibold">
-                              {event.startTime} - {event.endTime}
-                              {event.venue ? ` · ${event.venue}` : ""}
-                            </p>
-                            <div className="pointer-events-none absolute left-0 top-full z-20 mt-2 w-56 rounded-xl border border-[var(--border2)] bg-[var(--surface)] p-3 text-xs text-[var(--text2)] opacity-0 shadow transition group-hover:opacity-100">
-                              <p className="text-sm font-semibold text-[var(--text)]">{event.title}</p>
-                              <p className="mt-1">
-                                {event.date}
-                                {event.startTime ? ` · ${event.startTime}` : ""}
-                                {event.endTime ? ` - ${event.endTime}` : ""}
-                              </p>
-                              {event.venue && <p className="mt-1">Venue: {event.venue}</p>}
-                              {closeLabel && <p className="mt-1">{closeLabel}</p>}
-                            </div>
-                          </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-          )}
-        </div>
-
-        <div className="space-y-6">
-          <div className="glass-panel rounded-3xl p-6">
-            <h3 className="text-sm font-semibold">Smart Notification Center</h3>
-            <div className="mt-4 space-y-3 text-xs">
-              <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-red-700">
-                <p className="font-semibold">Urgent</p>
-                <p>Two venue conflicts detected next week.</p>
-              </div>
-              <div className="rounded-xl border border-[var(--border2)] bg-[var(--surface2)]/35 px-3 py-2 text-[var(--text2)]">
-                <p className="font-semibold">Updates</p>
-                <p>AI recommendations refreshed 5 minutes ago.</p>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -932,7 +866,7 @@ export default function Events({ showEnded = false }) {
                 <h3 className="mt-2 text-xl font-semibold">{selectedEvent.title}</h3>
                 <p className="mt-2 text-sm text-[var(--text2)]">
                   {selectedEvent.date}
-                  {selectedEvent.startTime ? ` · ${selectedEvent.startTime}` : ""}
+                  {selectedEvent.startTime ? ` · ${formatTime12h(selectedEvent.startTime)}` : ""}
                   {selectedEvent.venue ? ` · ${selectedEvent.venue}` : ""}
                 </p>
                 {getRegistrationCloseLabel(selectedEvent) && (

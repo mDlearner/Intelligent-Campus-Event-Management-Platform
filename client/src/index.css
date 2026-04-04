@@ -56,9 +56,21 @@ input[type="time"] {
 
 input[type="date"]::-webkit-calendar-picker-indicator,
 input[type="time"]::-webkit-calendar-picker-indicator {
-  filter: invert(1) brightness(1.6);
-  opacity: 0.95;
+  filter: invert(1) brightness(1.9);
+  opacity: 1;
+  width: 1.1rem;
+  height: 1.1rem;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
   cursor: pointer;
+  transition: filter 180ms ease;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+input[type="time"]::-webkit-calendar-picker-indicator:hover {
+  filter: invert(1) brightness(2.2);
 }
 
 input[type="date"]::-webkit-datetime-edit,

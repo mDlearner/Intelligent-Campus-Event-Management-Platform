@@ -170,6 +170,21 @@ export default function CreateEvent() {
     setForm((prev) => ({ ...prev, [name]: value }));
   }
 
+  function openPicker(fieldName) {
+    const input = document.querySelector(`input[name="${fieldName}"]`);
+    if (!input) {
+      return;
+    }
+
+    if (typeof input.showPicker === "function") {
+      input.showPicker();
+      return;
+    }
+
+    input.focus();
+    input.click();
+  }
+
   async function handleCreate(event) {
     event.preventDefault();
     setFormError("");
@@ -258,15 +273,28 @@ export default function CreateEvent() {
           <div className="grid gap-3 md:grid-cols-2">
             <div>
               <label className="text-sm font-bold text-[var(--text2)]">Date</label>
-              <input
-                className="neo-input mt-1 text-sm"
-                type="date"
-                name="date"
-                value={form.date}
-                onChange={handleChange}
-                min={todayDateValue}
-                required
-              />
+              <div className="relative mt-1">
+                <input
+                  className="neo-input pr-12 text-sm"
+                  type="date"
+                  name="date"
+                  value={form.date}
+                  onChange={handleChange}
+                  min={todayDateValue}
+                  required
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-[var(--gold2)] transition hover:bg-[rgba(240,192,64,0.14)]"
+                  aria-label="Open date picker"
+                  onClick={() => openPicker("date")}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" stroke="currentColor" strokeWidth="1.8">
+                    <rect x="3.5" y="5" width="17" height="15.5" rx="2.2" />
+                    <path d="M8 3.8v3.6M16 3.8v3.6M3.5 9.3h17" />
+                  </svg>
+                </button>
+              </div>
             </div>
             <div>
               <label className="text-sm font-bold text-[var(--text2)]">Max seats</label>
@@ -286,49 +314,101 @@ export default function CreateEvent() {
           <div className="grid gap-3 md:grid-cols-2">
             <div>
               <label className="text-sm font-bold text-[var(--text2)]">Event start</label>
-              <input
-                className="neo-input mt-1 text-sm"
-                type="time"
-                name="startTime"
-                value={form.startTime}
-                onChange={handleChange}
-                required
-              />
+              <div className="relative mt-1">
+                <input
+                  className="neo-input pr-12 text-sm"
+                  type="time"
+                  name="startTime"
+                  value={form.startTime}
+                  onChange={handleChange}
+                  required
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-[var(--gold2)] transition hover:bg-[rgba(240,192,64,0.14)]"
+                  aria-label="Open start time picker"
+                  onClick={() => openPicker("startTime")}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" stroke="currentColor" strokeWidth="1.8">
+                    <circle cx="12" cy="12" r="8.5" />
+                    <path d="M12 7.8v4.8l3.2 1.9" />
+                  </svg>
+                </button>
+              </div>
             </div>
             <div>
               <label className="text-sm font-bold text-[var(--text2)]">Event end</label>
-              <input
-                className="neo-input mt-1 text-sm"
-                type="time"
-                name="endTime"
-                value={form.endTime}
-                onChange={handleChange}
-                required
-              />
+              <div className="relative mt-1">
+                <input
+                  className="neo-input pr-12 text-sm"
+                  type="time"
+                  name="endTime"
+                  value={form.endTime}
+                  onChange={handleChange}
+                  required
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-[var(--gold2)] transition hover:bg-[rgba(240,192,64,0.14)]"
+                  aria-label="Open end time picker"
+                  onClick={() => openPicker("endTime")}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" stroke="currentColor" strokeWidth="1.8">
+                    <circle cx="12" cy="12" r="8.5" />
+                    <path d="M12 7.8v4.8l3.2 1.9" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
 
           <div className="grid gap-3 md:grid-cols-2">
             <div>
               <label className="text-sm font-bold text-[var(--text2)]">Registration closes</label>
-              <input
-                className="neo-input mt-1 text-sm"
-                type="date"
-                name="registrationCloseDate"
-                value={form.registrationCloseDate}
-                onChange={handleChange}
-                min={todayDateValue}
-              />
+              <div className="relative mt-1">
+                <input
+                  className="neo-input pr-12 text-sm"
+                  type="date"
+                  name="registrationCloseDate"
+                  value={form.registrationCloseDate}
+                  onChange={handleChange}
+                  min={todayDateValue}
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-[var(--gold2)] transition hover:bg-[rgba(240,192,64,0.14)]"
+                  aria-label="Open registration close date picker"
+                  onClick={() => openPicker("registrationCloseDate")}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" stroke="currentColor" strokeWidth="1.8">
+                    <rect x="3.5" y="5" width="17" height="15.5" rx="2.2" />
+                    <path d="M8 3.8v3.6M16 3.8v3.6M3.5 9.3h17" />
+                  </svg>
+                </button>
+              </div>
             </div>
             <div>
               <label className="text-sm font-bold text-[var(--text2)]">Close time</label>
-              <input
-                className="neo-input mt-1 text-sm"
-                type="time"
-                name="registrationCloseTime"
-                value={form.registrationCloseTime}
-                onChange={handleChange}
-              />
+              <div className="relative mt-1">
+                <input
+                  className="neo-input pr-12 text-sm"
+                  type="time"
+                  name="registrationCloseTime"
+                  value={form.registrationCloseTime}
+                  onChange={handleChange}
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-[var(--gold2)] transition hover:bg-[rgba(240,192,64,0.14)]"
+                  aria-label="Open registration close time picker"
+                  onClick={() => openPicker("registrationCloseTime")}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" stroke="currentColor" strokeWidth="1.8">
+                    <circle cx="12" cy="12" r="8.5" />
+                    <path d="M12 7.8v4.8l3.2 1.9" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
 
