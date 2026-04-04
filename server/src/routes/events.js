@@ -28,6 +28,32 @@ function parseDateTime(dateValue, timeValue) {
   return parsed;
 }
 
+function formatDateKey(value) {
+  const year = value.getFullYear();
+  const month = String(value.getMonth() + 1).padStart(2, "0");
+  const day = String(value.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function getNextDateValue(dateValue) {
+  if (!DATE_REGEX.test(dateValue || "")) {
+    return "";
+  }
+
+  const [year, month, day] = String(dateValue).split("-").map(Number);
+  const parsed = new Date(year, month - 1, day, 0, 0, 0, 0);
+  if (
+    parsed.getFullYear() !== year ||
+    parsed.getMonth() !== month - 1 ||
+    parsed.getDate() !== day
+  ) {
+    return "";
+  }
+
+  parsed.setDate(parsed.getDate() + 1);
+  return formatDateKey(parsed);
+}
+
 function formatTime12h(timeValue) {
   if (!TIME_REGEX.test(timeValue || "")) {
     return timeValue || "";
@@ -46,6 +72,34 @@ function formatTimeRange12h(startTime, endTime) {
     return `${start} - ${end}`;
   }
   return start || end || "";
+}
+
+function getResolvedEndDate(dateValue, startTime, endDateValue, endTime) {
+  if (endDateValue && DATE_REGEX.test(endDateValue)) {
+    return endDateValue;
+  }
+
+  if (!DATE_REGEX.test(dateValue || "") || !TIME_REGEX.test(startTime || "") || !TIME_REGEX.test(endTime || "")) {
+    return endDateValue || "";
+  }
+
+  return endTime <= startTime ? getNextDateValue(dateValue) : dateValue;
+}
+
+function getEventSpan(payload) {
+  const endDateValue = getResolvedEndDate(payload.date, payload.startTime, payload.endDate, payload.endTime);
+  const start = parseDateTime(payload.date, payload.startTime);
+  const end = parseDateTime(endDateValue || payload.date, payload.endTime);
+
+  if (!start || !end) {
+    return null;
+  }
+
+  return {
+    start,
+    end,
+    endDate: endDateValue || payload.date
+  };
 }
 
 function validateEventPayload(payload) {
@@ -104,7 +158,10 @@ function validateEventPayload(payload) {
     }
   }
 
-  if (startDateTime && endDateTime && endDateTime <= startDateTime) {
+  const eventSpan = getEventSpan(payload);
+  if (!eventSpan) {
+    errors.push("Event date/time values are invalid");
+  } else if (eventSpan.end <= eventSpan.start) {
     errors.push("Event end time must be after start time");
   }
 
@@ -149,7 +206,6 @@ async function checkVenueConflict(venue, date, startTime, endTime, excludeEventI
 
   const query = {
     venue: { $regex: `^${venue}$`, $options: "i" },
-    date: date,
     status: { $ne: "cancelled" }
   };
 
@@ -158,14 +214,19 @@ async function checkVenueConflict(venue, date, startTime, endTime, excludeEventI
   }
 
   const conflictingEvents = await Event.find(query).lean();
+  const newSpan = getEventSpan({ date, startTime, endTime });
+
+  if (!newSpan) {
+    return null;
+  }
 
   for (const event of conflictingEvents) {
-    const existingStart = parseDateTime(event.date, event.startTime);
-    const existingEnd = parseDateTime(event.date, event.endTime);
-    const newStart = parseDateTime(date, startTime);
-    const newEnd = parseDateTime(date, endTime);
+    const existingSpan = getEventSpan(event);
+    if (!existingSpan) {
+      continue;
+    }
 
-    if (newStart < existingEnd && newEnd > existingStart) {
+    if (newSpan.start < existingSpan.end && newSpan.end > existingSpan.start) {
       return {
         conflictingEventId: event._id,
         conflictingEventTitle: event.title,
@@ -283,6 +344,8 @@ router.post("/", authRequired, requireRole(["admin", "club"]), async (req, res, 
       return res.status(400).json({ message: errors[0], errors });
     }
 
+    payload.endDate = getResolvedEndDate(payload.date, payload.startTime, payload.endDate, payload.endTime) || null;
+
     const venueConflict = await checkVenueConflict(payload.venue, payload.date, payload.startTime, payload.endTime);
     if (venueConflict) {
       return res.status(409).json({
@@ -341,6 +404,13 @@ router.put("/:id", authRequired, requireRole(["admin", "club"]), async (req, res
     if (errors.length) {
       return res.status(400).json({ message: errors[0], errors });
     }
+
+    mergedPayload.endDate = getResolvedEndDate(
+      mergedPayload.date,
+      mergedPayload.startTime,
+      mergedPayload.endDate,
+      mergedPayload.endTime
+    ) || null;
 
     const venueConflict = await checkVenueConflict(
       mergedPayload.venue,

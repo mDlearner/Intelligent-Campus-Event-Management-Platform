@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { fetchEvents, createEvent, updateEvent, deleteEvent, registerForEvent } from '../lib/api.js';
 import { getAuth, getToken } from '../lib/auth.js';
-import { formatTime12h, formatTimeRange12h } from '../lib/time.js';
+import { formatTime12h, formatTimeRange12h, getEventDateTimeSpan } from '../lib/time.js';
 
 const initialEventForm = {
   title: "",
@@ -358,29 +358,13 @@ export default function Events({ showEnded = false }) {
       return false;
     }
 
-    const today = new Date();
-    const [year, month, day] = event.date.split("-").map(Number);
-    if (!year || !month || !day) {
+    const span = getEventDateTimeSpan(event.date, event.startTime, event.endDate, event.endTime);
+    if (!span) {
       return false;
     }
 
-    const eventDate = new Date(year, month - 1, day);
-    if (
-      eventDate.getFullYear() !== today.getFullYear() ||
-      eventDate.getMonth() !== today.getMonth() ||
-      eventDate.getDate() !== today.getDate()
-    ) {
-      return false;
-    }
-
-    const [startHours, startMinutes] = event.startTime.split(":").map(Number);
-    const [endHours, endMinutes] = event.endTime.split(":").map(Number);
-    const start = new Date(eventDate);
-    const end = new Date(eventDate);
-    start.setHours(startHours || 0, startMinutes || 0, 0, 0);
-    end.setHours(endHours || 0, endMinutes || 0, 0, 0);
-
-    return today >= start && today <= end;
+    const now = new Date();
+    return now >= span.start && now <= span.end;
   }
 
   function isEventEnded(event) {
@@ -388,29 +372,12 @@ export default function Events({ showEnded = false }) {
       return false;
     }
 
-    const [year, month, day] = event.date.split("-").map(Number);
-    const now = new Date();
-    const eventDayStart = new Date(year, month - 1, day, 0, 0, 0, 0);
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-
-    if (eventDayStart < todayStart) {
-      return true;
-    }
-
-    if (eventDayStart > todayStart) {
+    const span = getEventDateTimeSpan(event.date, event.startTime, event.endDate, event.endTime);
+    if (!span) {
       return false;
     }
 
-    if (!TIME_REGEX.test(event.endTime || "")) {
-      return false;
-    }
-
-    const endDateTime = parseDateTime(event.date, event.endTime);
-    if (!endDateTime) {
-      return false;
-    }
-
-    return endDateTime < now;
+    return span.end < new Date();
   }
 
   function getTags(event) {

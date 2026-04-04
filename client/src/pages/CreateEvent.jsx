@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { createEvent, updateEvent } from "../lib/api.js";
 import { getAuth, getToken } from "../lib/auth.js";
+import { getNextDateValue, getEventDateTimeSpan, resolveEventEndDate } from "../lib/time.js";
 
 const initialEventForm = {
   title: "",
@@ -93,18 +94,19 @@ function validateEventForm(form) {
   }
 
   const startDateTime = parseDateTime(form.date, form.startTime);
-  const endDateTime = parseDateTime(form.date, form.endTime);
   const eventDayStart = parseDateTime(form.date, "00:00");
+  const resolvedEndDate = resolveEventEndDate(form.date, form.startTime, form.endDate || "", form.endTime);
+  const eventSpan = getEventDateTimeSpan(form.date, form.startTime, resolvedEndDate, form.endTime);
 
   if (eventDayStart && eventDayStart < todayStart) {
     return "Event date cannot be before today";
   }
 
-  if (!startDateTime || !endDateTime) {
+  if (!startDateTime || !eventSpan) {
     return "Event date/time values are invalid";
   }
 
-  if (endDateTime <= startDateTime) {
+  if (form.endDate && eventSpan.end <= eventSpan.start) {
     return "Event end time must be after start time";
   }
 
@@ -245,7 +247,7 @@ export default function CreateEvent() {
         title: form.title,
         description: form.description,
         date: form.date,
-        endDate: form.endDate || null,
+        endDate: form.endDate || (form.endTime <= form.startTime ? getNextDateValue(form.date) : null),
         startTime: form.startTime,
         endTime: form.endTime,
         registrationCloseDate: form.registrationCloseDate || null,
