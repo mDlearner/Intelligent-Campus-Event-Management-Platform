@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { fetchEvents, createEvent, updateEvent, deleteEvent, registerForEvent } from '../lib/api.js';
 import { getAuth, getToken } from '../lib/auth.js';
-import { formatTime12h, formatTimeRange12h, getEventDateTimeSpan } from '../lib/time.js';
+import { formatTime12h, formatTimeRange12h, formatEventDateTimeRange, getEventDateTimeSpan } from '../lib/time.js';
 
 const initialEventForm = {
   title: "",
@@ -744,13 +744,11 @@ export default function Events({ showEnded = false }) {
                     </div>
                     <h2 className="mt-3 text-lg font-bold text-[var(--text)]">{event.title}</h2>
                     <p className="mt-2 text-xs font-semibold text-[var(--text2)]">
-                      {event.date}
-                      {event.startTime && event.endTime
-                        ? ` · ${formatTimeRange12h(event.startTime, event.endTime)}`
-                        : event.startTime
-                        ? ` · ${formatTime12h(event.startTime)}`
-                        : ""}
+                      {formatEventDateTimeRange(event.date, event.startTime, event.endDate, event.endTime)}
                       {event.venue ? ` · ${event.venue}` : ""}
+                    </p>
+                    <p className="mt-2 text-xs font-semibold text-[var(--text3)]">
+                      Available seats: {event.seatsRemaining ?? event.maxSeats}
                     </p>
                     {getRegistrationCloseLabel(event) && (
                       <p className="mt-2 text-xs font-bold text-[var(--text3)]">
@@ -764,9 +762,7 @@ export default function Events({ showEnded = false }) {
                   {!showEnded && (
                     <div className="mt-4 flex items-center justify-between text-xs font-semibold text-[var(--text3)]">
                       <span>
-                        {event.maxSeats
-                          ? `Seats left: ${event.seatsRemaining ?? event.maxSeats} of ${event.maxSeats}`
-                          : "Open capacity"}
+                        Available seats: {event.seatsRemaining ?? event.maxSeats}
                       </span>
                       <span className={event.registrationOpen === false ? "font-semibold text-[var(--rose)]" : "font-semibold text-[var(--teal)]"}>
                         {event.registrationOpen === false ? "Registration closed" : "Registration open"}

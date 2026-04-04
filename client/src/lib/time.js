@@ -8,6 +8,19 @@ function formatDateKey(value) {
   return `${year}-${month}-${day}`;
 }
 
+function formatDateDisplay(dateValue, options = {}) {
+  const parsed = parseDateValue(dateValue);
+  if (!parsed) {
+    return String(dateValue || "").trim();
+  }
+
+  return parsed.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: options.includeYear ? "numeric" : undefined
+  });
+}
+
 function parseDateValue(dateValue) {
   if (!DATE_REGEX.test(dateValue || "")) {
     return null;
@@ -84,6 +97,44 @@ export function getEventDateTimeSpan(dateValue, startTime, endDateValue, endTime
   }
 
   return { start: startDateTime, end: endDateTime, endDate: endDateKey };
+}
+
+export function formatEventDateRange(dateValue, endDateValue) {
+  const start = formatDateDisplay(dateValue, { includeYear: true });
+  if (!endDateValue || !DATE_REGEX.test(endDateValue || "") || String(endDateValue) === String(dateValue)) {
+    return start;
+  }
+
+  const end = formatDateDisplay(endDateValue, { includeYear: true });
+  return `${start} - ${end}`;
+}
+
+export function formatEventDateTimeRange(dateValue, startTime, endDateValue, endTime) {
+  const startDate = formatDateDisplay(dateValue, { includeYear: true });
+  const startTimeLabel = formatTime12h(startTime);
+  const endDateKey = resolveEventEndDate(dateValue, startTime, endDateValue, endTime);
+  const endDate = formatDateDisplay(endDateKey || endDateValue, { includeYear: true });
+  const endTimeLabel = formatTime12h(endTime);
+
+  if (!startDate || !startTimeLabel) {
+    return formatEventDateRange(dateValue, endDateValue);
+  }
+
+  if (endDateKey && endDateKey !== dateValue) {
+    if (endDate && endTimeLabel) {
+      return `${startDate} ${startTimeLabel} - ${endDate} ${endTimeLabel}`;
+    }
+
+    if (endDate) {
+      return `${startDate} ${startTimeLabel} - ${endDate}`;
+    }
+  }
+
+  if (startTimeLabel && endTimeLabel) {
+    return `${startDate} ${startTimeLabel} - ${endTimeLabel}`;
+  }
+
+  return `${startDate} ${startTimeLabel}`;
 }
 
 export function formatTime12h(timeValue) {

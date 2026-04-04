@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { fetchEventById, registerForEvent } from "../lib/api.js";
 import { getToken } from "../lib/auth.js";
-import { formatTime12h, formatTimeRange12h } from "../lib/time.js";
+import { formatEventDateTimeRange, formatTime12h, formatTimeRange12h } from "../lib/time.js";
 
 export default function EventDetail() {
   const { eventId } = useParams();
@@ -200,7 +200,9 @@ export default function EventDetail() {
         <div className="mb-8 grid gap-6 md:grid-cols-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-widest text-[var(--text3)]">Date</p>
-            <p className="mt-2 text-lg font-semibold text-[var(--text)]">{event.date}</p>
+            <p className="mt-2 text-lg font-semibold text-[var(--text)]">
+              {formatEventDateTimeRange(event.date, event.startTime, event.endDate, event.endTime)}
+            </p>
           </div>
           <div>
             <p className="text-xs font-semibold uppercase tracking-widest text-[var(--text3)]">Time</p>
@@ -213,10 +215,6 @@ export default function EventDetail() {
             <p className="mt-2 text-lg font-semibold text-[var(--text)]">
               {event.seatsRemaining ?? event.maxSeats}
             </p>
-          </div>
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-[var(--text3)]">Registered</p>
-            <p className="mt-2 text-lg font-semibold text-[var(--gold)]">{event.registeredCount || 0}</p>
           </div>
         </div>
 

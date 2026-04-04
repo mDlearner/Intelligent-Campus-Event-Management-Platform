@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchEvents } from "../lib/api.js";
 import { getAuth } from "../lib/auth.js";
-import { formatTimeRange12h } from "../lib/time.js";
+import { formatEventDateTimeRange } from "../lib/time.js";
 
 function parseEventDate(event) {
   if (!event?.date) {
@@ -487,7 +487,7 @@ export default function Home() {
       return "Time TBA";
     }
 
-    return formatTimeRange12h(event?.startTime, event?.endTime);
+    return formatEventDateTimeRange(event?.date, event?.startTime, event?.endDate, event?.endTime);
   }
 
   function showPreviousSlide() {
