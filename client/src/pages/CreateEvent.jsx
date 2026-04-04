@@ -7,6 +7,7 @@ const initialEventForm = {
   title: "",
   description: "",
   date: "",
+  endDate: "",
   startTime: "",
   endTime: "",
   registrationCloseDate: "",
@@ -68,6 +69,14 @@ function validateEventForm(form) {
 
   if (!DATE_REGEX.test(form.date || "")) {
     return "Event date is required";
+  }
+
+  if (form.endDate && !DATE_REGEX.test(form.endDate)) {
+    return "Event end date is invalid";
+  }
+
+  if (form.endDate && form.endDate < form.date) {
+    return "Event end date cannot be before event date";
   }
 
   if (!TIME_REGEX.test(form.startTime || "")) {
@@ -179,6 +188,7 @@ export default function CreateEvent() {
       title: event.title || "",
       description: event.description || "",
       date: event.date || "",
+      endDate: event.endDate || "",
       startTime: event.startTime || "",
       endTime: event.endTime || "",
       registrationCloseDate: event.registrationCloseDate || "",
@@ -235,6 +245,7 @@ export default function CreateEvent() {
         title: form.title,
         description: form.description,
         date: form.date,
+        endDate: form.endDate || null,
         startTime: form.startTime,
         endTime: form.endTime,
         registrationCloseDate: form.registrationCloseDate || null,
@@ -305,7 +316,7 @@ export default function CreateEvent() {
             />
           </div>
 
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid gap-3 md:grid-cols-3">
             <div>
               <label className="text-sm font-bold text-[var(--text2)]">Date</label>
               <div className="relative mt-1">
@@ -323,6 +334,30 @@ export default function CreateEvent() {
                   className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-[var(--gold2)] transition hover:bg-[rgba(240,192,64,0.14)]"
                   aria-label="Open date picker"
                   onClick={() => openPicker("date")}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" stroke="currentColor" strokeWidth="1.8">
+                    <rect x="3.5" y="5" width="17" height="15.5" rx="2.2" />
+                    <path d="M8 3.8v3.6M16 3.8v3.6M3.5 9.3h17" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-bold text-[var(--text2)]">To date (optional)</label>
+              <div className="relative mt-1">
+                <input
+                  className="neo-input pr-12 text-sm"
+                  type="date"
+                  name="endDate"
+                  value={form.endDate}
+                  onChange={handleChange}
+                  min={form.date || todayDateValue}
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-[var(--gold2)] transition hover:bg-[rgba(240,192,64,0.14)]"
+                  aria-label="Open end date picker"
+                  onClick={() => openPicker("endDate")}
                 >
                   <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" stroke="currentColor" strokeWidth="1.8">
                     <rect x="3.5" y="5" width="17" height="15.5" rx="2.2" />

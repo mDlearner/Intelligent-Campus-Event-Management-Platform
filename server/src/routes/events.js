@@ -67,6 +67,10 @@ function validateEventPayload(payload) {
     errors.push("Event date must be in YYYY-MM-DD format");
   }
 
+  if (payload.endDate && !DATE_REGEX.test(payload.endDate)) {
+    errors.push("Event end date must be in YYYY-MM-DD format");
+  }
+
   if (!TIME_REGEX.test(payload.startTime || "")) {
     errors.push("Event start time must be in HH:mm format");
   }
@@ -90,6 +94,14 @@ function validateEventPayload(payload) {
 
   if (eventDayStart && eventDayStart < todayStart) {
     errors.push("Event date cannot be before today");
+  }
+
+  if (payload.endDate && DATE_REGEX.test(payload.endDate) && DATE_REGEX.test(payload.date || "")) {
+    const startDateOnly = parseDateTime(payload.date, "00:00");
+    const endDateOnly = parseDateTime(payload.endDate, "00:00");
+    if (startDateOnly && endDateOnly && endDateOnly < startDateOnly) {
+      errors.push("Event end date cannot be before event date");
+    }
   }
 
   if (startDateTime && endDateTime && endDateTime <= startDateTime) {

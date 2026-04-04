@@ -15,6 +15,13 @@ const eventSchema = new mongoose.Schema(
         message: "Event date must be in YYYY-MM-DD format"
       }
     },
+    endDate: {
+      type: String,
+      validate: {
+        validator: (value) => !value || DATE_REGEX.test(value),
+        message: "Event end date must be in YYYY-MM-DD format"
+      }
+    },
     startTime: {
       type: String,
       required: true,
