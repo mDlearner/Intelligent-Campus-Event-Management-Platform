@@ -397,7 +397,7 @@ export default function Events({ showEnded = false }) {
         title.includes("pass fee")
       ))
     ) {
-      tags.push("Paid Events");
+      tags.push("Paid Event");
     }
     if (title.includes("career") || title.includes("intern")) {
       tags.push("Career");
@@ -509,8 +509,8 @@ export default function Events({ showEnded = false }) {
     if (activeFilter === "Workshops") {
       return getTags(event).includes("Workshop");
     }
-    if (activeFilter === "Paid Events") {
-      return getTags(event).includes("Paid Events");
+    if (activeFilter === "Paid Event") {
+      return getTags(event).includes("Paid Event");
     }
     return true;
   });
@@ -639,7 +639,7 @@ export default function Events({ showEnded = false }) {
           </div>
           {!showEnded && (
             <div className="flex flex-wrap gap-2">
-              {["All", "Happening Now", "This Week", "Workshops", "Paid Events"].map((filter) => (
+              {["All", "Happening Now", "This Week", "Workshops", "Paid Event"].map((filter) => (
                 <button
                   key={filter}
                   className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
@@ -722,13 +722,6 @@ export default function Events({ showEnded = false }) {
                           {event.categories[0]}
                         </span>
                       )}
-                      {!showEnded && (
-                        <span className="rounded-full bg-[var(--gold)]/20 px-3 py-1 text-[10px] font-semibold text-[var(--gold)]">
-                          {event.maxSeats
-                            ? `Seats: ${event.seatsRemaining ?? event.maxSeats} / ${event.maxSeats}`
-                            : "Seats: Open"}
-                        </span>
-                      )}
                     </div>
                   </div>
                   <div className="mt-5">
@@ -742,13 +735,17 @@ export default function Events({ showEnded = false }) {
                         </span>
                       ))}
                     </div>
-                    <h2 className="mt-3 text-lg font-bold text-[var(--text)]">{event.title}</h2>
+                    <div className="mt-3 flex items-start justify-between gap-3">
+                      <h2 className="text-lg font-bold text-[var(--text)]">{event.title}</h2>
+                      {event.registrationOpen !== false && (
+                        <span className="shrink-0 rounded-full bg-[var(--gold)]/20 px-3 py-1 text-[10px] font-semibold text-[var(--gold)]">
+                          Seats: {event.seatsRemaining ?? event.maxSeats}
+                        </span>
+                      )}
+                    </div>
                     <p className="mt-2 text-xs font-semibold text-[var(--text2)]">
                       {formatEventDateTimeRange(event.date, event.startTime, event.endDate, event.endTime)}
                       {event.venue ? ` · ${event.venue}` : ""}
-                    </p>
-                    <p className="mt-2 text-xs font-semibold text-[var(--text3)]">
-                      Available seats: {event.seatsRemaining ?? event.maxSeats}
                     </p>
                     {getRegistrationCloseLabel(event) && (
                       <p className="mt-2 text-xs font-bold text-[var(--text3)]">
@@ -760,10 +757,7 @@ export default function Events({ showEnded = false }) {
                     )}
                   </div>
                   {!showEnded && (
-                    <div className="mt-4 flex items-center justify-between text-xs font-semibold text-[var(--text3)]">
-                      <span>
-                        Available seats: {event.seatsRemaining ?? event.maxSeats}
-                      </span>
+                    <div className="mt-4 flex items-center justify-end text-xs font-semibold text-[var(--text3)]">
                       <span className={event.registrationOpen === false ? "font-semibold text-[var(--rose)]" : "font-semibold text-[var(--teal)]"}>
                         {event.registrationOpen === false ? "Registration closed" : "Registration open"}
                       </span>
