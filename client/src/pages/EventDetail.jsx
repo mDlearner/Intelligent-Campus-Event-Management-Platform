@@ -125,45 +125,64 @@ export default function EventDetail() {
         Back to Events
       </button>
 
-      <div className="glass-panel rounded-3xl p-8">
-        <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
-          <div className="flex-1">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[var(--text3)]">Event Detail</p>
-            <h1 className="mt-2 text-3xl font-semibold md:text-4xl text-[var(--text)]">{event.title}</h1>
-            <p className="mt-3 text-sm text-[var(--text2)]">{event.venue}</p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-[var(--surface2)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--text2)]">
-              {event.status || "upcoming"}
-            </span>
-            <span
-              className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] ${
-                event.registrationOpen === false
-                  ? "bg-[rgba(255,107,138,0.2)] text-[var(--rose)]"
-                  : "bg-[rgba(0,212,170,0.2)] text-[var(--teal)]"
-              }`}
-            >
-              {event.registrationOpen === false ? "Registration Closed" : "Registration Open"}
-            </span>
-          </div>
-        </div>
-
+      <div className="glass-panel overflow-hidden rounded-3xl">
         {event.imageUrl && (
-          <div className="relative mb-8 -mx-8 h-[320px] overflow-hidden rounded-2xl bg-[var(--surface2)] md:h-[360px]">
-            <img
-              src={event.imageUrl}
-              alt=""
-              aria-hidden="true"
-              className="absolute inset-0 h-full w-full scale-105 object-cover opacity-35 blur-sm"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg)]/70 via-[var(--bg)]/35 to-[var(--bg)]/10" />
+          <div className="relative h-[420px] overflow-hidden rounded-3xl md:h-[460px]">
             <img
               src={event.imageUrl}
               alt={event.title}
-              className="relative z-10 h-full w-full object-contain p-6 md:p-8"
+              className="h-full w-full rounded-3xl object-cover"
             />
+            <div className="absolute inset-0 bg-gradient-to-b from-[rgba(8,11,18,0.32)] via-[rgba(8,11,18,0.48)] to-[rgba(8,11,18,0.74)]" />
+
+            <div className="absolute inset-x-0 top-0 z-10 flex items-start justify-between gap-3 p-8">
+              <div className="flex-1">
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/70">Event Detail</p>
+                <h1 className="mt-2 text-3xl font-semibold md:text-4xl text-white">{event.title}</h1>
+                <p className="mt-3 text-sm text-white/80">{event.venue}</p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-full bg-white/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white/80 backdrop-blur-sm">
+                  {event.status || "upcoming"}
+                </span>
+                <span
+                  className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] backdrop-blur-sm ${
+                    event.registrationOpen === false
+                      ? "bg-[rgba(255,107,138,0.22)] text-[var(--rose)]"
+                      : "bg-[rgba(0,212,170,0.22)] text-[var(--teal)]"
+                  }`}
+                >
+                  {event.registrationOpen === false ? "Registration Closed" : "Registration Open"}
+                </span>
+              </div>
+            </div>
           </div>
         )}
+
+        <div className="p-8">
+          {!event.imageUrl && (
+            <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+              <div className="flex-1">
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[var(--text3)]">Event Detail</p>
+                <h1 className="mt-2 text-3xl font-semibold md:text-4xl text-[var(--text)]">{event.title}</h1>
+                <p className="mt-3 text-sm text-[var(--text2)]">{event.venue}</p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-full bg-[var(--surface2)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--text2)]">
+                  {event.status || "upcoming"}
+                </span>
+                <span
+                  className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] ${
+                    event.registrationOpen === false
+                      ? "bg-[rgba(255,107,138,0.2)] text-[var(--rose)]"
+                      : "bg-[rgba(0,212,170,0.2)] text-[var(--teal)]"
+                  }`}
+                >
+                  {event.registrationOpen === false ? "Registration Closed" : "Registration Open"}
+                </span>
+              </div>
+            </div>
+          )}
 
         {event.categories && event.categories.length > 0 && (
           <div className="mb-6 flex flex-wrap gap-2">
@@ -390,6 +409,7 @@ export default function EventDetail() {
           >
             Browse More Events
           </button>
+        </div>
         </div>
       </div>
     </section>

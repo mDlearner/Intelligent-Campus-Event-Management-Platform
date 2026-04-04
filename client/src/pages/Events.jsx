@@ -308,22 +308,7 @@ export default function Events({ showEnded = false }) {
   }
 
   function handleEdit(event) {
-    setEditingEventId(event._id);
-    setForm({
-      title: event.title || "",
-      description: event.description || "",
-      date: event.date || "",
-      startTime: event.startTime || "",
-      endTime: event.endTime || "",
-      registrationCloseDate: event.registrationCloseDate || "",
-      registrationCloseTime: event.registrationCloseTime || "",
-      venue: event.venue || "",
-      imageUrl: event.imageUrl || "",
-      maxSeats: event.maxSeats ? String(event.maxSeats) : "",
-      categories: event.categories || [],
-      speakers: event.speakers || [],
-      sponsors: event.sponsors || []
-    });
+    navigate("/events/create", { state: { event } });
   }
 
   async function handleDelete(eventId) {
@@ -835,6 +820,16 @@ export default function Events({ showEnded = false }) {
                   )}
                   {isAdmin && (
                     <div className="mt-3 flex gap-2">
+                      <button
+                        className="flex-1 rounded-full border border-[var(--blue)]/30 bg-[rgba(77,159,255,0.1)] px-3 py-2 text-xs font-bold text-[var(--blue)] transition hover:bg-[rgba(77,159,255,0.2)]"
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEdit(event);
+                        }}
+                      >
+                        Edit
+                      </button>
                       <button
                         className="flex-1 rounded-full border border-[var(--rose)]/30 bg-[rgba(255,107,138,0.1)] px-3 py-2 text-xs font-bold text-[var(--rose)] transition hover:bg-[rgba(255,107,138,0.2)]"
                         type="button"

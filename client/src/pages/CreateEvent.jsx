@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { createEvent } from "../lib/api.js";
+import { useLocation, useNavigate } from "react-router-dom";
+import { createEvent, updateEvent } from "../lib/api.js";
 import { getAuth, getToken } from "../lib/auth.js";
 
 const initialEventForm = {
@@ -138,10 +138,12 @@ function validateEventForm(form) {
 
 export default function CreateEvent() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [auth, setAuth] = useState(() => getAuth());
   const [form, setForm] = useState(initialEventForm);
   const [formError, setFormError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingEventId, setEditingEventId] = useState(null);
   const canCreate = auth?.user?.role === "club" || auth?.user?.role === "admin";
   const todayDateValue = formatDateInputValue(new Date());
 
@@ -164,6 +166,30 @@ export default function CreateEvent() {
       navigate("/events");
     }
   }, [canCreate, navigate]);
+
+  useEffect(() => {
+    const event = location.state?.event;
+    if (!event) {
+      return;
+    }
+
+    setEditingEventId(event._id || null);
+    setForm({
+      title: event.title || "",
+      description: event.description || "",
+      date: event.date || "",
+      startTime: event.startTime || "",
+      endTime: event.endTime || "",
+      registrationCloseDate: event.registrationCloseDate || "",
+      registrationCloseTime: event.registrationCloseTime || "",
+      venue: event.venue || "",
+      maxSeats: event.maxSeats ? String(event.maxSeats) : "",
+      imageUrl: event.imageUrl || "",
+      categories: event.categories || [],
+      speakers: event.speakers || [],
+      sponsors: event.sponsors || []
+    });
+  }, [location.state]);
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -219,10 +245,14 @@ export default function CreateEvent() {
         sponsors: form.sponsors.filter((s) => s.name)
       };
 
-      await createEvent(payload, token);
+      if (editingEventId) {
+        await updateEvent(editingEventId, payload, token);
+      } else {
+        await createEvent(payload, token);
+      }
       navigate("/events");
     } catch (err) {
-      setFormError(err.message || "Unable to create event");
+      setFormError(err.message || (editingEventId ? "Unable to update event" : "Unable to create event"));
     } finally {
       setIsSubmitting(false);
     }
@@ -234,7 +264,9 @@ export default function CreateEvent() {
         <div className="mb-6 flex items-center justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--text3)]">Organizer</p>
-            <h1 className="mt-2 text-2xl font-semibold text-[var(--text)] md:text-3xl">Create Event</h1>
+            <h1 className="mt-2 text-2xl font-semibold text-[var(--text)] md:text-3xl">
+              {editingEventId ? "Edit Event" : "Create Event"}
+            </h1>
           </div>
           <button
             className="neo-btn-ghost px-4 py-2 text-sm"
@@ -678,7 +710,7 @@ export default function CreateEvent() {
           )}
 
           <button className="neo-btn w-full px-4 py-2 text-sm disabled:opacity-70" type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Creating..." : "Create Event"}
+            {isSubmitting ? (editingEventId ? "Saving..." : "Creating...") : editingEventId ? "Save Changes" : "Create Event"}
           </button>
         </form>
       </div>
