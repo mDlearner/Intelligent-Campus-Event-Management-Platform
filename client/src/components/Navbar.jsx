@@ -6,6 +6,7 @@ export default function Navbar() {
   const navigate = useNavigate();
   const [auth, setAuth] = useState(() => getAuth());
   const [searchValue, setSearchValue] = useState("");
+  const canCreate = auth?.user?.role === "club" || auth?.user?.role === "admin";
 
   useEffect(() => {
     function handleAuthChange() {
@@ -179,6 +180,16 @@ export default function Navbar() {
             </svg>
           </NavLink>
 
+          {canCreate && (
+            <button
+              className="neo-btn hidden px-4 py-1.5 text-xs uppercase tracking-wider sm:inline-flex"
+              type="button"
+              onClick={() => navigate("/events/create")}
+            >
+              Create Event
+            </button>
+          )}
+
           {auth ? (
             <button
               className="neo-btn px-4 py-1.5 text-xs uppercase tracking-wider"
@@ -194,6 +205,16 @@ export default function Navbar() {
             >
               Login
             </NavLink>
+          )}
+
+          {canCreate && (
+            <button
+              className="neo-btn inline-flex px-4 py-1.5 text-xs uppercase tracking-wider sm:hidden"
+              type="button"
+              onClick={() => navigate("/events/create")}
+            >
+              Create
+            </button>
           )}
         </div>
       </nav>
