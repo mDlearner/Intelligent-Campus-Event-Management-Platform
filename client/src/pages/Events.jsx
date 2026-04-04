@@ -415,16 +415,20 @@ export default function Events({ showEnded = false }) {
 
   function getTags(event) {
     const title = `${event?.title || ""} ${event?.description || ""}`.toLowerCase();
+    const paymentType = String(event?.paymentType || "").toLowerCase();
     const tags = [];
     if (title.includes("workshop") || title.includes("learn")) {
       tags.push("Workshop");
     }
     if (
-      title.includes("paid") ||
-      title.includes("ticket") ||
-      title.includes("entry fee") ||
-      title.includes("registration fee") ||
-      title.includes("pass fee")
+      paymentType === "paid" ||
+      (!paymentType && (
+        title.includes("paid") ||
+        title.includes("ticket") ||
+        title.includes("entry fee") ||
+        title.includes("registration fee") ||
+        title.includes("pass fee")
+      ))
     ) {
       tags.push("Paid Events");
     }

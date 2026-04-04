@@ -13,6 +13,7 @@ const initialEventForm = {
   registrationCloseTime: "",
   venue: "",
   maxSeats: "",
+  paymentType: "free",
   imageUrl: "",
   categories: [],
   speakers: [],
@@ -184,6 +185,7 @@ export default function CreateEvent() {
       registrationCloseTime: event.registrationCloseTime || "",
       venue: event.venue || "",
       maxSeats: event.maxSeats ? String(event.maxSeats) : "",
+      paymentType: event.paymentType || "free",
       imageUrl: event.imageUrl || "",
       categories: event.categories || [],
       speakers: event.speakers || [],
@@ -240,6 +242,7 @@ export default function CreateEvent() {
         venue: form.venue,
         imageUrl: form.imageUrl || null,
         maxSeats: Number(form.maxSeats),
+        paymentType: form.paymentType,
         categories: form.categories,
         speakers: form.speakers.filter((s) => s.name),
         sponsors: form.sponsors.filter((s) => s.name)
@@ -341,6 +344,19 @@ export default function CreateEvent() {
                 required
               />
             </div>
+          </div>
+
+          <div>
+            <label className="text-sm font-bold text-[var(--text2)]">Event type</label>
+            <select
+              className="neo-input mt-1 text-sm"
+              name="paymentType"
+              value={form.paymentType}
+              onChange={handleChange}
+            >
+              <option value="free">Free</option>
+              <option value="paid">Paid</option>
+            </select>
           </div>
 
           <div className="grid gap-3 md:grid-cols-2">

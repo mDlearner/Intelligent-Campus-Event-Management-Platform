@@ -49,6 +49,7 @@ const eventSchema = new mongoose.Schema(
     imageUrl: { type: String, trim: true },
     organizer: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     maxSeats: { type: Number, required: true, min: 1 },
+    paymentType: { type: String, enum: ["free", "paid"], default: "free" },
     status: { type: String, enum: ["upcoming", "ongoing", "completed", "cancelled"], default: "upcoming" },
     categories: [
       {
