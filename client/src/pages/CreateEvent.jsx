@@ -528,7 +528,21 @@ export default function CreateEvent() {
           <div>
             <label className="text-sm font-bold text-[var(--text2)]">Categories</label>
             <div className="mt-2 grid gap-2 sm:grid-cols-2">
-              {["Workshop", "Hackathon", "Cultural", "Social Impact", "Innovation & Research", "Academic Seminar", "Competition"].map((cat) => (
+              {[
+                "Tech Conference",
+                "Hackathon",
+                "Social Impact",
+                "Cultural",
+                "Academic",
+                "Arts",
+                "Music",
+                "Startup",
+                "Workshop",
+                "Other",
+                "Innovation & Research",
+                "Academic Seminar",
+                "Competition"
+              ].map((cat) => (
                 <label key={cat} className="flex items-center gap-2">
                   <input
                     type="checkbox"

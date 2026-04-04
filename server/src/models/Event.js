@@ -61,7 +61,21 @@ const eventSchema = new mongoose.Schema(
     categories: [
       {
         type: String,
-        enum: ["Workshop", "Hackathon", "Cultural", "Social Impact", "Innovation & Research", "Academic Seminar", "Competition"]
+        enum: [
+          "Tech Conference",
+          "Hackathon",
+          "Social Impact",
+          "Cultural",
+          "Academic",
+          "Arts",
+          "Music",
+          "Startup",
+          "Workshop",
+          "Other",
+          "Innovation & Research",
+          "Academic Seminar",
+          "Competition"
+        ]
       }
     ],
     speakers: [

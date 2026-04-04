@@ -81,35 +81,56 @@ export default function EventDetail() {
 
   function getCategoryTone(tag) {
     const key = String(tag || "").toLowerCase();
-    if (key.includes("academic") || key.includes("seminar")) {
-      return "border-[var(--gold)]/30 bg-[rgba(240,192,64,0.1)] text-[var(--gold)]";
+    if (key === "tech conference") {
+      return "border-red-500/30 bg-[rgba(239,68,68,0.12)] text-red-300";
     }
-    if (key.includes("workshop")) {
-      return "border-[var(--blue)]/30 bg-[rgba(77,159,255,0.1)] text-[var(--blue)]";
+    if (key === "hackathon") {
+      return "border-blue-500/30 bg-[rgba(59,130,246,0.12)] text-blue-300";
     }
-    if (key.includes("hackathon")) {
-      return "border-purple-500/30 bg-[rgba(168,85,247,0.1)] text-purple-400";
+    if (key === "social impact") {
+      return "border-green-500/30 bg-[rgba(34,197,94,0.12)] text-green-300";
     }
-    if (key.includes("cultural")) {
-      return "border-[var(--rose)]/30 bg-[rgba(255,107,138,0.1)] text-[var(--rose)]";
+    if (key === "cultural") {
+      return "border-orange-500/30 bg-[rgba(249,115,22,0.12)] text-orange-300";
     }
-    if (key.includes("competition")) {
-      return "border-orange-500/30 bg-[rgba(249,115,22,0.1)] text-orange-400";
+    if (key === "academic") {
+      return "border-yellow-500/30 bg-[rgba(234,179,8,0.12)] text-yellow-300";
     }
-    if (key.includes("social impact")) {
-      return "border-[var(--teal)]/30 bg-[rgba(0,212,170,0.1)] text-[var(--teal)]";
+    if (key === "arts") {
+      return "border-pink-500/30 bg-[rgba(236,72,153,0.12)] text-pink-300";
+    }
+    if (key === "music") {
+      return "border-purple-500/30 bg-[rgba(168,85,247,0.12)] text-purple-300";
+    }
+    if (key === "startup") {
+      return "border-amber-700/40 bg-[rgba(180,83,9,0.16)] text-amber-200";
+    }
+    if (key === "workshop") {
+      return "border-white/35 bg-[rgba(255,255,255,0.08)] text-white";
+    }
+    if (key === "other") {
+      return "border-slate-500/30 bg-[rgba(100,116,139,0.14)] text-slate-300";
+    }
+    if (key === "innovation & research") {
+      return "border-teal-500/30 bg-[rgba(20,184,166,0.12)] text-teal-300";
+    }
+    if (key === "academic seminar") {
+      return "border-lime-500/30 bg-[rgba(132,204,22,0.12)] text-lime-300";
+    }
+    if (key === "competition") {
+      return "border-rose-500/30 bg-[rgba(244,63,94,0.12)] text-rose-300";
     }
     if (key.includes("sport")) {
       return "border-emerald-500/30 bg-[rgba(16,185,129,0.1)] text-emerald-400";
     }
-    if (key.includes("innovation") || key.includes("research")) {
-      return "border-cyan-500/30 bg-[rgba(34,211,238,0.1)] text-cyan-400";
-    }
-    if (key.includes("free food")) {
-      return "border-lime-500/30 bg-[rgba(132,204,22,0.1)] text-lime-400";
+    if (key.includes("paid event")) {
+      return "border-sky-500/30 bg-[rgba(14,165,233,0.12)] text-sky-300";
     }
     if (key.includes("career")) {
       return "border-indigo-500/30 bg-[rgba(99,102,241,0.1)] text-indigo-400";
+    }
+    if (key.includes("free food")) {
+      return "border-green-500/30 bg-[rgba(34,197,94,0.1)] text-green-300";
     }
     return "border-[var(--border2)] bg-[var(--surface2)] text-[var(--text2)]";
   }
