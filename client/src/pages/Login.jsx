@@ -31,6 +31,8 @@ export default function Login() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState("");
   const [verificationSentTo, setVerificationSentTo] = useState("");
+  const [secondaryVerificationSentTo, setSecondaryVerificationSentTo] = useState("");
+  const [verificationStage, setVerificationStage] = useState("primary");
   const [verificationCode, setVerificationCode] = useState("");
   const [verificationRequired, setVerificationRequired] = useState(false);
   const [isResending, setIsResending] = useState(false);
@@ -66,6 +68,9 @@ export default function Login() {
         setVerificationRequired(true);
         setVerificationEmail(result.email || form.email);
         setVerificationSentTo(result.verificationSentTo || result.email || form.email);
+        setSecondaryVerificationSentTo(result.secondaryVerificationSentTo || "");
+        setVerificationStage(result.verificationStage || "primary");
+        setVerificationCode("");
         setError("");
         return;
       }
@@ -88,8 +93,19 @@ export default function Login() {
       const normalizedCode = verificationCode.replace(/\D/g, "").slice(0, 6);
       const result = await verifyRegistration({
         email: verificationEmail,
-        code: normalizedCode
+        code: normalizedCode,
+        stage: verificationStage
       });
+
+      if (result?.secondaryVerificationRequired) {
+        setVerificationStage(result.verificationStage || "secondary");
+        setVerificationCode("");
+        setError("");
+        if (secondaryVerificationSentTo) {
+          setVerificationSentTo(secondaryVerificationSentTo);
+        }
+        return;
+      }
 
       setAuth({ token: result.token, user: result.user });
       navigate("/events");
@@ -108,9 +124,18 @@ export default function Login() {
     setIsResending(true);
 
     try {
-      const result = await resendVerification({ email: verificationEmail });
+      const result = await resendVerification({ email: verificationEmail, stage: verificationStage });
       if (result?.verificationSentTo) {
         setVerificationSentTo(result.verificationSentTo);
+      }
+      if (result?.secondaryVerificationSentTo) {
+        setSecondaryVerificationSentTo(result.secondaryVerificationSentTo);
+        if (verificationStage === "secondary") {
+          setVerificationSentTo(result.secondaryVerificationSentTo);
+        }
+      }
+      if (result?.verificationStage) {
+        setVerificationStage(result.verificationStage);
       }
     } catch (err) {
       setError(err.message || "Unable to resend code");
@@ -278,7 +303,9 @@ export default function Login() {
               required
             />
             <p className="mt-2 text-xs text-[var(--text3)]">
-              The code was sent to {verificationSentTo || verificationEmail}. It is valid for 7 days.
+              {verificationStage === "secondary"
+                ? "Step 2 of 2: Enter the secondary OTP."
+                : "Step 1 of 2: Enter the primary OTP."} The code was sent to {verificationSentTo || verificationEmail}. It is valid for 7 days.
             </p>
           </div>
 
@@ -293,7 +320,11 @@ export default function Login() {
             type="submit"
             disabled={isSubmitting}
           >
-            {isSubmitting ? "Verifying..." : "Verify & Complete"}
+            {isSubmitting
+              ? "Verifying..."
+              : verificationStage === "secondary"
+              ? "Verify Step 2 & Complete"
+              : "Verify Step 1"}
           </button>
           <button
             className="neo-btn-ghost w-full px-3 py-2 text-sm disabled:opacity-70"

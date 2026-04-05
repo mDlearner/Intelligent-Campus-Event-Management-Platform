@@ -12,6 +12,9 @@ const userSchema = new mongoose.Schema(
     isVerified: { type: Boolean, default: true },
     verificationCode: { type: String, trim: true },
     verificationExpiresAt: { type: Date },
+    primaryOtpVerified: { type: Boolean, default: false },
+    secondaryVerificationCode: { type: String, trim: true },
+    secondaryVerificationExpiresAt: { type: Date },
     pendingEmail: { type: String, lowercase: true, trim: true },
     pendingEmailCode: { type: String, trim: true },
     pendingEmailExpiresAt: { type: Date }

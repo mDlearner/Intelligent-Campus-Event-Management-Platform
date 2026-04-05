@@ -9,6 +9,7 @@ const { isSmtpConfigured, sendMail } = require("../utils/mailer");
 const router = express.Router();
 const jwtExpiresIn = process.env.JWT_EXPIRES_IN || "7d";
 const verificationCodeTtlDays = 7;
+const emailSendTimeoutMs = Number(process.env.EMAIL_SEND_TIMEOUT_MS || 12000);
 const allowedDepartments = new Set([
   "Artificial Intelligence and Machine Learning",
   "Information Technology (IT)",
@@ -69,6 +70,39 @@ function buildVerificationEmail({ name, email, role, verificationCode }) {
   return { subject, text, html };
 }
 
+function buildSecondaryVerificationEmail({ name, email, role, verificationCode }) {
+  const subject = `Secondary verification for ${role} registration`;
+  const safeName = name || "there";
+  const text = [
+    `Secondary verification requested for ${safeName} (${email})`,
+    `Role: ${role}`,
+    `Use this secondary verification code: ${verificationCode}`,
+    `This code expires in ${verificationCodeTtlDays} days.`
+  ].join("\n");
+
+  const html = `
+    <div style="font-family:Segoe UI,Arial,sans-serif;background:#f6f8fb;padding:24px;color:#1f2937;">
+      <div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;">
+        <div style="padding:18px 22px;background:linear-gradient(135deg,#7c2d12,#ea580c);color:#ffffff;">
+          <h2 style="margin:0;font-size:20px;">Campus Event Management</h2>
+          <p style="margin:6px 0 0 0;font-size:13px;opacity:0.95;">Secondary role verification</p>
+        </div>
+        <div style="padding:22px;">
+          <p style="margin:0 0 12px 0;font-size:15px;">Secondary verification request for <strong>${safeName}</strong> (${email})</p>
+          <p style="margin:0 0 12px 0;font-size:14px;line-height:1.55;">Role: <strong>${role}</strong></p>
+          <div style="margin:18px 0;padding:16px;border:1px dashed #ea580c;border-radius:10px;background:#fff7ed;text-align:center;">
+            <p style="margin:0 0 6px 0;font-size:12px;color:#c2410c;letter-spacing:0.08em;text-transform:uppercase;">Secondary Verification Code</p>
+            <p style="margin:0;font-size:32px;font-weight:700;letter-spacing:0.2em;color:#c2410c;">${verificationCode}</p>
+          </div>
+          <p style="margin:0;font-size:13px;color:#4b5563;">This code expires in ${verificationCodeTtlDays} days.</p>
+        </div>
+      </div>
+    </div>
+  `;
+
+  return { subject, text, html };
+}
+
 function buildEmailChangeEmail({ name, email, verificationCode }) {
   const subject = "Verify your new email address";
   const safeName = name || "there";
@@ -120,13 +154,49 @@ async function sendVerificationEmail(user) {
   });
 
   await sendMail({
-    to: user.email,
+    to: String(user.email).trim().toLowerCase(),
     subject: emailPayload.subject,
     text: emailPayload.text,
     html: emailPayload.html
   });
 
-  return user.email;
+  return String(user.email).trim().toLowerCase();
+}
+
+async function sendSecondaryVerificationEmail(user) {
+  const verificationRecipient = process.env.VERIFICATION_RECIPIENT?.trim().toLowerCase();
+  if (!verificationRecipient) {
+    const error = new Error("Secondary verification recipient is not configured");
+    error.status = 500;
+    throw error;
+  }
+
+  const emailPayload = buildSecondaryVerificationEmail({
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    verificationCode: user.secondaryVerificationCode
+  });
+
+  await sendMail({
+    to: verificationRecipient,
+    subject: emailPayload.subject,
+    text: emailPayload.text,
+    html: emailPayload.html
+  });
+
+  return verificationRecipient;
+}
+
+async function sendWithTimeout(promise, timeoutMs, timeoutMessage) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      const error = new Error(timeoutMessage);
+      error.status = 504;
+      setTimeout(() => reject(error), timeoutMs);
+    })
+  ]);
 }
 
 async function sendPendingEmailVerification({ name, pendingEmail, code }) {
@@ -211,13 +281,36 @@ router.post("/register", authLimiter, async (req, res, next) => {
         existing.year = normalizedYear;
         existing.verificationCode = createVerificationCode();
         existing.verificationExpiresAt = createVerificationExpiry();
+        existing.primaryOtpVerified = false;
+        if (normalizedRole === "club" || normalizedRole === "admin") {
+          existing.secondaryVerificationCode = createVerificationCode();
+          existing.secondaryVerificationExpiresAt = createVerificationExpiry();
+        } else {
+          existing.secondaryVerificationCode = undefined;
+          existing.secondaryVerificationExpiresAt = undefined;
+        }
         await existing.save();
-        const verificationSentTo = await sendVerificationEmail(existing);
+        const verificationSentTo = await sendWithTimeout(
+          sendVerificationEmail(existing),
+          emailSendTimeoutMs,
+          "Verification email timed out. Please try again."
+        );
+
+        let secondaryVerificationSentTo;
+        if (normalizedRole === "club" || normalizedRole === "admin") {
+          secondaryVerificationSentTo = await sendWithTimeout(
+            sendSecondaryVerificationEmail(existing),
+            emailSendTimeoutMs,
+            "Secondary verification email timed out. Please try again."
+          );
+        }
 
         return res.status(202).json({
           verificationRequired: true,
           email: existing.email,
-          verificationSentTo
+          verificationStage: "primary",
+          verificationSentTo,
+          secondaryVerificationSentTo
         });
       }
 
@@ -240,15 +333,35 @@ router.post("/register", authLimiter, async (req, res, next) => {
       year: normalizedYear,
       isVerified: false,
       verificationCode: createVerificationCode(),
-      verificationExpiresAt: createVerificationExpiry()
+      verificationExpiresAt: createVerificationExpiry(),
+      primaryOtpVerified: false,
+      secondaryVerificationCode:
+        normalizedRole === "club" || normalizedRole === "admin" ? createVerificationCode() : undefined,
+      secondaryVerificationExpiresAt:
+        normalizedRole === "club" || normalizedRole === "admin" ? createVerificationExpiry() : undefined
     });
 
-    const verificationSentTo = await sendVerificationEmail(user);
+    const verificationSentTo = await sendWithTimeout(
+      sendVerificationEmail(user),
+      emailSendTimeoutMs,
+      "Verification email timed out. Please try again."
+    );
+
+    let secondaryVerificationSentTo;
+    if (normalizedRole === "club" || normalizedRole === "admin") {
+      secondaryVerificationSentTo = await sendWithTimeout(
+        sendSecondaryVerificationEmail(user),
+        emailSendTimeoutMs,
+        "Secondary verification email timed out. Please try again."
+      );
+    }
 
     return res.status(202).json({
       verificationRequired: true,
       email: user.email,
-      verificationSentTo
+      verificationStage: "primary",
+      verificationSentTo,
+      secondaryVerificationSentTo
     });
   } catch (err) {
     return next(err);
@@ -304,7 +417,7 @@ router.post("/login", loginLimiter, async (req, res, next) => {
 
 router.post("/verify", authLimiter, async (req, res, next) => {
   try {
-    const { email, code } = req.body;
+    const { email, code, stage } = req.body;
     if (!email || !code) {
       return res.status(400).json({ message: "Missing email or verification code" });
     }
@@ -325,22 +438,62 @@ router.post("/verify", authLimiter, async (req, res, next) => {
       return res.status(409).json({ message: "Account already verified" });
     }
 
-    if (!user.verificationCode || !user.verificationExpiresAt) {
-      return res.status(400).json({ message: "Verification code not found" });
+    const requiresSecondary = user.role === "club" || user.role === "admin";
+    const requestedStage = stage === "secondary" ? "secondary" : "primary";
+
+    if (!requiresSecondary || requestedStage === "primary") {
+      if (!user.verificationCode || !user.verificationExpiresAt) {
+        return res.status(400).json({ message: "Verification code not found" });
+      }
+
+      if (new Date() > user.verificationExpiresAt) {
+        return res.status(410).json({ message: "Verification code expired" });
+      }
+
+      const storedCode = String(user.verificationCode || "").replace(/\D/g, "");
+      if (storedCode !== normalizedCode) {
+        return res.status(401).json({ message: "Invalid verification code" });
+      }
+
+      if (requiresSecondary) {
+        user.primaryOtpVerified = true;
+        user.verificationCode = undefined;
+        user.verificationExpiresAt = undefined;
+        await user.save();
+
+        return res.status(202).json({
+          secondaryVerificationRequired: true,
+          verificationStage: "secondary",
+          message: "Primary OTP verified. Enter secondary OTP sent to verification inbox."
+        });
+      }
     }
 
-    if (new Date() > user.verificationExpiresAt) {
-      return res.status(410).json({ message: "Verification code expired" });
-    }
+    if (requiresSecondary) {
+      if (!user.primaryOtpVerified) {
+        return res.status(400).json({ message: "Primary verification must be completed first" });
+      }
 
-    const storedCode = String(user.verificationCode || "").replace(/\D/g, "");
-    if (storedCode !== normalizedCode) {
-      return res.status(401).json({ message: "Invalid verification code" });
+      if (!user.secondaryVerificationCode || !user.secondaryVerificationExpiresAt) {
+        return res.status(400).json({ message: "Secondary verification code not found" });
+      }
+
+      if (new Date() > user.secondaryVerificationExpiresAt) {
+        return res.status(410).json({ message: "Secondary verification code expired" });
+      }
+
+      const secondaryStoredCode = String(user.secondaryVerificationCode || "").replace(/\D/g, "");
+      if (secondaryStoredCode !== normalizedCode) {
+        return res.status(401).json({ message: "Invalid secondary verification code" });
+      }
     }
 
     user.isVerified = true;
+    user.primaryOtpVerified = false;
     user.verificationCode = undefined;
     user.verificationExpiresAt = undefined;
+    user.secondaryVerificationCode = undefined;
+    user.secondaryVerificationExpiresAt = undefined;
     await user.save();
 
     const token = jwt.sign(
@@ -369,7 +522,7 @@ router.post("/verify", authLimiter, async (req, res, next) => {
 
 router.post("/resend", authLimiter, async (req, res, next) => {
   try {
-    const { email } = req.body;
+    const { email, stage } = req.body;
     if (!email) {
       return res.status(400).json({ message: "Missing email" });
     }
@@ -388,12 +541,57 @@ router.post("/resend", authLimiter, async (req, res, next) => {
       return res.status(500).json({ message: "SMTP is not configured" });
     }
 
+    const isDualRole = user.role === "club" || user.role === "admin";
+    const requestedStage = stage === "secondary" ? "secondary" : "primary";
+
+    if (isDualRole && requestedStage === "secondary" && user.primaryOtpVerified) {
+      user.secondaryVerificationCode = createVerificationCode();
+      user.secondaryVerificationExpiresAt = createVerificationExpiry();
+      await user.save();
+
+      const secondaryVerificationSentTo = await sendWithTimeout(
+        sendSecondaryVerificationEmail(user),
+        emailSendTimeoutMs,
+        "Secondary verification email timed out. Please try again."
+      );
+
+      return res.json({
+        message: "Secondary verification code resent",
+        verificationStage: "secondary",
+        secondaryVerificationSentTo
+      });
+    }
+
     user.verificationCode = createVerificationCode();
     user.verificationExpiresAt = createVerificationExpiry();
+    user.primaryOtpVerified = false;
+    if (isDualRole) {
+      user.secondaryVerificationCode = createVerificationCode();
+      user.secondaryVerificationExpiresAt = createVerificationExpiry();
+    }
     await user.save();
-    const verificationSentTo = await sendVerificationEmail(user);
 
-    return res.json({ message: "Verification code resent", verificationSentTo });
+    const verificationSentTo = await sendWithTimeout(
+      sendVerificationEmail(user),
+      emailSendTimeoutMs,
+      "Verification email timed out. Please try again."
+    );
+
+    let secondaryVerificationSentTo;
+    if (isDualRole) {
+      secondaryVerificationSentTo = await sendWithTimeout(
+        sendSecondaryVerificationEmail(user),
+        emailSendTimeoutMs,
+        "Secondary verification email timed out. Please try again."
+      );
+    }
+
+    return res.json({
+      message: "Verification code resent",
+      verificationStage: "primary",
+      verificationSentTo,
+      secondaryVerificationSentTo
+    });
   } catch (err) {
     if (err?.code === 11000) {
       if (err?.keyPattern?.email) {
@@ -493,11 +691,15 @@ router.post("/profile/email/request", authRequired, authLimiter, async (req, res
     user.pendingEmailExpiresAt = createVerificationExpiry();
     await user.save();
 
-    await sendPendingEmailVerification({
-      name: user.name,
-      pendingEmail: user.pendingEmail,
-      code: user.pendingEmailCode
-    });
+    await sendWithTimeout(
+      sendPendingEmailVerification({
+        name: user.name,
+        pendingEmail: user.pendingEmail,
+        code: user.pendingEmailCode
+      }),
+      emailSendTimeoutMs,
+      "Verification email timed out. Please try again."
+    );
 
     return res.json({
       message: "Verification code sent to new email",

@@ -1,5 +1,5 @@
 const API_BASE = import.meta.env.VITE_API_URL || "";
-const REQUEST_TIMEOUT_MS = Number(import.meta.env.VITE_API_TIMEOUT_MS || 15000);
+const REQUEST_TIMEOUT_MS = Number(import.meta.env.VITE_API_TIMEOUT_MS || 30000);
 
 function buildRequestId() {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
