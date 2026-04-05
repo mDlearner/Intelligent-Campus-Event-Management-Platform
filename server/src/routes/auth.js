@@ -216,6 +216,32 @@ async function sendPendingEmailVerification({ name, pendingEmail, code }) {
   return pendingEmail;
 }
 
+async function sendRegistrationOtpEmails(user, isDualRole) {
+  const primaryPromise = sendWithTimeout(
+    sendVerificationEmail(user),
+    emailSendTimeoutMs,
+    "Verification email timed out. Please try again."
+  );
+
+  if (!isDualRole) {
+    const verificationSentTo = await primaryPromise;
+    return { verificationSentTo };
+  }
+
+  const secondaryPromise = sendWithTimeout(
+    sendSecondaryVerificationEmail(user),
+    emailSendTimeoutMs,
+    "Secondary verification email timed out. Please try again."
+  );
+
+  const [verificationSentTo, secondaryVerificationSentTo] = await Promise.all([
+    primaryPromise,
+    secondaryPromise
+  ]);
+
+  return { verificationSentTo, secondaryVerificationSentTo };
+}
+
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 30,
@@ -290,20 +316,11 @@ router.post("/register", authLimiter, async (req, res, next) => {
           existing.secondaryVerificationExpiresAt = undefined;
         }
         await existing.save();
-        const verificationSentTo = await sendWithTimeout(
-          sendVerificationEmail(existing),
-          emailSendTimeoutMs,
-          "Verification email timed out. Please try again."
+        const isDualRole = normalizedRole === "club" || normalizedRole === "admin";
+        const { verificationSentTo, secondaryVerificationSentTo } = await sendRegistrationOtpEmails(
+          existing,
+          isDualRole
         );
-
-        let secondaryVerificationSentTo;
-        if (normalizedRole === "club" || normalizedRole === "admin") {
-          secondaryVerificationSentTo = await sendWithTimeout(
-            sendSecondaryVerificationEmail(existing),
-            emailSendTimeoutMs,
-            "Secondary verification email timed out. Please try again."
-          );
-        }
 
         return res.status(202).json({
           verificationRequired: true,
@@ -341,20 +358,11 @@ router.post("/register", authLimiter, async (req, res, next) => {
         normalizedRole === "club" || normalizedRole === "admin" ? createVerificationExpiry() : undefined
     });
 
-    const verificationSentTo = await sendWithTimeout(
-      sendVerificationEmail(user),
-      emailSendTimeoutMs,
-      "Verification email timed out. Please try again."
+    const isDualRole = normalizedRole === "club" || normalizedRole === "admin";
+    const { verificationSentTo, secondaryVerificationSentTo } = await sendRegistrationOtpEmails(
+      user,
+      isDualRole
     );
-
-    let secondaryVerificationSentTo;
-    if (normalizedRole === "club" || normalizedRole === "admin") {
-      secondaryVerificationSentTo = await sendWithTimeout(
-        sendSecondaryVerificationEmail(user),
-        emailSendTimeoutMs,
-        "Secondary verification email timed out. Please try again."
-      );
-    }
 
     return res.status(202).json({
       verificationRequired: true,
@@ -571,20 +579,10 @@ router.post("/resend", authLimiter, async (req, res, next) => {
     }
     await user.save();
 
-    const verificationSentTo = await sendWithTimeout(
-      sendVerificationEmail(user),
-      emailSendTimeoutMs,
-      "Verification email timed out. Please try again."
+    const { verificationSentTo, secondaryVerificationSentTo } = await sendRegistrationOtpEmails(
+      user,
+      isDualRole
     );
-
-    let secondaryVerificationSentTo;
-    if (isDualRole) {
-      secondaryVerificationSentTo = await sendWithTimeout(
-        sendSecondaryVerificationEmail(user),
-        emailSendTimeoutMs,
-        "Secondary verification email timed out. Please try again."
-      );
-    }
 
     return res.json({
       message: "Verification code resent",
