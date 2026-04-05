@@ -1,7 +1,25 @@
 const nodemailer = require("nodemailer");
+const dns = require("dns").promises;
 const logger = require("./logger");
 
 let mailer;
+
+async function resolveSmtpHost(host, family) {
+  if (family !== 4) {
+    return { host, tlsServername: host };
+  }
+
+  try {
+    const ipv4Addresses = await dns.resolve4(host);
+    if (Array.isArray(ipv4Addresses) && ipv4Addresses.length > 0) {
+      return { host: ipv4Addresses[0], tlsServername: host };
+    }
+  } catch (error) {
+    logger.warn({ err: error, host }, "Failed to resolve SMTP host to IPv4, using original host");
+  }
+
+  return { host, tlsServername: host };
+}
 
 function getSmtpConfig() {
   const host = process.env.SMTP_HOST;
@@ -31,15 +49,6 @@ function getSmtpConfig() {
 }
 
 function getMailer() {
-  const config = getSmtpConfig();
-  if (!config) {
-    return null;
-  }
-
-  if (!mailer) {
-    mailer = nodemailer.createTransport(config);
-  }
-
   return mailer;
 }
 
@@ -48,10 +57,24 @@ function isSmtpConfigured() {
 }
 
 async function sendMail({ to, subject, text, html }) {
-  const transporter = getMailer();
-  if (!transporter) {
+  const config = getSmtpConfig();
+  if (!config) {
     throw new Error("SMTP is not configured");
   }
+
+  if (!mailer) {
+    const resolved = await resolveSmtpHost(config.host, config.family);
+    const transportConfig = {
+      ...config,
+      host: resolved.host,
+      tls: {
+        servername: resolved.tlsServername
+      }
+    };
+    mailer = nodemailer.createTransport(transportConfig);
+  }
+
+  const transporter = getMailer();
 
   const from = process.env.SMTP_FROM || process.env.SMTP_USER;
   const info = await transporter.sendMail({ from, to, subject, text, html });
