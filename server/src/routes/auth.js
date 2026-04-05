@@ -30,39 +30,141 @@ function createVerificationExpiry() {
 }
 
 function buildVerificationEmail({ name, email, role, verificationCode }) {
-  const subject = `Verify your ${role} account`;
+  const subject = `🔐 Verify Your ${role.charAt(0).toUpperCase() + role.slice(1)} Account - Campus Event Management`;
   const safeName = name || "there";
+  const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
   const text = [
-    `Hi ${safeName},`,
+    `Welcome to Campus Event Management, ${safeName}!`,
     "",
-    `Thanks for registering as ${role}.`,
-    `Use this verification code: ${verificationCode}`,
+    `We're excited to have you join us as a ${role}.`,
+    `Thanks for registering with ${email}.`,
+    "",
+    `=== YOUR VERIFICATION CODE ===`,
+    `${verificationCode}`,
+    `============================`,
+    "",
+    `HOW TO VERIFY:`,
+    `1. Go back to your registration screen`,
+    `2. Enter the code above in the verification field`,
+    `3. Click "Verify" to complete your account setup`,
+    "",
     `This code expires in ${verificationCodeTtlDays} days.`,
     "",
-    "If you did not create this account, you can ignore this email.",
+    `Security Tip: Never share this code with anyone. Campus Event Management team will never ask for it.`,
     "",
-    "Campus Event Management"
+    `If you didn't create this account, please ignore this email or contact us for support.`,
+    "",
+    `Questions? Reply to this email or visit our help center.`,
+    "",
+    "Campus Event Management Team"
   ].join("\n");
 
   const html = `
-    <div style="font-family:Segoe UI,Arial,sans-serif;background:#f6f8fb;padding:24px;color:#1f2937;">
-      <div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;">
-        <div style="padding:18px 22px;background:linear-gradient(135deg,#0f766e,#14b8a6);color:#ffffff;">
-          <h2 style="margin:0;font-size:20px;">Campus Event Management</h2>
-          <p style="margin:6px 0 0 0;font-size:13px;opacity:0.95;">Account verification</p>
+    <div style="font-family:'Segoe UI','-apple-system','BlinkMacSystemFont','Roboto',sans-serif;background:linear-gradient(135deg,#0f766e 0%,#14b8a6 100%);padding:40px 20px;margin:0;">
+      <div style="max-width:600px;margin:0 auto;">
+        <!-- Header Banner -->
+        <div style="background:linear-gradient(135deg,#0f766e 0%,#14b8a6 100%);padding:40px 30px;border-radius:16px 16px 0 0;text-align:center;color:#ffffff;">
+          <div style="font-size:48px;margin-bottom:12px;">🎓📅</div>
+          <h1 style="margin:0 0 8px 0;font-size:28px;font-weight:700;">Welcome to Campus Event Management</h1>
+          <p style="margin:0;font-size:15px;opacity:0.95;">Verify Your ${roleLabel} Account</p>
         </div>
-        <div style="padding:22px;">
-          <p style="margin:0 0 12px 0;font-size:15px;">Hi ${safeName},</p>
-          <p style="margin:0 0 12px 0;font-size:14px;line-height:1.55;">
-            Thanks for registering as <strong>${role}</strong> with <strong>${email}</strong>.
-            Please use the verification code below to activate your account.
+
+        <!-- Main Content -->
+        <div style="background:#ffffff;padding:40px 30px;border-radius:0 0 16px 16px;">
+          <!-- Greeting -->
+          <p style="margin:0 0 20px 0;font-size:16px;color:#1f2937;line-height:1.6;">
+            Hi <strong>${safeName}</strong>,
           </p>
-          <div style="margin:18px 0;padding:16px;border:1px dashed #14b8a6;border-radius:10px;background:#f0fdfa;text-align:center;">
-            <p style="margin:0 0 6px 0;font-size:12px;color:#0f766e;letter-spacing:0.08em;text-transform:uppercase;">Verification Code</p>
-            <p style="margin:0;font-size:32px;font-weight:700;letter-spacing:0.2em;color:#0f766e;">${verificationCode}</p>
+
+          <!-- Welcome Message -->
+          <div style="background:#f0fdfa;border-left:4px solid #14b8a6;padding:16px;border-radius:8px;margin-bottom:24px;">
+            <p style="margin:0;font-size:14px;color:#0f766e;line-height:1.6;">
+              Welcome! We're thrilled to have you join our campus community as a <strong>${roleLabel}</strong>. 
+              Your account is almost ready. Complete the verification process below to unlock all features.
+            </p>
           </div>
-          <p style="margin:0;font-size:13px;color:#4b5563;">This code expires in ${verificationCodeTtlDays} days.</p>
-          <p style="margin:14px 0 0 0;font-size:12px;color:#6b7280;">If you did not create this account, you can ignore this email.</p>
+
+          <!-- Account Details -->
+          <div style="background:#f6f8fb;padding:16px;border-radius:8px;margin-bottom:24px;">
+            <p style="margin:0 0 8px 0;font-size:13px;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;">Account Details</p>
+            <table style="width:100%;font-size:14px;color:#1f2937;">
+              <tr>
+                <td style="padding:4px 0;"><strong>Email:</strong></td>
+                <td style="padding:4px 0;text-align:right;color:#0f766e;">${email}</td>
+              </tr>
+              <tr>
+                <td style="padding:4px 0;"><strong>Role:</strong></td>
+                <td style="padding:4px 0;text-align:right;color:#0f766e;">${roleLabel}</td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- Verification Code Block -->
+          <div style="margin:28px 0;text-align:center;">
+            <p style="margin:0 0 12px 0;font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:0.08em;font-weight:600;">Your Verification Code</p>
+            <div style="background:linear-gradient(135deg,#f0fdfa 0%,#e0f2fe 100%);border:2px dashed #14b8a6;border-radius:12px;padding:20px;margin:0;">
+              <p style="margin:0;font-size:40px;font-weight:900;letter-spacing:0.15em;color:#0f766e;font-family:'Courier New',monospace;">${verificationCode}</p>
+            </div>
+            <p style="margin:12px 0 0 0;font-size:12px;color:#6b7280;">Click to copy the code above</p>
+          </div>
+
+          <!-- How to Verify Section -->
+          <div style="background:#fffbeb;border-left:4px solid #f59e0b;padding:16px;border-radius:8px;margin-bottom:24px;">
+            <p style="margin:0 0 12px 0;font-size:13px;font-weight:600;color:#92400e;text-transform:uppercase;letter-spacing:0.05em;">How to Verify</p>
+            <ol style="margin:0;padding-left:20px;color:#1f2937;font-size:14px;line-height:1.8;">
+              <li>Go back to the registration page</li>
+              <li>Locate the verification code field</li>
+              <li>Paste or type the 6-digit code shown above</li>
+              <li>Click "Verify & Complete" to finish</li>
+            </ol>
+          </div>
+
+          <!-- Expiration Notice -->
+          <div style="background:#fee2e2;border-left:4px solid #ef4444;padding:12px 16px;border-radius:8px;margin-bottom:24px;">
+            <p style="margin:0;font-size:13px;color:#7f1d1d;">
+              ⏱️ <strong>Valid for ${verificationCodeTtlDays} days</strong> — After expiration, request a new code
+            </p>
+          </div>
+
+          <!-- Security Section -->
+          <div style="background:#f5f3ff;border-left:4px solid #8b5cf6;padding:16px;border-radius:8px;margin-bottom:24px;">
+            <p style="margin:0 0 10px 0;font-size:13px;font-weight:600;color:#6d28d9;text-transform:uppercase;letter-spacing:0.05em;">🔒 Safety Tips</p>
+            <ul style="margin:0;padding-left:20px;color:#4c1d95;font-size:13px;line-height:1.8;">
+              <li>Never share your verification code with anyone</li>
+              <li>Campus Event Management will never ask for this code via email or message</li>
+              <li>This is a confidential code meant only for you</li>
+            </ul>
+          </div>
+
+          <!-- CTA Button -->
+          <div style="text-align:center;margin:28px 0;">
+            <p style="margin:0 0 12px 0;font-size:13px;color:#6b7280;">Ready to verify? Go back to the app:</p>
+            <a href="https://intelligent-campus-event-management-8jou.onrender.com/dashboard" style="display:inline-block;background:linear-gradient(135deg,#0f766e 0%,#14b8a6 100%);color:#ffffff;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;transition:opacity 0.3s ease;">Open Registration Page</a>
+          </div>
+
+          <!-- Divider -->
+          <div style="height:1px;background:#e5e7eb;margin:28px 0;"></div>
+
+          <!-- Need Help Section -->
+          <div style="background:#f9fafb;padding:16px;border-radius:8px;margin-bottom:20px;">
+            <p style="margin:0 0 10px 0;font-size:13px;font-weight:600;color:#1f2937;">Need Help?</p>
+            <p style="margin:0;font-size:13px;color:#6b7280;line-height:1.6;">
+              If you didn't create this account or have any questions, please contact our support team at 
+              <a href="mailto:support@campusevent.com" style="color:#0f766e;text-decoration:none;font-weight:600;">support@campusevent.com</a>
+            </p>
+          </div>
+
+          <!-- Footer -->
+          <div style="text-align:center;border-top:1px solid #e5e7eb;padding-top:20px;">
+            <p style="margin:0 0 8px 0;font-size:12px;color:#6b7280;">
+              © 2024 Campus Event Management. All rights reserved.
+            </p>
+            <p style="margin:0;font-size:11px;color:#9ca3af;">
+              <a href="#" style="color:#0f766e;text-decoration:none;margin-right:12px;">Privacy Policy</a>
+              <a href="#" style="color:#0f766e;text-decoration:none;margin-right:12px;">Terms of Service</a>
+              <a href="#" style="color:#0f766e;text-decoration:none;">Contact Us</a>
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -72,30 +174,127 @@ function buildVerificationEmail({ name, email, role, verificationCode }) {
 }
 
 function buildSecondaryVerificationEmail({ name, email, role, verificationCode }) {
-  const subject = `Secondary verification for ${role} registration`;
+  const subject = `🔐 Secondary Verification Required - ${role.charAt(0).toUpperCase() + role.slice(1)} Account`;
   const safeName = name || "there";
+  const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
   const text = [
-    `Secondary verification requested for ${safeName} (${email})`,
-    `Role: ${role}`,
-    `Use this secondary verification code: ${verificationCode}`,
-    `This code expires in ${verificationCodeTtlDays} days.`
+    `Secondary Verification for ${safeName}'s ${role} Account`,
+    "",
+    `This is a secondary verification code for account registration.`,
+    `User: ${safeName} (${email})`,
+    `Role: ${roleLabel}`,
+    "",
+    `=== SECONDARY VERIFICATION CODE ===`,
+    `${verificationCode}`,
+    `===================================`,
+    "",
+    `This code expires in ${verificationCodeTtlDays} days.`,
+    "",
+    `INSTRUCTIONS:`,
+    `1. Share this code with ${safeName} through a secure channel`,
+    `2. They will use this code as their second verification step`,
+    `3. This completes the registration process for the ${role} role`,
+    "",
+    `Campus Event Management Team`
   ].join("\n");
 
   const html = `
-    <div style="font-family:Segoe UI,Arial,sans-serif;background:#f6f8fb;padding:24px;color:#1f2937;">
-      <div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;">
-        <div style="padding:18px 22px;background:linear-gradient(135deg,#7c2d12,#ea580c);color:#ffffff;">
-          <h2 style="margin:0;font-size:20px;">Campus Event Management</h2>
-          <p style="margin:6px 0 0 0;font-size:13px;opacity:0.95;">Secondary role verification</p>
+    <div style="font-family:'Segoe UI','-apple-system','BlinkMacSystemFont','Roboto',sans-serif;background:linear-gradient(135deg,#7c2d12 0%,#ea580c 100%);padding:40px 20px;margin:0;">
+      <div style="max-width:600px;margin:0 auto;">
+        <!-- Header Banner -->
+        <div style="background:linear-gradient(135deg,#7c2d12 0%,#ea580c 100%);padding:40px 30px;border-radius:16px 16px 0 0;text-align:center;color:#ffffff;">
+          <div style="font-size:48px;margin-bottom:12px;">🔐✅</div>
+          <h1 style="margin:0 0 8px 0;font-size:28px;font-weight:700;">Secondary Verification</h1>
+          <p style="margin:0;font-size:15px;opacity:0.95;">Additional Security Step for ${roleLabel} Account</p>
         </div>
-        <div style="padding:22px;">
-          <p style="margin:0 0 12px 0;font-size:15px;">Secondary verification request for <strong>${safeName}</strong> (${email})</p>
-          <p style="margin:0 0 12px 0;font-size:14px;line-height:1.55;">Role: <strong>${role}</strong></p>
-          <div style="margin:18px 0;padding:16px;border:1px dashed #ea580c;border-radius:10px;background:#fff7ed;text-align:center;">
-            <p style="margin:0 0 6px 0;font-size:12px;color:#c2410c;letter-spacing:0.08em;text-transform:uppercase;">Secondary Verification Code</p>
-            <p style="margin:0;font-size:32px;font-weight:700;letter-spacing:0.2em;color:#c2410c;">${verificationCode}</p>
+
+        <!-- Main Content -->
+        <div style="background:#ffffff;padding:40px 30px;border-radius:0 0 16px 16px;">
+          <!-- Important Notice -->
+          <div style="background:#fef3c7;border-left:4px solid #f59e0b;padding:16px;border-radius:8px;margin-bottom:24px;">
+            <p style="margin:0;font-size:14px;color:#92400e;font-weight:600;">
+              ⚠️ This is a restricted email verification — forward and share appropriately
+            </p>
           </div>
-          <p style="margin:0;font-size:13px;color:#4b5563;">This code expires in ${verificationCodeTtlDays} days.</p>
+
+          <!-- Greeting -->
+          <p style="margin:0 0 20px 0;font-size:16px;color:#1f2937;line-height:1.6;">
+            Secondary verification requested for <strong>${safeName}</strong>
+          </p>
+
+          <!-- Account Details -->
+          <div style="background:#f6f8fb;padding:16px;border-radius:8px;margin-bottom:24px;">
+            <p style="margin:0 0 8px 0;font-size:13px;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;">Registration Details</p>
+            <table style="width:100%;font-size:14px;color:#1f2937;">
+              <tr>
+                <td style="padding:6px 0;"><strong>User Name:</strong></td>
+                <td style="padding:6px 0;text-align:right;color:#7c2d12;">${safeName}</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 0;"><strong>Email Address:</strong></td>
+                <td style="padding:6px 0;text-align:right;color:#7c2d12;">${email}</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 0;"><strong>Account Role:</strong></td>
+                <td style="padding:6px 0;text-align:right;color:#7c2d12;font-weight:600;">${roleLabel}</td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- Secondary Verification Code -->
+          <div style="margin:28px 0;text-align:center;">
+            <p style="margin:0 0 12px 0;font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:0.08em;font-weight:600;">Secondary Verification Code</p>
+            <div style="background:linear-gradient(135deg,#fff7ed 0%,#fed7aa 100%);border:2px dashed #ea580c;border-radius:12px;padding:20px;margin:0;">
+              <p style="margin:0;font-size:40px;font-weight:900;letter-spacing:0.15em;color:#7c2d12;font-family:'Courier New',monospace;">${verificationCode}</p>
+            </div>
+            <p style="margin:12px 0 0 0;font-size:12px;color:#6b7280;">Click to copy the code above</p>
+          </div>
+
+          <!-- Instructions -->
+          <div style="background:#fffbeb;border-left:4px solid #f59e0b;padding:16px;border-radius:8px;margin-bottom:24px;">
+            <p style="margin:0 0 12px 0;font-size:13px;font-weight:600;color:#92400e;text-transform:uppercase;letter-spacing:0.05em;">What to do next</p>
+            <ol style="margin:0;padding-left:20px;color:#1f2937;font-size:14px;line-height:1.8;">
+              <li>Share this code with <strong>${safeName}</strong> securely</li>
+              <li>They will enter this code on the verification page</li>
+              <li>Their account will be fully activated</li>
+              <li>They can start using Campus Event Management</li>
+            </ol>
+          </div>
+
+          <!-- Security Information -->
+          <div style="background:#f5f3ff;border-left:4px solid #8b5cf6;padding:16px;border-radius:8px;margin-bottom:24px;">
+            <p style="margin:0 0 10px 0;font-size:13px;font-weight:600;color:#6d28d9;text-transform:uppercase;letter-spacing:0.05em;">🔒 Security Notes</p>
+            <ul style="margin:0;padding-left:20px;color:#4c1d95;font-size:13px;line-height:1.8;">
+              <li>This code is unique and valid for ${verificationCodeTtlDays} days only</li>
+              <li>For ${role} accounts, only share with the authorized person</li>
+              <li>Each code can be used once for verification</li>
+              <li>If code expires, request a new one from the registration page</li>
+            </ul>
+          </div>
+
+          <!-- Divider -->
+          <div style="height:1px;background:#e5e7eb;margin:28px 0;"></div>
+
+          <!-- Support Section -->
+          <div style="background:#f9fafb;padding:16px;border-radius:8px;">
+            <p style="margin:0 0 10px 0;font-size:13px;font-weight:600;color:#1f2937;">Questions or Concerns?</p>
+            <p style="margin:0;font-size:13px;color:#6b7280;line-height:1.6;">
+              Contact our support team at 
+              <a href="mailto:support@campusevent.com" style="color:#7c2d12;text-decoration:none;font-weight:600;">support@campusevent.com</a>
+            </p>
+          </div>
+
+          <!-- Footer -->
+          <div style="text-align:center;border-top:1px solid #e5e7eb;padding-top:20px;margin-top:20px;">
+            <p style="margin:0 0 8px 0;font-size:12px;color:#6b7280;">
+              © 2024 Campus Event Management. All rights reserved.
+            </p>
+            <p style="margin:0;font-size:11px;color:#9ca3af;">
+              <a href="#" style="color:#7c2d12;text-decoration:none;margin-right:12px;">Privacy Policy</a>
+              <a href="#" style="color:#7c2d12;text-decoration:none;margin-right:12px;">Terms of Service</a>
+              <a href="#" style="color:#7c2d12;text-decoration:none;">Contact Us</a>
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -105,39 +304,135 @@ function buildSecondaryVerificationEmail({ name, email, role, verificationCode }
 }
 
 function buildEmailChangeEmail({ name, email, verificationCode }) {
-  const subject = "Verify your new email address";
+  const subject = `🔐 Verify Your New Email Address - Campus Event Management`;
   const safeName = name || "there";
   const text = [
     `Hi ${safeName},`,
     "",
-    `You requested to change your account email to ${email}.`,
-    `Use this verification code: ${verificationCode}`,
-    `This code expires in ${verificationCodeTtlDays} days.`,
+    `Email Change Request for Your Campus Event Management Account`,
     "",
-    "If you did not request this, ignore this email.",
+    `You have requested to change your account email to: ${email}`,
     "",
-    "Campus Event Management"
+    `=== EMAIL VERIFICATION CODE ===`,
+    `${verificationCode}`,
+    `===============================`,
+    "",
+    `HOW TO VERIFY:`,
+    `1. Go to account settings in Campus Event Management`,
+    `2. Find the "Change Email" section`,
+    `3. Enter the verification code above`,
+    `4. Click "Confirm Email Change"`,
+    "",
+    `Valid for ${verificationCodeTtlDays} days.`,
+    "",
+    `Why did you receive this? We send this email when someone requests to change the email associated with an account.`,
+    "",
+    `If you did not request this change, please ignore this email or contact support immediately.`,
+    "",
+    "Campus Event Management Team"
   ].join("\n");
 
   const html = `
-    <div style="font-family:Segoe UI,Arial,sans-serif;background:#f6f8fb;padding:24px;color:#1f2937;">
-      <div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;">
-        <div style="padding:18px 22px;background:linear-gradient(135deg,#1d4ed8,#3b82f6);color:#ffffff;">
-          <h2 style="margin:0;font-size:20px;">Campus Event Management</h2>
-          <p style="margin:6px 0 0 0;font-size:13px;opacity:0.95;">Email change verification</p>
+    <div style="font-family:'Segoe UI','-apple-system','BlinkMacSystemFont','Roboto',sans-serif;background:linear-gradient(135deg,#1d4ed8 0%,#3b82f6 100%);padding:40px 20px;margin:0;">
+      <div style="max-width:600px;margin:0 auto;">
+        <!-- Header Banner -->
+        <div style="background:linear-gradient(135deg,#1d4ed8 0%,#3b82f6 100%);padding:40px 30px;border-radius:16px 16px 0 0;text-align:center;color:#ffffff;">
+          <div style="font-size:48px;margin-bottom:12px;">✉️🔄</div>
+          <h1 style="margin:0 0 8px 0;font-size:28px;font-weight:700;">Email Verification</h1>
+          <p style="margin:0;font-size:15px;opacity:0.95;">Confirm your new email address</p>
         </div>
-        <div style="padding:22px;">
-          <p style="margin:0 0 12px 0;font-size:15px;">Hi ${safeName},</p>
-          <p style="margin:0 0 12px 0;font-size:14px;line-height:1.55;">
-            We received a request to change your account email to <strong>${email}</strong>.
-            Please verify this new email address using the code below.
-          </p>
-          <div style="margin:18px 0;padding:16px;border:1px dashed #3b82f6;border-radius:10px;background:#eff6ff;text-align:center;">
-            <p style="margin:0 0 6px 0;font-size:12px;color:#1d4ed8;letter-spacing:0.08em;text-transform:uppercase;">Verification Code</p>
-            <p style="margin:0;font-size:32px;font-weight:700;letter-spacing:0.2em;color:#1d4ed8;">${verificationCode}</p>
+
+        <!-- Main Content -->
+        <div style="background:#ffffff;padding:40px 30px;border-radius:0 0 16px 16px;">
+          <!-- Alert Box -->
+          <div style="background:#dbeafe;border-left:4px solid #3b82f6;padding:16px;border-radius:8px;margin-bottom:24px;">
+            <p style="margin:0;font-size:14px;color:#1e40af;font-weight:600;">
+              ℹ️ You have requested to change the email address on your account
+            </p>
           </div>
-          <p style="margin:0;font-size:13px;color:#4b5563;">This code expires in ${verificationCodeTtlDays} days.</p>
-          <p style="margin:14px 0 0 0;font-size:12px;color:#6b7280;">If you did not request this, ignore this email.</p>
+
+          <!-- Greeting -->
+          <p style="margin:0 0 20px 0;font-size:16px;color:#1f2937;line-height:1.6;">
+            Hi <strong>${safeName}</strong>,
+          </p>
+
+          <!-- Change Summary -->
+          <div style="background:#f6f8fb;padding:20px;border-radius:8px;margin-bottom:24px;">
+            <p style="margin:0 0 12px 0;font-size:13px;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;">Email Change Details</p>
+            <div style="border-top:1px solid #e5e7eb;padding-top:12px;">
+              <p style="margin:8px 0;font-size:14px;color:#1f2937;">
+                <strong>New Email Address:</strong><br>
+                <span style="color:#1d4ed8;font-weight:600;">${email}</span>
+              </p>
+              <p style="margin:8px 0;font-size:13px;color:#6b7280;">
+                Once verified, we'll send all future communications to this address.
+              </p>
+            </div>
+          </div>
+
+          <!-- Verification Code -->
+          <div style="margin:28px 0;text-align:center;">
+            <p style="margin:0 0 12px 0;font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:0.08em;font-weight:600;">Verification Code</p>
+            <div style="background:linear-gradient(135deg,#eff6ff 0%,#e0f2fe 100%);border:2px dashed #3b82f6;border-radius:12px;padding:20px;margin:0;">
+              <p style="margin:0;font-size:40px;font-weight:900;letter-spacing:0.15em;color:#1d4ed8;font-family:'Courier New',monospace;">${verificationCode}</p>
+            </div>
+            <p style="margin:12px 0 0 0;font-size:12px;color:#6b7280;">Click to copy the code above</p>
+          </div>
+
+          <!-- Instructions -->
+          <div style="background:#f0fdf4;border-left:4px solid #22c55e;padding:16px;border-radius:8px;margin-bottom:24px;">
+            <p style="margin:0 0 12px 0;font-size:13px;font-weight:600;color:#166534;text-transform:uppercase;letter-spacing:0.05em;">Verification Steps</p>
+            <ol style="margin:0;padding-left:20px;color:#1f2937;font-size:14px;line-height:1.8;">
+              <li>Open your Campus Event Management account settings</li>
+              <li>Go to "Account & Security" section</li>
+              <li>Find "Change Email Address" option</li>
+              <li>Paste the code above in the verification field</li>
+              <li>Click "Confirm Email Change" to complete</li>
+            </ol>
+          </div>
+
+          <!-- Safety Notice -->
+          <div style="background:#fef2f2;border-left:4px solid #ef4444;padding:16px;border-radius:8px;margin-bottom:24px;">
+            <p style="margin:0 0 10px 0;font-size:13px;font-weight:600;color:#991b1b;text-transform:uppercase;letter-spacing:0.05em;">🛡️ Important Security Notice</p>
+            <ul style="margin:0;padding-left:20px;color:#7f1d1d;font-size:13px;line-height:1.8;">
+              <li><strong>Code Validity:</strong> This code expires in ${verificationCodeTtlDays} days</li>
+              <li><strong>One-time Use:</strong> The code can only be used once</li>
+              <li><strong>Confidentiality:</strong> Never share this code with anyone</li>
+              <li><strong>Didn't Request?:</strong> If you didn't initiate this change, secure your account immediately</li>
+            </ul>
+          </div>
+
+          <!-- Why Received Section -->
+          <div style="background:#f9fafb;padding:14px;border-radius:8px;margin-bottom:20px;border:1px solid #e5e7eb;">
+            <p style="margin:0;font-size:12px;color:#6b7280;line-height:1.6;">
+              <strong>Why did you receive this email?</strong><br>
+              We send this email whenever someone requests to change the email address associated with a Campus Event Management account. If this wasn't you, please secure your account right away.
+            </p>
+          </div>
+
+          <!-- Divider -->
+          <div style="height:1px;background:#e5e7eb;margin:28px 0;"></div>
+
+          <!-- Support -->
+          <div style="background:#f9fafb;padding:16px;border-radius:8px;margin-bottom:20px;">
+            <p style="margin:0 0 10px 0;font-size:13px;font-weight:600;color:#1f2937;">Need Assistance?</p>
+            <p style="margin:0;font-size:13px;color:#6b7280;line-height:1.6;">
+              If you have any questions or need help, contact our support team:<br>
+              <a href="mailto:support@campusevent.com" style="color:#1d4ed8;text-decoration:none;font-weight:600;">support@campusevent.com</a>
+            </p>
+          </div>
+
+          <!-- Footer -->
+          <div style="text-align:center;border-top:1px solid #e5e7eb;padding-top:20px;">
+            <p style="margin:0 0 8px 0;font-size:12px;color:#6b7280;">
+              © 2024 Campus Event Management. All rights reserved.
+            </p>
+            <p style="margin:0;font-size:11px;color:#9ca3af;">
+              <a href="#" style="color:#1d4ed8;text-decoration:none;margin-right:12px;">Privacy Policy</a>
+              <a href="#" style="color:#1d4ed8;text-decoration:none;margin-right:12px;">Terms of Service</a>
+              <a href="#" style="color:#1d4ed8;text-decoration:none;">Contact Us</a>
+            </p>
+          </div>
         </div>
       </div>
     </div>

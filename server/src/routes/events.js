@@ -2,8 +2,9 @@ const express = require("express");
 const rateLimit = require("express-rate-limit");
 const Event = require("../models/Event");
 const Registration = require("../models/Registration");
+const User = require("../models/User");
 const { authRequired, requireRole } = require("../middleware/auth");
-const { isSmtpConfigured, sendMail } = require("../utils/mailer");
+const { isResendConfigured, isSmtpConfigured, sendMail } = require("../utils/mailer");
 const { validateEventPayload: validateEventSchema } = require("../shared/schemas");
 
 const router = express.Router();
@@ -81,6 +82,119 @@ function formatTimeRange12h(startTime, endTime) {
     return `${start} - ${end}`;
   }
   return start || end || "";
+}
+
+function formatDateForEmail(dateValue) {
+  if (!DATE_REGEX.test(dateValue || "")) {
+    return dateValue || "TBD";
+  }
+
+  const [year, month, day] = String(dateValue).split("-").map(Number);
+  const parsed = new Date(year, month - 1, day);
+  if (Number.isNaN(parsed.getTime())) {
+    return dateValue;
+  }
+
+  return parsed.toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric"
+  });
+}
+
+function buildRegistrationConfirmationEmail({ userName, event }) {
+  const eventTitle = event?.title || "Campus Event";
+  const eventDate = formatDateForEmail(event?.date);
+  const eventTime = formatTimeRange12h(event?.startTime, event?.endTime) || event?.startTime || "TBD";
+  const eventVenue = event?.venue || "TBD";
+  const eventDescription = String(event?.description || "").trim();
+  const safeUserName = userName || "Student";
+
+  const subject = `Registration Confirmed: ${eventTitle}`;
+  const text = [
+    `Hi ${safeUserName},`,
+    "",
+    "Your registration is confirmed.",
+    "",
+    `Event: ${eventTitle}`,
+    `Date: ${eventDate}`,
+    `Time: ${eventTime}`,
+    `Venue: ${eventVenue}`,
+    "",
+    eventDescription ? `About this event: ${eventDescription}` : "",
+    "",
+    "Next steps:",
+    "1. Add the event date and time to your calendar.",
+    "2. Arrive 10-15 minutes early for check-in.",
+    "3. Carry your student ID if required by organizers.",
+    "",
+    "If you did not register for this event, please contact support.",
+    "",
+    "Campus Event Management"
+  ].filter(Boolean).join("\n");
+
+  const html = `
+    <div style="font-family:Segoe UI,Arial,sans-serif;background:#f3f6fb;padding:24px;color:#1f2937;">
+      <div style="max-width:620px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;">
+        <div style="padding:20px 24px;background:linear-gradient(135deg,#0f172a,#1d4ed8);color:#ffffff;">
+          <h2 style="margin:0;font-size:22px;">Campus Event Management</h2>
+          <p style="margin:8px 0 0 0;font-size:13px;opacity:0.95;">Event registration confirmation</p>
+        </div>
+
+        <div style="padding:24px;">
+          <p style="margin:0 0 12px 0;font-size:15px;">Hi ${safeUserName},</p>
+          <p style="margin:0 0 16px 0;font-size:14px;line-height:1.6;">
+            Great news. Your spot is confirmed for the event below.
+          </p>
+
+          <div style="border:1px solid #dbeafe;background:#eff6ff;border-radius:12px;padding:16px 18px;margin-bottom:18px;">
+            <p style="margin:0 0 10px 0;font-size:12px;color:#1d4ed8;letter-spacing:0.08em;text-transform:uppercase;font-weight:600;">Event Details</p>
+            <table style="width:100%;border-collapse:collapse;font-size:14px;color:#1f2937;">
+              <tr>
+                <td style="padding:6px 0;font-weight:600;width:90px;vertical-align:top;">Title</td>
+                <td style="padding:6px 0;">${eventTitle}</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 0;font-weight:600;vertical-align:top;">Date</td>
+                <td style="padding:6px 0;">${eventDate}</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 0;font-weight:600;vertical-align:top;">Time</td>
+                <td style="padding:6px 0;">${eventTime}</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 0;font-weight:600;vertical-align:top;">Venue</td>
+                <td style="padding:6px 0;">${eventVenue}</td>
+              </tr>
+            </table>
+          </div>
+
+          ${eventDescription ? `
+          <div style="margin-bottom:18px;">
+            <p style="margin:0 0 8px 0;font-size:13px;color:#374151;font-weight:600;">About this event</p>
+            <p style="margin:0;font-size:14px;line-height:1.6;color:#4b5563;">${eventDescription}</p>
+          </div>
+          ` : ""}
+
+          <div style="border:1px solid #d1fae5;background:#ecfdf5;border-radius:12px;padding:14px 16px;margin-bottom:18px;">
+            <p style="margin:0 0 8px 0;font-size:13px;color:#065f46;font-weight:600;">What to do next</p>
+            <ol style="margin:0;padding-left:18px;font-size:13px;line-height:1.8;color:#065f46;">
+              <li>Save this event date and time in your calendar.</li>
+              <li>Arrive 10-15 minutes early for smooth check-in.</li>
+              <li>Carry your student ID if requested by the organizer.</li>
+            </ol>
+          </div>
+
+          <p style="margin:0;font-size:12px;color:#6b7280;line-height:1.6;">
+            If you did not register for this event, please contact support immediately.
+          </p>
+        </div>
+      </div>
+    </div>
+  `;
+
+  return { subject, text, html };
 }
 
 function getResolvedEndDate(dateValue, startTime, endDateValue, endTime) {
@@ -435,11 +549,19 @@ router.post("/:id/register", authRequired, requireRole(["student"]), mutationLim
       user: req.user.userId
     });
 
-    if (isSmtpConfigured()) {
-      const subject = `Registration confirmed: ${event.title}`;
-      const text = `You are registered for ${event.title} on ${event.date} at ${event.startTime} in ${event.venue}.`;
+    if (isResendConfigured() || isSmtpConfigured()) {
+      const userRecord = await User.findById(req.user.userId).select("name").lean();
+      const emailPayload = buildRegistrationConfirmationEmail({
+        userName: userRecord?.name,
+        event
+      });
 
-      sendMail({ to: req.user.email, subject, text }).catch((err) => {
+      sendMail({
+        to: req.user.email,
+        subject: emailPayload.subject,
+        text: emailPayload.text,
+        html: emailPayload.html
+      }).catch((err) => {
         console.error("Failed to send confirmation email", err.message);
       });
     }
