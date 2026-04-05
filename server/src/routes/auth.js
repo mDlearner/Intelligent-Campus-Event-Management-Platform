@@ -5,6 +5,7 @@ const rateLimit = require("express-rate-limit");
 const User = require("../models/User");
 const { authRequired } = require("../middleware/auth");
 const { isSmtpConfigured, sendMail } = require("../utils/mailer");
+const logger = require("../utils/logger");
 
 const router = express.Router();
 const jwtExpiresIn = process.env.JWT_EXPIRES_IN || "7d";
@@ -217,6 +218,18 @@ async function sendPendingEmailVerification({ name, pendingEmail, code }) {
 }
 
 async function sendRegistrationOtpEmails(user, isDualRole) {
+  const secondaryVerificationSentTo = isDualRole
+    ? process.env.VERIFICATION_RECIPIENT?.trim().toLowerCase()
+    : undefined;
+
+  if (isDualRole && !secondaryVerificationSentTo) {
+    const error = new Error("Secondary verification recipient is not configured");
+    error.status = 500;
+    throw error;
+  }
+
+  const verificationSentTo = String(user.email).trim().toLowerCase();
+
   const primaryPromise = sendWithTimeout(
     sendVerificationEmail(user),
     emailSendTimeoutMs,
@@ -224,7 +237,7 @@ async function sendRegistrationOtpEmails(user, isDualRole) {
   );
 
   if (!isDualRole) {
-    const verificationSentTo = await primaryPromise;
+    await primaryPromise;
     return { verificationSentTo };
   }
 
@@ -234,10 +247,36 @@ async function sendRegistrationOtpEmails(user, isDualRole) {
     "Secondary verification email timed out. Please try again."
   );
 
-  const [verificationSentTo, secondaryVerificationSentTo] = await Promise.all([
+  await Promise.all([
     primaryPromise,
     secondaryPromise
   ]);
+
+  return { verificationSentTo, secondaryVerificationSentTo };
+}
+
+function dispatchRegistrationOtpEmails(user, isDualRole) {
+  const verificationSentTo = String(user.email).trim().toLowerCase();
+  const secondaryVerificationSentTo = isDualRole
+    ? process.env.VERIFICATION_RECIPIENT?.trim().toLowerCase()
+    : undefined;
+
+  if (isDualRole && !secondaryVerificationSentTo) {
+    const error = new Error("Secondary verification recipient is not configured");
+    error.status = 500;
+    throw error;
+  }
+
+  setImmediate(async () => {
+    try {
+      await sendRegistrationOtpEmails(user, isDualRole);
+    } catch (error) {
+      logger.error(
+        { err: error, email: user.email, role: user.role },
+        "Background registration OTP dispatch failed"
+      );
+    }
+  });
 
   return { verificationSentTo, secondaryVerificationSentTo };
 }
@@ -317,7 +356,7 @@ router.post("/register", authLimiter, async (req, res, next) => {
         }
         await existing.save();
         const isDualRole = normalizedRole === "club" || normalizedRole === "admin";
-        const { verificationSentTo, secondaryVerificationSentTo } = await sendRegistrationOtpEmails(
+        const { verificationSentTo, secondaryVerificationSentTo } = dispatchRegistrationOtpEmails(
           existing,
           isDualRole
         );
@@ -359,7 +398,7 @@ router.post("/register", authLimiter, async (req, res, next) => {
     });
 
     const isDualRole = normalizedRole === "club" || normalizedRole === "admin";
-    const { verificationSentTo, secondaryVerificationSentTo } = await sendRegistrationOtpEmails(
+    const { verificationSentTo, secondaryVerificationSentTo } = dispatchRegistrationOtpEmails(
       user,
       isDualRole
     );
