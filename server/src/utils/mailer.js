@@ -4,6 +4,27 @@ const logger = require("./logger");
 
 let mailer;
 
+function buildFromAddress() {
+  const smtpUser = process.env.SMTP_USER?.trim();
+  const smtpFrom = process.env.SMTP_FROM?.trim();
+
+  if (!smtpUser) {
+    return smtpFrom;
+  }
+
+  if (!smtpFrom) {
+    return smtpUser;
+  }
+
+  const namedAddressMatch = smtpFrom.match(/^(.*)<([^>]+)>$/);
+  if (namedAddressMatch) {
+    const displayName = namedAddressMatch[1].trim().replace(/^"|"$/g, "");
+    return displayName ? `${displayName} <${smtpUser}>` : smtpUser;
+  }
+
+  return smtpUser;
+}
+
 async function resolveSmtpHost(host, family) {
   if (family !== 4) {
     return { host, tlsServername: host };
@@ -76,7 +97,7 @@ async function sendMail({ to, subject, text, html }) {
 
   const transporter = getMailer();
 
-  const from = process.env.SMTP_FROM || process.env.SMTP_USER;
+  const from = buildFromAddress();
   const info = await transporter.sendMail({ from, to, subject, text, html });
 
   logger.info(
