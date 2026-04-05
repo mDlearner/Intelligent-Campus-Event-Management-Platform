@@ -33,7 +33,7 @@ async function apiFetch(path, { method = "GET", body, token } = {}) {
   } catch (error) {
     if (error.name === "AbortError") {
       const timeoutError = new Error(
-        `Request timed out after ${Math.round(REQUEST_TIMEOUT_MS / 1000)}s (Ref: ${requestId})`
+        `Request timed out after ${Math.round(REQUEST_TIMEOUT_MS / 1000)}s`
       );
       timeoutError.status = 408;
       timeoutError.requestId = requestId;
@@ -52,8 +52,7 @@ async function apiFetch(path, { method = "GET", body, token } = {}) {
   if (!response.ok) {
     const serverRequestId = response.headers.get("x-request-id") || payload?.requestId || requestId;
     const message = payload?.message || `Request failed (${response.status})`;
-    const displayMessage = serverRequestId ? `${message} (Ref: ${serverRequestId})` : message;
-    const error = new Error(displayMessage);
+    const error = new Error(message);
     error.status = response.status;
     error.payload = payload;
     error.requestId = serverRequestId;
@@ -130,4 +129,12 @@ export function fetchProfile(token) {
 
 export function updateProfile(payload, token) {
   return apiFetch("/api/auth/profile", { method: "PUT", body: payload, token });
+}
+
+export function requestProfileEmailChange(payload, token) {
+  return apiFetch("/api/auth/profile/email/request", { method: "POST", body: payload, token });
+}
+
+export function verifyProfileEmailChange(payload, token) {
+  return apiFetch("/api/auth/profile/email/verify", { method: "POST", body: payload, token });
 }

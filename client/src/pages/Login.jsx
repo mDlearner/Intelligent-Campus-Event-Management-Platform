@@ -13,6 +13,16 @@ const initialForm = {
   year: ""
 };
 
+const DEPARTMENTS = [
+  "Artificial Intelligence and Machine Learning",
+  "Information Technology (IT)",
+  "Electronics and Communication Engineering (ECE)",
+  "Civil Engineering (CE)",
+  "Mechanical Engineering (ME)",
+  "Electrical and Electronics Engineering (EEE)",
+  "Computer Science and Engineering (CSE)"
+];
+
 export default function Login() {
   const navigate = useNavigate();
   const [mode, setMode] = useState("login");
@@ -20,6 +30,7 @@ export default function Login() {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState("");
+  const [verificationSentTo, setVerificationSentTo] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const [verificationRequired, setVerificationRequired] = useState(false);
   const [isResending, setIsResending] = useState(false);
@@ -54,6 +65,7 @@ export default function Login() {
       if (result?.verificationRequired) {
         setVerificationRequired(true);
         setVerificationEmail(result.email || form.email);
+        setVerificationSentTo(result.verificationSentTo || result.email || form.email);
         setError("");
         return;
       }
@@ -73,9 +85,10 @@ export default function Login() {
     setIsSubmitting(true);
 
     try {
+      const normalizedCode = verificationCode.replace(/\D/g, "").slice(0, 6);
       const result = await verifyRegistration({
         email: verificationEmail,
-        code: verificationCode.trim()
+        code: normalizedCode
       });
 
       setAuth({ token: result.token, user: result.user });
@@ -95,7 +108,10 @@ export default function Login() {
     setIsResending(true);
 
     try {
-      await resendVerification({ email: verificationEmail });
+      const result = await resendVerification({ email: verificationEmail });
+      if (result?.verificationSentTo) {
+        setVerificationSentTo(result.verificationSentTo);
+      }
     } catch (err) {
       setError(err.message || "Unable to resend code");
     } finally {
@@ -174,15 +190,23 @@ export default function Login() {
                 </select>
               </div>
               <div>
-                <label className="text-xs font-semibold text-[var(--text3)]">Department (Optional)</label>
-                <input
+                <label className="text-xs font-semibold text-[var(--text3)]">Department</label>
+                <select
                   className="neo-input mt-2"
-                  type="text"
                   name="department"
                   value={form.department}
                   onChange={handleChange}
-                  placeholder="Computer Science"
-                />
+                  required
+                >
+                  <option value="" disabled>
+                    Select department
+                  </option>
+                  {DEPARTMENTS.map((departmentName) => (
+                    <option key={departmentName} value={departmentName}>
+                      {departmentName}
+                    </option>
+                  ))}
+                </select>
               </div>
               {form.role === "student" && (
                 <div className="grid gap-3 md:grid-cols-2">
@@ -195,6 +219,7 @@ export default function Login() {
                       value={form.studentId}
                       onChange={handleChange}
                       placeholder="STU-2026-0245"
+                      required
                     />
                   </div>
                   <div>
@@ -206,6 +231,7 @@ export default function Login() {
                       value={form.year}
                       onChange={handleChange}
                       placeholder="2"
+                      required
                     />
                   </div>
                 </div>
@@ -214,7 +240,7 @@ export default function Login() {
           )}
 
           {error && (
-            <div className="rounded-2xl border border-[var(--rose)]/30 bg-[rgba(255,107,138,0.1)] px-3 py-2 text-sm text-[var(--rose)]">
+            <div className="rounded-2xl border border-[var(--rose)]/30 bg-[rgba(255,107,138,0.1)] px-3 py-2 text-center text-sm text-[var(--rose)]">
               {error}
             </div>
           )}
@@ -244,18 +270,20 @@ export default function Login() {
               className="neo-input mt-2"
               type="text"
               value={verificationCode}
-              onChange={(event) => setVerificationCode(event.target.value)}
+              onChange={(event) => setVerificationCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
               placeholder="Enter code"
               maxLength={6}
+              inputMode="numeric"
+              pattern="[0-9]{6}"
               required
             />
             <p className="mt-2 text-xs text-[var(--text3)]">
-              The code was sent to {verificationEmail}. It is valid for 7 days.
+              The code was sent to {verificationSentTo || verificationEmail}. It is valid for 7 days.
             </p>
           </div>
 
           {error && (
-            <div className="rounded-2xl border border-[var(--rose)]/30 bg-[rgba(255,107,138,0.1)] px-3 py-2 text-sm text-[var(--rose)]">
+            <div className="rounded-2xl border border-[var(--rose)]/30 bg-[rgba(255,107,138,0.1)] px-3 py-2 text-center text-sm text-[var(--rose)]">
               {error}
             </div>
           )}

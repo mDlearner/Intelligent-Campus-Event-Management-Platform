@@ -7,11 +7,14 @@ const userSchema = new mongoose.Schema(
     passwordHash: { type: String, required: true },
     role: { type: String, enum: ["student", "club", "admin"], default: "student" },
     department: { type: String, trim: true },
-    studentId: { type: String, trim: true },
+    studentId: { type: String, trim: true, unique: true, sparse: true },
     year: { type: String, trim: true },
     isVerified: { type: Boolean, default: true },
     verificationCode: { type: String, trim: true },
-    verificationExpiresAt: { type: Date }
+    verificationExpiresAt: { type: Date },
+    pendingEmail: { type: String, lowercase: true, trim: true },
+    pendingEmailCode: { type: String, trim: true },
+    pendingEmailExpiresAt: { type: Date }
   },
   { timestamps: true }
 );

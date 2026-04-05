@@ -26,4 +26,4 @@ npm run dev
 - `LOG_LEVEL` (optional, default `info`)
 
 Optional email settings:
-- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_SECURE`, `SMTP_FROM`
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_SECURE`, `SMTP_FROM`, `VERIFICATION_RECIPIENT`

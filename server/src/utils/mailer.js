@@ -1,4 +1,5 @@
 const nodemailer = require("nodemailer");
+const logger = require("./logger");
 
 let mailer;
 
@@ -51,7 +52,29 @@ async function sendMail({ to, subject, text, html }) {
   }
 
   const from = process.env.SMTP_FROM || process.env.SMTP_USER;
-  await transporter.sendMail({ from, to, subject, text, html });
+  const info = await transporter.sendMail({ from, to, subject, text, html });
+
+  logger.info(
+    {
+      to,
+      subject,
+      messageId: info.messageId,
+      accepted: info.accepted,
+      rejected: info.rejected,
+      response: info.response
+    },
+    "SMTP sendMail result"
+  );
+
+  if (Array.isArray(info.rejected) && info.rejected.length > 0) {
+    throw new Error(`Email rejected by SMTP provider: ${info.rejected.join(", ")}`);
+  }
+
+  if (Array.isArray(info.accepted) && info.accepted.length === 0) {
+    throw new Error("Email was not accepted by SMTP provider");
+  }
+
+  return info;
 }
 
 module.exports = {
