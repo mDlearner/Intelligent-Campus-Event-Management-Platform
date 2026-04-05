@@ -257,10 +257,10 @@ async function sendRegistrationOtpEmails(user, isDualRole) {
 
 function shouldDispatchOtpInBackground() {
   if (typeof process.env.OTP_BACKGROUND_DISPATCH === "string") {
-    return process.env.OTP_BACKGROUND_DISPATCH === "true";
+    return process.env.OTP_BACKGROUND_DISPATCH !== "false";
   }
 
-  return process.env.NODE_ENV !== "production";
+  return true;
 }
 
 async function dispatchRegistrationOtpEmails(user, isDualRole) {
