@@ -192,8 +192,31 @@ function enrichEventWithRegistration(event, registeredCount) {
 
 router.get("/", async (req, res, next) => {
   try {
-    const events = await Event.find().sort({ date: 1, startTime: 1 }).lean();
+    const rawPage = Number.parseInt(req.query.page, 10);
+    const rawLimit = Number.parseInt(req.query.limit, 10);
+    const hasPaginationQuery = Number.isInteger(rawPage) || Number.isInteger(rawLimit);
+    const page = Number.isInteger(rawPage) && rawPage > 0 ? rawPage : 1;
+    const limit = Number.isInteger(rawLimit) && rawLimit > 0 ? Math.min(rawLimit, 50) : 8;
+    const skip = (page - 1) * limit;
+
+    const [events, totalEvents] = await Promise.all([
+      hasPaginationQuery
+        ? Event.find().sort({ date: 1, startTime: 1 }).skip(skip).limit(limit).lean()
+        : Event.find().sort({ date: 1, startTime: 1 }).lean(),
+      hasPaginationQuery ? Event.countDocuments() : Promise.resolve(0)
+    ]);
+
     if (!events.length) {
+      if (hasPaginationQuery) {
+        return res.json({
+          items: [],
+          page,
+          limit,
+          total: totalEvents,
+          totalPages: Math.ceil(totalEvents / limit),
+          hasNextPage: false
+        });
+      }
       return res.json([]);
     }
 
@@ -212,6 +235,18 @@ router.get("/", async (req, res, next) => {
       const registeredCount = countMap[event._id.toString()] || 0;
       return enrichEventWithRegistration(event, registeredCount);
     });
+
+    if (hasPaginationQuery) {
+      const totalPages = Math.ceil(totalEvents / limit);
+      return res.json({
+        items: enriched,
+        page,
+        limit,
+        total: totalEvents,
+        totalPages,
+        hasNextPage: page < totalPages
+      });
+    }
 
     return res.json(enriched);
   } catch (err) {

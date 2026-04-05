@@ -48,6 +48,14 @@ export function fetchEvents() {
   return apiFetch("/api/events");
 }
 
+export function fetchEventsPaginated(page = 1, limit = 8) {
+  const params = new URLSearchParams({
+    page: String(page),
+    limit: String(limit)
+  });
+  return apiFetch(`/api/events?${params.toString()}`);
+}
+
 export function fetchEventById(eventId) {
   return apiFetch(`/api/events/${eventId}`);
 }

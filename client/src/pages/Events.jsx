@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { fetchEvents, createEvent, updateEvent, deleteEvent, registerForEvent } from '../lib/api.js';
+import { fetchEventsPaginated, createEvent, updateEvent, deleteEvent, registerForEvent } from '../lib/api.js';
 import { getAuth, getToken } from '../lib/auth.js';
 import { formatTime12h, formatTimeRange12h, formatEventDateTimeRange, getEventDateTimeSpan } from '../lib/time.js';
 import { validateEventPayload } from '../lib/schemas.js';
@@ -116,6 +116,7 @@ function getCategoryTone(tag) {
 export default function Events({ showEnded = false }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const pageSize = 8;
   const [searchParams, setSearchParams] = useSearchParams();
   const [form, setForm] = useState(initialEventForm);
   const [formError, setFormError] = useState("");
@@ -160,14 +161,21 @@ export default function Events({ showEnded = false }) {
     }
   }, [searchParams]);
 
-  const eventsQuery = useQuery({
-    queryKey: ['events'],
-    queryFn: fetchEvents,
+  const eventsQuery = useInfiniteQuery({
+    queryKey: ['events-paginated'],
+    initialPageParam: 1,
+    queryFn: ({ pageParam }) => fetchEventsPaginated(pageParam, pageSize),
+    getNextPageParam: (lastPage) => (lastPage.hasNextPage ? lastPage.page + 1 : undefined),
     refetchOnMount: 'always'
   });
 
-  const events = eventsQuery.data || [];
-  const loading = eventsQuery.isLoading || eventsQuery.isFetching;
+  const events = useMemo(
+    () => (eventsQuery.data?.pages || []).flatMap((page) => page.items || []),
+    [eventsQuery.data]
+  );
+  const loading = eventsQuery.isLoading;
+  const isLoadingMore = eventsQuery.isFetchingNextPage;
+  const hasNextPage = eventsQuery.hasNextPage;
   const error = eventsQuery.error?.message || '';
 
   function handleChange(event) {
@@ -214,13 +222,11 @@ export default function Events({ showEnded = false }) {
 
       if (editingEventId) {
         const updated = await updateEvent(editingEventId, payload, token);
-        queryClient.setQueryData(['events'], (previous = []) =>
-          previous.map((item) => (item._id === updated._id ? updated : item))
-        );
+        queryClient.invalidateQueries({ queryKey: ['events-paginated'] });
         setEditingEventId(null);
       } else {
-        const created = await createEvent(payload, token);
-        queryClient.setQueryData(['events'], (previous = []) => [created, ...previous]);
+        await createEvent(payload, token);
+        queryClient.invalidateQueries({ queryKey: ['events-paginated'] });
       }
       setForm(initialEventForm);
     } catch (err) {
@@ -248,9 +254,7 @@ export default function Events({ showEnded = false }) {
 
     try {
       await deleteEvent(eventId, token);
-      queryClient.setQueryData(['events'], (previous = []) =>
-        previous.filter((item) => item._id !== eventId)
-      );
+      queryClient.invalidateQueries({ queryKey: ['events-paginated'] });
       if (editingEventId === eventId) {
         setEditingEventId(null);
         setForm(initialEventForm);
@@ -269,6 +273,7 @@ export default function Events({ showEnded = false }) {
 
     try {
       await registerForEvent(eventId, token);
+      queryClient.invalidateQueries({ queryKey: ['events-paginated'] });
       window.dispatchEvent(new Event("registrations-updated"));
       alert("Registered successfully");
       return true;
@@ -751,6 +756,19 @@ export default function Events({ showEnded = false }) {
                   )}
                 </article>
               ))}
+            </div>
+          )}
+
+          {!loading && !error && hasNextPage && (
+            <div className="flex justify-center pt-2">
+              <button
+                className="rounded-full border border-[var(--border2)] bg-[var(--surface2)]/50 px-5 py-2 text-sm font-semibold text-[var(--text2)] transition hover:bg-[var(--surface2)] hover:text-[var(--text)] disabled:cursor-not-allowed disabled:opacity-60"
+                type="button"
+                onClick={() => eventsQuery.fetchNextPage()}
+                disabled={isLoadingMore}
+              >
+                {isLoadingMore ? 'Loading more...' : 'Load more events'}
+              </button>
             </div>
           )}
 
