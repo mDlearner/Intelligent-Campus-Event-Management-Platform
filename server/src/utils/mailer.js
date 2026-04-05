@@ -12,6 +12,7 @@ function getSmtpConfig() {
   const connectionTimeout = Number(process.env.SMTP_CONNECTION_TIMEOUT_MS || 10000);
   const greetingTimeout = Number(process.env.SMTP_GREETING_TIMEOUT_MS || 10000);
   const socketTimeout = Number(process.env.SMTP_SOCKET_TIMEOUT_MS || 10000);
+  const family = Number(process.env.SMTP_FAMILY || 4);
 
   if (!host || !user || !pass) {
     return null;
@@ -22,6 +23,7 @@ function getSmtpConfig() {
     port,
     secure,
     auth: { user, pass },
+    family,
     connectionTimeout,
     greetingTimeout,
     socketTimeout
