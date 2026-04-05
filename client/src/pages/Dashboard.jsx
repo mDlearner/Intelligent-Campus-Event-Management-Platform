@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { fetchMyNotifications, fetchMyRegistrations } from "../lib/api.js";
 import { getAuth, getToken } from "../lib/auth.js";
@@ -6,13 +7,33 @@ import { formatEventDateTimeRange } from "../lib/time.js";
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [auth, setAuth] = useState(() => getAuth());
-  const [registrations, setRegistrations] = useState([]);
-  const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshKey, setRefreshKey] = useState(0);
   const [showQrPass, setShowQrPass] = useState(false);
   const [selectedRegistration, setSelectedRegistration] = useState(null);
+
+  const dashboardQuery = useQuery({
+    queryKey: ["dashboard"],
+    queryFn: async () => {
+      const token = getToken();
+      if (!token) {
+        return { registrations: [], notifications: [] };
+      }
+
+      const [registrationsData, notificationsData] = await Promise.all([
+        fetchMyRegistrations(token),
+        fetchMyNotifications(token)
+      ]);
+
+      return { registrations: registrationsData, notifications: notificationsData };
+    },
+    enabled: !!getToken()
+  });
+
+  const registrations = dashboardQuery.data?.registrations || [];
+  const notifications = dashboardQuery.data?.notifications || [];
+  const loading = dashboardQuery.isLoading;
+
   const upcomingThisWeek = useMemo(() => {
     const now = new Date();
     const cutoff = new Date(now);
@@ -34,7 +55,7 @@ export default function Dashboard() {
     }
 
     function handleRegistrationsUpdate() {
-      setRefreshKey((prev) => prev + 1);
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     }
 
     window.addEventListener("auth-changed", handleAuthChange);
@@ -47,49 +68,6 @@ export default function Dashboard() {
       window.removeEventListener("registrations-updated", handleRegistrationsUpdate);
     };
   }, []);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    async function loadRegistrations() {
-      const token = getToken();
-      if (!token) {
-        if (isMounted) {
-          setRegistrations([]);
-          setNotifications([]);
-          setLoading(false);
-        }
-        return;
-      }
-
-      try {
-        const [registrationsData, notificationsData] = await Promise.all([
-          fetchMyRegistrations(token),
-          fetchMyNotifications(token)
-        ]);
-        if (isMounted) {
-          setRegistrations(registrationsData);
-          setNotifications(notificationsData);
-        }
-      } catch {
-        if (isMounted) {
-          setRegistrations([]);
-          setNotifications([]);
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    }
-
-    setLoading(true);
-    loadRegistrations();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [auth, refreshKey]);
 
   return (
     <section className="space-y-6">

@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { fetchEvents, createEvent, updateEvent, deleteEvent, registerForEvent } from '../lib/api.js';
 import { getAuth, getToken } from '../lib/auth.js';
@@ -200,10 +201,8 @@ function validateEventForm(form) {
 
 export default function Events({ showEnded = false }) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [form, setForm] = useState(initialEventForm);
   const [formError, setFormError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -247,35 +246,15 @@ export default function Events({ showEnded = false }) {
     }
   }, [searchParams]);
 
-  useEffect(() => {
-    let isMounted = true;
+  const eventsQuery = useQuery({
+    queryKey: ['events'],
+    queryFn: fetchEvents,
+    refetchOnMount: 'always'
+  });
 
-    async function loadEvents() {
-      if (isMounted) {
-        setLoading(true);
-        setError("");
-      }
-      try {
-        const data = await fetchEvents();
-        if (isMounted) {
-          setEvents(data);
-        }
-      } catch (err) {
-        if (isMounted) {
-          setError(err.message || "Unable to load events");
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    }
-
-    loadEvents();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  const events = eventsQuery.data || [];
+  const loading = eventsQuery.isLoading || eventsQuery.isFetching;
+  const error = eventsQuery.error?.message || '';
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -318,11 +297,13 @@ export default function Events({ showEnded = false }) {
 
       if (editingEventId) {
         const updated = await updateEvent(editingEventId, payload, token);
-        setEvents((prev) => prev.map((item) => (item._id === updated._id ? updated : item)));
+        queryClient.setQueryData(['events'], (previous = []) =>
+          previous.map((item) => (item._id === updated._id ? updated : item))
+        );
         setEditingEventId(null);
       } else {
         const created = await createEvent(payload, token);
-        setEvents((prev) => [created, ...prev]);
+        queryClient.setQueryData(['events'], (previous = []) => [created, ...previous]);
       }
       setForm(initialEventForm);
     } catch (err) {
@@ -350,7 +331,9 @@ export default function Events({ showEnded = false }) {
 
     try {
       await deleteEvent(eventId, token);
-      setEvents((prev) => prev.filter((item) => item._id !== eventId));
+      queryClient.setQueryData(['events'], (previous = []) =>
+        previous.filter((item) => item._id !== eventId)
+      );
       if (editingEventId === eventId) {
         setEditingEventId(null);
         setForm(initialEventForm);
