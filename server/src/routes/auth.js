@@ -255,7 +255,15 @@ async function sendRegistrationOtpEmails(user, isDualRole) {
   return { verificationSentTo, secondaryVerificationSentTo };
 }
 
-function dispatchRegistrationOtpEmails(user, isDualRole) {
+function shouldDispatchOtpInBackground() {
+  if (typeof process.env.OTP_BACKGROUND_DISPATCH === "string") {
+    return process.env.OTP_BACKGROUND_DISPATCH === "true";
+  }
+
+  return process.env.NODE_ENV !== "production";
+}
+
+async function dispatchRegistrationOtpEmails(user, isDualRole) {
   const verificationSentTo = String(user.email).trim().toLowerCase();
   const secondaryVerificationSentTo = isDualRole
     ? process.env.VERIFICATION_RECIPIENT?.trim().toLowerCase()
@@ -267,7 +275,11 @@ function dispatchRegistrationOtpEmails(user, isDualRole) {
     throw error;
   }
 
-  // Dispatch OTP emails asynchronously in background
+  if (!shouldDispatchOtpInBackground()) {
+    logger.info({ email: user.email, role: user.role, isDualRole }, "Sending registration OTP synchronously");
+    return sendRegistrationOtpEmails(user, isDualRole);
+  }
+
   process.nextTick(async () => {
     try {
       logger.info({ email: user.email, role: user.role, isDualRole }, "Starting background OTP dispatch");
@@ -359,7 +371,7 @@ router.post("/register", authLimiter, async (req, res, next) => {
         }
         await existing.save();
         const isDualRole = normalizedRole === "club" || normalizedRole === "admin";
-        const { verificationSentTo, secondaryVerificationSentTo } = dispatchRegistrationOtpEmails(
+        const { verificationSentTo, secondaryVerificationSentTo } = await dispatchRegistrationOtpEmails(
           existing,
           isDualRole
         );
@@ -401,7 +413,7 @@ router.post("/register", authLimiter, async (req, res, next) => {
     });
 
     const isDualRole = normalizedRole === "club" || normalizedRole === "admin";
-    const { verificationSentTo, secondaryVerificationSentTo } = dispatchRegistrationOtpEmails(
+    const { verificationSentTo, secondaryVerificationSentTo } = await dispatchRegistrationOtpEmails(
       user,
       isDualRole
     );

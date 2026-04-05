@@ -43,9 +43,10 @@ async function resolveSmtpHost(host, family) {
 }
 
 function getSmtpConfig() {
-  const host = process.env.SMTP_HOST;
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
+  const host = process.env.SMTP_HOST?.trim();
+  const user = process.env.SMTP_USER?.trim();
+  const rawPass = process.env.SMTP_PASS?.trim();
+  const pass = rawPass ? rawPass.replace(/\s+/g, "") : "";
   const port = Number(process.env.SMTP_PORT || 587);
   const secure = process.env.SMTP_SECURE === "true" || port === 465;
   const connectionTimeout = Number(process.env.SMTP_CONNECTION_TIMEOUT_MS || 10000);
