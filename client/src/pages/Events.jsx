@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { fetchEvents, createEvent, updateEvent, deleteEvent, registerForEvent } from '../lib/api.js';
 import { getAuth, getToken } from '../lib/auth.js';
 import { formatTime12h, formatTimeRange12h, formatEventDateTimeRange, getEventDateTimeSpan } from '../lib/time.js';
+import { validateEventPayload } from '../lib/schemas.js';
 
 const initialEventForm = {
   title: "",
@@ -112,93 +113,6 @@ function getCategoryTone(tag) {
   return "border-[var(--border2)] bg-[var(--surface2)] text-[var(--text2)]";
 }
 
-function validateEventForm(form) {
-  const now = new Date();
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-  if (!form.title.trim()) {
-    return "Title is required";
-  }
-
-  if (!form.venue.trim()) {
-    return "Venue is required";
-  }
-
-  if (!Array.isArray(form.categories) || form.categories.length === 0) {
-    return "At least one category is required";
-  }
-
-  if (!DATE_REGEX.test(form.date || "")) {
-    return "Event date is required";
-  }
-
-  if (!TIME_REGEX.test(form.startTime || "")) {
-    return "Event start time is required";
-  }
-
-  if (!TIME_REGEX.test(form.endTime || "")) {
-    return "Event end time is required";
-  }
-
-  const maxSeats = Number(form.maxSeats);
-  if (!Number.isInteger(maxSeats) || maxSeats <= 0) {
-    return "Max seats must be an integer greater than 0";
-  }
-
-  const startDateTime = parseDateTime(form.date, form.startTime);
-  const endDateTime = parseDateTime(form.date, form.endTime);
-  const eventDayStart = parseDateTime(form.date, "00:00");
-
-  if (eventDayStart && eventDayStart < todayStart) {
-    return "Event date cannot be before today";
-  }
-
-  if (!startDateTime || !endDateTime) {
-    return "Event date/time values are invalid";
-  }
-
-  if (endDateTime <= startDateTime) {
-    return "Event end time must be after start time";
-  }
-
-  if (form.registrationCloseTime && !form.registrationCloseDate) {
-    return "Registration close date is required when close time is provided";
-  }
-
-  if (form.registrationCloseDate) {
-    if (!DATE_REGEX.test(form.registrationCloseDate)) {
-      return "Registration close date is invalid";
-    }
-
-    if (form.registrationCloseTime && !TIME_REGEX.test(form.registrationCloseTime)) {
-      return "Registration close time is invalid";
-    }
-
-    const closeDateTime = parseDateTime(
-      form.registrationCloseDate,
-      form.registrationCloseTime || "23:59"
-    );
-    if (!closeDateTime) {
-      return "Registration close date/time is invalid";
-    }
-
-    if (
-      closeDateTime.getFullYear() === now.getFullYear() &&
-      closeDateTime.getMonth() === now.getMonth() &&
-      closeDateTime.getDate() === now.getDate() &&
-      closeDateTime <= now
-    ) {
-      return "Registration close time must be greater than current time for today";
-    }
-
-    if (closeDateTime >= startDateTime) {
-      return "Registration must close before event start";
-    }
-  }
-
-  return "";
-}
-
 export default function Events({ showEnded = false }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -267,12 +181,6 @@ export default function Events({ showEnded = false }) {
     setIsSubmitting(true);
 
     try {
-      const validationError = validateEventForm(form);
-      if (validationError) {
-        setFormError(validationError);
-        return;
-      }
-
       const token = getToken();
       if (!token) {
         navigate("/login");
@@ -281,7 +189,7 @@ export default function Events({ showEnded = false }) {
 
       const payload = {
         title: form.title,
-        description: form.description,
+        description: form.description || "",
         date: form.date,
         startTime: form.startTime,
         endTime: form.endTime,
@@ -294,6 +202,15 @@ export default function Events({ showEnded = false }) {
         speakers: form.speakers.filter((s) => s.name),
         sponsors: form.sponsors.filter((s) => s.name)
       };
+
+      const validation = validateEventPayload(payload);
+      if (!validation.success) {
+        const errorMessages = Object.entries(validation.errors)
+          .map(([field, msgs]) => msgs.join(', '))
+          .join('; ');
+        setFormError(errorMessages || "Validation failed");
+        return;
+      }
 
       if (editingEventId) {
         const updated = await updateEvent(editingEventId, payload, token);

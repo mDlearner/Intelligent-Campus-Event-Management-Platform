@@ -3,6 +3,7 @@ const Event = require("../models/Event");
 const Registration = require("../models/Registration");
 const { authRequired, requireRole } = require("../middleware/auth");
 const { isSmtpConfigured, sendMail } = require("../utils/mailer");
+const { validateEventPayload: validateEventSchema } = require("../shared/schemas");
 
 const router = express.Router();
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
@@ -100,102 +101,6 @@ function getEventSpan(payload) {
     end,
     endDate: endDateValue || payload.date
   };
-}
-
-function validateEventPayload(payload) {
-  const errors = [];
-  const now = new Date();
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const title = typeof payload.title === "string" ? payload.title.trim() : "";
-  const venue = typeof payload.venue === "string" ? payload.venue.trim() : "";
-
-  if (!title) {
-    errors.push("Title is required");
-  }
-
-  if (!venue) {
-    errors.push("Venue is required");
-  }
-
-  if (!DATE_REGEX.test(payload.date || "")) {
-    errors.push("Event date must be in YYYY-MM-DD format");
-  }
-
-  if (payload.endDate && !DATE_REGEX.test(payload.endDate)) {
-    errors.push("Event end date must be in YYYY-MM-DD format");
-  }
-
-  if (!TIME_REGEX.test(payload.startTime || "")) {
-    errors.push("Event start time must be in HH:mm format");
-  }
-
-  if (!TIME_REGEX.test(payload.endTime || "")) {
-    errors.push("Event end time must be in HH:mm format");
-  }
-
-  const seats = Number(payload.maxSeats);
-  if (!Number.isInteger(seats) || seats <= 0) {
-    errors.push("Max seats must be an integer greater than 0");
-  }
-
-  if (payload.categories && Array.isArray(payload.categories) && payload.categories.length === 0) {
-    errors.push("At least one category is required");
-  }
-
-  const startDateTime = parseDateTime(payload.date || "", payload.startTime || "");
-  const endDateTime = parseDateTime(payload.date || "", payload.endTime || "");
-  const eventDayStart = parseDateTime(payload.date || "", "00:00");
-
-  if (eventDayStart && eventDayStart < todayStart) {
-    errors.push("Event date cannot be before today");
-  }
-
-  if (payload.endDate && DATE_REGEX.test(payload.endDate) && DATE_REGEX.test(payload.date || "")) {
-    const startDateOnly = parseDateTime(payload.date, "00:00");
-    const endDateOnly = parseDateTime(payload.endDate, "00:00");
-    if (startDateOnly && endDateOnly && endDateOnly < startDateOnly) {
-      errors.push("Event end date cannot be before event date");
-    }
-  }
-
-  const eventSpan = getEventSpan(payload);
-  if (!eventSpan) {
-    errors.push("Event date/time values are invalid");
-  } else if (eventSpan.end <= eventSpan.start) {
-    errors.push("Event end time must be after start time");
-  }
-
-  const closeDate = payload.registrationCloseDate;
-  const closeTime = payload.registrationCloseTime;
-  if (closeTime && !closeDate) {
-    errors.push("Registration close date is required when close time is provided");
-  }
-
-  if (closeDate && !DATE_REGEX.test(closeDate)) {
-    errors.push("Registration close date must be in YYYY-MM-DD format");
-  }
-
-  if (closeTime && !TIME_REGEX.test(closeTime)) {
-    errors.push("Registration close time must be in HH:mm format");
-  }
-
-  if (closeDate && startDateTime) {
-    const closeDateTime = parseDateTime(closeDate, closeTime || "23:59");
-    if (!closeDateTime) {
-      errors.push("Registration close date/time is invalid");
-    } else if (
-      closeDateTime.getFullYear() === now.getFullYear() &&
-      closeDateTime.getMonth() === now.getMonth() &&
-      closeDateTime.getDate() === now.getDate() &&
-      closeDateTime <= now
-    ) {
-      errors.push("Registration close time must be greater than current time for today");
-    } else if (closeDateTime >= startDateTime) {
-      errors.push("Registration must close before event start");
-    }
-  }
-
-  return errors;
 }
 
 async function checkVenueConflict(venue, date, startTime, endTime, excludeEventId = null) {
@@ -333,20 +238,23 @@ router.post("/", authRequired, requireRole(["admin", "club"]), async (req, res, 
   try {
     const payload = {
       ...req.body,
-      title: typeof req.body.title === "string" ? req.body.title.trim() : req.body.title,
-      venue: typeof req.body.venue === "string" ? req.body.venue.trim() : req.body.venue,
       maxSeats: Number(req.body.maxSeats),
       organizer: req.user.userId
     };
 
-    const errors = validateEventPayload(payload);
-    if (errors.length) {
-      return res.status(400).json({ message: errors[0], errors });
+    const validation = validateEventSchema(payload);
+    if (!validation.success) {
+      const errorMessages = Object.entries(validation.errors)
+        .map(([field, msgs]) => msgs.join(', '))
+        .join('; ');
+      return res.status(400).json({ message: errorMessages, errors: validation.errors });
     }
 
-    payload.endDate = getResolvedEndDate(payload.date, payload.startTime, payload.endDate, payload.endTime) || null;
+    const validatedPayload = validation.data;
+    validatedPayload.endDate = getResolvedEndDate(validatedPayload.date, validatedPayload.startTime, validatedPayload.endDate, validatedPayload.endTime) || null;
+    validatedPayload.organizer = req.user.userId;
 
-    const venueConflict = await checkVenueConflict(payload.venue, payload.date, payload.startTime, payload.endTime);
+    const venueConflict = await checkVenueConflict(validatedPayload.venue, validatedPayload.date, validatedPayload.startTime, validatedPayload.endTime);
     if (venueConflict) {
       return res.status(409).json({
         message: `Venue conflict: ${venueConflict.conflictingEventTitle} is scheduled at this venue from ${venueConflict.conflictingTime}`,
@@ -354,7 +262,7 @@ router.post("/", authRequired, requireRole(["admin", "club"]), async (req, res, 
       });
     }
 
-    const event = await Event.create(payload);
+    const event = await Event.create(validatedPayload);
     return res.status(201).json(event);
   } catch (err) {
     return next(err);
@@ -389,34 +297,30 @@ router.put("/:id", authRequired, requireRole(["admin", "club"]), async (req, res
     const mergedPayload = {
       ...existingEvent.toObject(),
       ...req.body,
-      title:
-        typeof (req.body.title ?? existingEvent.title) === "string"
-          ? (req.body.title ?? existingEvent.title).trim()
-          : req.body.title ?? existingEvent.title,
-      venue:
-        typeof (req.body.venue ?? existingEvent.venue) === "string"
-          ? (req.body.venue ?? existingEvent.venue).trim()
-          : req.body.venue ?? existingEvent.venue,
       maxSeats: Number(req.body.maxSeats ?? existingEvent.maxSeats)
     };
 
-    const errors = validateEventPayload(mergedPayload);
-    if (errors.length) {
-      return res.status(400).json({ message: errors[0], errors });
+    const validation = validateEventSchema(mergedPayload);
+    if (!validation.success) {
+      const errorMessages = Object.entries(validation.errors)
+        .map(([field, msgs]) => msgs.join(', '))
+        .join('; ');
+      return res.status(400).json({ message: errorMessages, errors: validation.errors });
     }
 
-    mergedPayload.endDate = getResolvedEndDate(
-      mergedPayload.date,
-      mergedPayload.startTime,
-      mergedPayload.endDate,
-      mergedPayload.endTime
+    const validatedPayload = validation.data;
+    validatedPayload.endDate = getResolvedEndDate(
+      validatedPayload.date,
+      validatedPayload.startTime,
+      validatedPayload.endDate,
+      validatedPayload.endTime
     ) || null;
 
     const venueConflict = await checkVenueConflict(
-      mergedPayload.venue,
-      mergedPayload.date,
-      mergedPayload.startTime,
-      mergedPayload.endTime,
+      validatedPayload.venue,
+      validatedPayload.date,
+      validatedPayload.startTime,
+      validatedPayload.endTime,
       existingEvent._id
     );
     if (venueConflict) {
@@ -426,33 +330,7 @@ router.put("/:id", authRequired, requireRole(["admin", "club"]), async (req, res
       });
     }
 
-    const updatePayload = {
-      ...req.body,
-      title:
-        typeof req.body.title === "string"
-          ? req.body.title.trim()
-          : req.body.title,
-      venue:
-        typeof req.body.venue === "string"
-          ? req.body.venue.trim()
-          : req.body.venue,
-      maxSeats:
-        req.body.maxSeats === undefined
-          ? undefined
-          : Number(req.body.maxSeats)
-    };
-
-    if (updatePayload.maxSeats === undefined) {
-      delete updatePayload.maxSeats;
-    }
-    if (updatePayload.title === undefined) {
-      delete updatePayload.title;
-    }
-    if (updatePayload.venue === undefined) {
-      delete updatePayload.venue;
-    }
-
-    const event = await Event.findByIdAndUpdate(req.params.id, updatePayload, {
+    const event = await Event.findByIdAndUpdate(req.params.id, validatedPayload, {
       new: true,
       runValidators: true
     });
