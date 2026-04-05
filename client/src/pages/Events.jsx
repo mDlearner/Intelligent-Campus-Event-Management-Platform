@@ -82,7 +82,7 @@ function getCategoryTone(tag) {
     return "border-amber-700/40 bg-[rgba(180,83,9,0.16)] text-amber-200";
   }
   if (key === "workshop") {
-    return "border-white/35 bg-[rgba(255,255,255,0.08)] text-white";
+    return "border-cyan-500/30 bg-[rgba(6,182,212,0.12)] text-cyan-300";
   }
   if (key === "other") {
     return "border-slate-500/30 bg-[rgba(100,116,139,0.14)] text-slate-300";
@@ -251,6 +251,10 @@ export default function Events({ showEnded = false }) {
     let isMounted = true;
 
     async function loadEvents() {
+      if (isMounted) {
+        setLoading(true);
+        setError("");
+      }
       try {
         const data = await fetchEvents();
         if (isMounted) {
@@ -456,7 +460,7 @@ export default function Events({ showEnded = false }) {
       return "border-amber-700/40 bg-[rgba(180,83,9,0.16)] text-amber-200";
     }
     if (key === "workshop") {
-      return "border-white/35 bg-[rgba(255,255,255,0.08)] text-white";
+      return "border-cyan-500/30 bg-[rgba(6,182,212,0.12)] text-cyan-300";
     }
     if (key === "other") {
       return "border-slate-500/30 bg-[rgba(100,116,139,0.14)] text-slate-300";
@@ -711,7 +715,7 @@ export default function Events({ showEnded = false }) {
               ))}
             </div>
           )}
-          {error && (
+          {!loading && error && (
             <div className="rounded-2xl border border-[var(--rose)]/30 bg-[rgba(255,107,138,0.1)] px-4 py-3 text-sm text-[var(--rose)]">
               {error}
             </div>

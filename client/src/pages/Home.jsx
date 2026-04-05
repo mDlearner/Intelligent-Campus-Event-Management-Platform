@@ -2,7 +2,50 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchEvents } from "../lib/api.js";
 import { getAuth } from "../lib/auth.js";
-import { formatEventDateTimeRange } from "../lib/time.js";
+import { formatEventDateTimeRange, resolveEventEndDate } from "../lib/time.js";
+
+const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+
+function parseDateKey(dateValue) {
+  if (!DATE_REGEX.test(String(dateValue || ""))) {
+    return null;
+  }
+
+  const [year, month, day] = String(dateValue).split("-").map(Number);
+  const parsed = new Date(year, month - 1, day, 0, 0, 0, 0);
+  if (
+    parsed.getFullYear() !== year ||
+    parsed.getMonth() !== month - 1 ||
+    parsed.getDate() !== day
+  ) {
+    return null;
+  }
+
+  return parsed;
+}
+
+function getEventDateRangeKeys(event) {
+  const startDate = parseDateKey(event?.date);
+  if (!startDate) {
+    return [];
+  }
+
+  const resolvedEndDateValue =
+    resolveEventEndDate(event?.date, event?.startTime, event?.endDate, event?.endTime) || event?.date;
+  const endDate = parseDateKey(resolvedEndDateValue) || startDate;
+
+  const safeEnd = endDate < startDate ? startDate : endDate;
+  const keys = [];
+  const cursor = new Date(startDate.getTime());
+
+  // Guard against malformed data creating huge ranges.
+  while (cursor <= safeEnd && keys.length < 366) {
+    keys.push(formatDateKey(cursor));
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  return keys;
+}
 
 function parseEventDate(event) {
   if (!event?.date) {
@@ -120,10 +163,17 @@ export default function Home() {
       if (!event?.date) {
         continue;
       }
-      const key = String(event.date);
-      const bucket = map.get(key) || [];
-      bucket.push(event);
-      map.set(key, bucket);
+
+      const eventDateKeys = getEventDateRangeKeys(event);
+      if (eventDateKeys.length === 0) {
+        continue;
+      }
+
+      for (const key of eventDateKeys) {
+        const bucket = map.get(key) || [];
+        bucket.push(event);
+        map.set(key, bucket);
+      }
     }
 
     for (const [key, list] of map.entries()) {

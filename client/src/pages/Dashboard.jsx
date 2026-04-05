@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchMyNotifications, fetchMyRegistrations, sendReminders } from "../lib/api.js";
+import { fetchMyNotifications, fetchMyRegistrations } from "../lib/api.js";
 import { getAuth, getToken } from "../lib/auth.js";
 import { formatEventDateTimeRange } from "../lib/time.js";
 
@@ -11,10 +11,8 @@ export default function Dashboard() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [notice, setNotice] = useState("");
   const [showQrPass, setShowQrPass] = useState(false);
   const [selectedRegistration, setSelectedRegistration] = useState(null);
-  const canCreate = auth?.user?.role === "club" || auth?.user?.role === "admin";
   const upcomingThisWeek = useMemo(() => {
     const now = new Date();
     const cutoff = new Date(now);
@@ -93,83 +91,8 @@ export default function Dashboard() {
     };
   }, [auth, refreshKey]);
 
-  async function handleSendReminders() {
-    const token = getToken();
-    if (!token) {
-      navigate("/login");
-      return;
-    }
-
-    try {
-      const result = await sendReminders(token);
-      setNotice(`Scheduled ${result.scheduledCount} reminder(s).`);
-    } catch (err) {
-      setNotice(err.message || "Unable to schedule reminders");
-    }
-  }
-
   return (
-    <section className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)]">
-      <aside className="space-y-4">
-        <div className="bento-tile rounded-2xl p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[var(--text3)]">
-            My Dashboard
-          </p>
-          <div className="mt-4 space-y-2 text-sm text-[var(--text2)]">
-            <button className="neo-btn flex w-full items-center justify-between px-3 py-2 font-semibold" type="button">
-              Overview
-              <span className="rounded-full bg-[var(--gold2)]/20 px-2 py-0.5 text-[10px]">Live</span>
-            </button>
-            <button className="neo-btn-ghost flex w-full items-center justify-between px-3 py-2" type="button" onClick={() => navigate("/events")}>
-              Browse Events
-              <span className="text-xs text-[var(--text3)]">Discover</span>
-            </button>
-            <button className="neo-btn-ghost flex w-full items-center justify-between px-3 py-2" type="button">
-              Registrations
-              <span className="text-xs text-[var(--text3)]">{registrations.length}</span>
-            </button>
-            <button className="neo-btn-ghost flex w-full items-center justify-between px-3 py-2" type="button">
-              Calendar
-              <span className="text-xs text-[var(--text3)]">View</span>
-            </button>
-          </div>
-        </div>
-        <div className="bento-tile rounded-2xl p-4">
-          <h3 className="text-sm font-semibold text-[var(--text)]">Actions</h3>
-          {notice && (
-            <div className="mt-3 rounded-xl border border-[var(--teal)]/30 bg-[rgba(0,212,170,0.1)] px-3 py-2 text-xs text-[var(--teal)]">
-              {notice}
-            </div>
-          )}
-          <div className="mt-4 space-y-2">
-            {canCreate && (
-              <button
-                className="neo-btn w-full px-3 py-2 text-xs"
-                type="button"
-                onClick={() => navigate("/events/create")}
-              >
-                + Create Event
-              </button>
-            )}
-            <button
-              className="neo-btn-ghost w-full px-3 py-2 text-xs"
-              type="button"
-              onClick={() => navigate("/events")}
-            >
-              View Calendar
-            </button>
-            <button
-              className="neo-btn-ghost w-full px-3 py-2 text-xs"
-              type="button"
-              onClick={handleSendReminders}
-            >
-              Send Reminders
-            </button>
-          </div>
-        </div>
-      </aside>
-
-      <div className="space-y-6">
+    <section className="space-y-6">
         <div className="grid gap-4 md:grid-cols-3">
           <div className="bento-tile rounded-2xl p-4">
             <p className="text-xs font-semibold text-[var(--text3)]">Registered Events</p>
@@ -191,67 +114,9 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <div className="bento-tile rounded-2xl p-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-[var(--text)]">Dashboard</h2>
-              <span className="rounded-full bg-[rgba(0,212,170,0.12)] px-2 py-1 text-[10px] font-semibold text-[var(--teal)]">
-                Live
-              </span>
-            </div>
-            <p className="mt-2 text-sm text-[var(--text2)]">
-              Overview of your registered events and activity.
-            </p>
-            <div className="mt-6 rounded-2xl border border-[var(--border2)] bg-[var(--surface2)]/35 p-4">
-              <svg viewBox="0 0 400 140" className="h-32 w-full">
-                <defs>
-                  <linearGradient id="lineGradient" x1="0" x2="1" y1="0" y2="0">
-                    <stop offset="0%" stopColor="#4f46e5" />
-                    <stop offset="100%" stopColor="#f97316" />
-                  </linearGradient>
-                </defs>
-                <path
-                  d="M10 110 C 60 40, 120 80, 180 50 C 230 30, 280 40, 330 20"
-                  fill="none"
-                  stroke="url(#lineGradient)"
-                  strokeWidth="4"
-                />
-                <circle cx="180" cy="50" r="6" fill="#4f46e5" />
-                <circle cx="330" cy="20" r="6" fill="#f97316" />
-              </svg>
-            </div>
-          </div>
-
-          <div className="glass-panel rounded-2xl p-6">
-              <h3 className="text-sm font-semibold text-[var(--text)]">Notifications</h3>
-            <div className="mt-4 space-y-3 text-xs">
-                <div className="rounded-xl border border-[var(--rose)]/30 bg-[rgba(255,107,138,0.1)] px-3 py-2 text-[var(--rose)]">
-                <p className="font-semibold">Alerts</p>
-                <p>Check your registrations and calendar.</p>
-              </div>
-                <div className="rounded-xl border border-[var(--border2)] bg-[var(--surface2)]/35 px-3 py-2 text-[var(--text2)]">
-                <p className="font-semibold">Updates</p>
-                <p>Stay tuned for new events and opportunities.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <div className="bento-tile rounded-2xl p-6">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-[var(--text)]">My Registered Events</h2>
-            {registrations.length > 0 && (
-              <button
-                className="neo-btn rounded-full px-3 py-1 text-xs"
-                type="button"
-                onClick={() => {
-                  setSelectedRegistration(registrations[0]);
-                  setShowQrPass(true);
-                }}
-              >
-                Show QR Pass
-              </button>
-            )}
           </div>
           {loading && <p className="mt-3 text-sm text-[var(--text2)]">Loading events...</p>}
           {!loading && registrations.length === 0 && (
@@ -298,8 +163,6 @@ export default function Dashboard() {
             </div>
           )}
         </div>
-      </div>
-
       {showQrPass && selectedRegistration && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-[rgba(8,11,18,0.72)] px-4 py-6">
           <div className="bento-tile w-full max-w-md rounded-3xl p-6 text-center">

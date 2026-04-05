@@ -64,8 +64,20 @@ export default function Timeline() {
 
   if (loading) {
     return (
-      <div style={{ padding: '2.5rem', textAlign: 'center', color: 'var(--text2)' }}>
-        <p style={{ fontSize: '1.1rem', fontWeight: 700 }}>Loading timeline...</p>
+      <div className="timeline" aria-busy="true" aria-label="Loading timeline">
+        <div className="timeline-line"></div>
+        {Array.from({ length: 4 }).map((_, index) => (
+          <div key={`timeline-skeleton-${index}`} className="t-item" style={{ opacity: 0.85 }}>
+            <div className="t-dot" style={{ background: 'var(--surface2)', color: 'transparent' }}>
+              0
+            </div>
+            <div className="t-body" style={{ width: '100%' }}>
+              <div className="t-date" style={{ width: '7.5rem', height: '0.9rem', borderRadius: '999px', background: 'var(--surface2)' }} />
+              <div className="t-title" style={{ marginTop: '0.55rem', width: '75%', height: '1rem', borderRadius: '999px', background: 'var(--surface2)' }} />
+              <div className="t-where" style={{ marginTop: '0.5rem', width: '55%', height: '0.85rem', borderRadius: '999px', background: 'var(--surface2)' }} />
+            </div>
+          </div>
+        ))}
       </div>
     );
   }
