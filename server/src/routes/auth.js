@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 const rateLimit = require("express-rate-limit");
 const User = require("../models/User");
 const { authRequired } = require("../middleware/auth");
-const { isSmtpConfigured, sendMail } = require("../utils/mailer");
+const { isResendConfigured, isSmtpConfigured, sendMail } = require("../utils/mailer");
 const logger = require("../utils/logger");
 
 const router = express.Router();
@@ -329,6 +329,10 @@ router.post("/register", authLimiter, async (req, res, next) => {
       return res.status(400).json({ message: "Please select a valid department" });
     }
 
+    if (!isResendConfigured() && !isSmtpConfigured()) {
+      return res.status(500).json({ message: "Email service is not configured" });
+    }
+
     if (normalizedRole === "student" && (!normalizedStudentId || !normalizedYear)) {
       return res.status(400).json({
         message: "Student registration requires department, student ID, and year"
@@ -349,10 +353,6 @@ router.post("/register", authLimiter, async (req, res, next) => {
     const existing = await User.findOne({ email: normalizedEmail });
     if (existing) {
       if (!existing.isVerified) {
-        if (!isSmtpConfigured()) {
-          return res.status(500).json({ message: "SMTP is not configured" });
-        }
-
         existing.name = name;
         existing.passwordHash = await bcrypt.hash(password, 10);
         existing.role = normalizedRole;
@@ -389,10 +389,6 @@ router.post("/register", authLimiter, async (req, res, next) => {
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
-
-    if (!isSmtpConfigured()) {
-      return res.status(500).json({ message: "SMTP is not configured" });
-    }
 
     const user = await User.create({
       name,

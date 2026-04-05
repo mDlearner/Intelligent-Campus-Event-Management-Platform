@@ -1,8 +1,10 @@
 const nodemailer = require("nodemailer");
 const dns = require("dns").promises;
+const { Resend } = require("resend");
 const logger = require("./logger");
 
 let mailer;
+let resendClient;
 
 function buildFromAddress() {
   const smtpUser = process.env.SMTP_USER?.trim();
@@ -70,6 +72,17 @@ function getSmtpConfig() {
   };
 }
 
+function getResendConfig() {
+  const apiKey = process.env.RESEND_API_KEY?.trim();
+  const from = process.env.RESEND_FROM?.trim() || process.env.SMTP_FROM?.trim() || process.env.SMTP_USER?.trim();
+
+  if (!apiKey || !from) {
+    return null;
+  }
+
+  return { apiKey, from };
+}
+
 function getMailer() {
   return mailer;
 }
@@ -78,7 +91,42 @@ function isSmtpConfigured() {
   return Boolean(getSmtpConfig());
 }
 
+function isResendConfigured() {
+  return Boolean(getResendConfig());
+}
+
 async function sendMail({ to, subject, text, html }) {
+  const resendConfig = getResendConfig();
+  if (resendConfig) {
+    if (!resendClient) {
+      resendClient = new Resend(resendConfig.apiKey);
+    }
+
+    const info = await resendClient.emails.send({
+      from: resendConfig.from,
+      to,
+      subject,
+      text,
+      html
+    });
+
+    logger.info(
+      {
+        to,
+        subject,
+        provider: "resend",
+        response: info
+      },
+      "Resend sendMail result"
+    );
+
+    if (info?.error) {
+      throw new Error(info.error.message || "Email was rejected by Resend");
+    }
+
+    return info;
+  }
+
   const config = getSmtpConfig();
   if (!config) {
     throw new Error("SMTP is not configured");
@@ -125,6 +173,7 @@ async function sendMail({ to, subject, text, html }) {
 }
 
 module.exports = {
+  isResendConfigured,
   isSmtpConfigured,
   sendMail
 };
