@@ -108,8 +108,9 @@ function buildRegistrationConfirmationEmail({ userName, event }) {
   const eventDate = formatDateForEmail(event?.date);
   const eventTime = formatTimeRange12h(event?.startTime, event?.endTime) || event?.startTime || "TBD";
   const eventVenue = event?.venue || "TBD";
-  const eventDescription = String(event?.description || "").trim();
   const safeUserName = userName || "Student";
+  const clientBaseUrl = (process.env.CLIENT_BASE_URL || "https://intelligent-campus-event-management-8jou.onrender.com").replace(/\/$/, "");
+  const eventUrl = `${clientBaseUrl}/events/${String(event?._id || "")}`;
 
   const subject = `Registration Confirmed: ${eventTitle}`;
   const text = [
@@ -122,17 +123,12 @@ function buildRegistrationConfirmationEmail({ userName, event }) {
     `Time: ${eventTime}`,
     `Venue: ${eventVenue}`,
     "",
-    eventDescription ? `About this event: ${eventDescription}` : "",
-    "",
-    "Next steps:",
-    "1. Add the event date and time to your calendar.",
-    "2. Arrive 10-15 minutes early for check-in.",
-    "3. Carry your student ID if required by organizers.",
+    `Open event page: ${eventUrl}`,
     "",
     "If you did not register for this event, please contact support.",
     "",
     "Campus Event Management"
-  ].filter(Boolean).join("\n");
+  ].join("\n");
 
   const html = `
     <div style="font-family:Segoe UI,Arial,sans-serif;background:#f3f6fb;padding:24px;color:#1f2937;">
@@ -170,20 +166,9 @@ function buildRegistrationConfirmationEmail({ userName, event }) {
             </table>
           </div>
 
-          ${eventDescription ? `
-          <div style="margin-bottom:18px;">
-            <p style="margin:0 0 8px 0;font-size:13px;color:#374151;font-weight:600;">About this event</p>
-            <p style="margin:0;font-size:14px;line-height:1.6;color:#4b5563;">${eventDescription}</p>
-          </div>
-          ` : ""}
-
-          <div style="border:1px solid #d1fae5;background:#ecfdf5;border-radius:12px;padding:14px 16px;margin-bottom:18px;">
-            <p style="margin:0 0 8px 0;font-size:13px;color:#065f46;font-weight:600;">What to do next</p>
-            <ol style="margin:0;padding-left:18px;font-size:13px;line-height:1.8;color:#065f46;">
-              <li>Save this event date and time in your calendar.</li>
-              <li>Arrive 10-15 minutes early for smooth check-in.</li>
-              <li>Carry your student ID if requested by the organizer.</li>
-            </ol>
+          <div style="text-align:center;margin:24px 0 18px 0;">
+            <p style="margin:0 0 12px 0;font-size:13px;color:#6b7280;">Open this exact event:</p>
+            <a href="${eventUrl}" style="display:inline-block;background:linear-gradient(135deg,#0f766e 0%,#14b8a6 100%);color:#ffffff;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">Go To Event</a>
           </div>
 
           <p style="margin:0;font-size:12px;color:#6b7280;line-height:1.6;">

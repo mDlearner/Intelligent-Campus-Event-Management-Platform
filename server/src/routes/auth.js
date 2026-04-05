@@ -33,6 +33,8 @@ function buildVerificationEmail({ name, email, role, verificationCode }) {
   const subject = `🔐 Verify Your ${role.charAt(0).toUpperCase() + role.slice(1)} Account - Campus Event Management`;
   const safeName = name || "there";
   const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
+  const clientBaseUrl = (process.env.CLIENT_BASE_URL || "https://intelligent-campus-event-management-8jou.onrender.com").replace(/\/$/, "");
+  const browseEventsUrl = `${clientBaseUrl}/events`;
   const text = [
     `Welcome to Campus Event Management, ${safeName}!`,
     "",
@@ -43,18 +45,7 @@ function buildVerificationEmail({ name, email, role, verificationCode }) {
     `${verificationCode}`,
     `============================`,
     "",
-    `HOW TO VERIFY:`,
-    `1. Go back to your registration screen`,
-    `2. Enter the code above in the verification field`,
-    `3. Click "Verify" to complete your account setup`,
-    "",
-    `This code expires in ${verificationCodeTtlDays} days.`,
-    "",
-    `Security Tip: Never share this code with anyone. Campus Event Management team will never ask for it.`,
-    "",
-    `If you didn't create this account, please ignore this email or contact us for support.`,
-    "",
-    `Questions? Reply to this email or visit our help center.`,
+    `Browse events: ${browseEventsUrl}`,
     "",
     "Campus Event Management Team"
   ].join("\n");
@@ -108,50 +99,10 @@ function buildVerificationEmail({ name, email, role, verificationCode }) {
             <p style="margin:12px 0 0 0;font-size:12px;color:#6b7280;">Click to copy the code above</p>
           </div>
 
-          <!-- How to Verify Section -->
-          <div style="background:#fffbeb;border-left:4px solid #f59e0b;padding:16px;border-radius:8px;margin-bottom:24px;">
-            <p style="margin:0 0 12px 0;font-size:13px;font-weight:600;color:#92400e;text-transform:uppercase;letter-spacing:0.05em;">How to Verify</p>
-            <ol style="margin:0;padding-left:20px;color:#1f2937;font-size:14px;line-height:1.8;">
-              <li>Go back to the registration page</li>
-              <li>Locate the verification code field</li>
-              <li>Paste or type the 6-digit code shown above</li>
-              <li>Click "Verify & Complete" to finish</li>
-            </ol>
-          </div>
-
-          <!-- Expiration Notice -->
-          <div style="background:#fee2e2;border-left:4px solid #ef4444;padding:12px 16px;border-radius:8px;margin-bottom:24px;">
-            <p style="margin:0;font-size:13px;color:#7f1d1d;">
-              ⏱️ <strong>Valid for ${verificationCodeTtlDays} days</strong> — After expiration, request a new code
-            </p>
-          </div>
-
-          <!-- Security Section -->
-          <div style="background:#f5f3ff;border-left:4px solid #8b5cf6;padding:16px;border-radius:8px;margin-bottom:24px;">
-            <p style="margin:0 0 10px 0;font-size:13px;font-weight:600;color:#6d28d9;text-transform:uppercase;letter-spacing:0.05em;">🔒 Safety Tips</p>
-            <ul style="margin:0;padding-left:20px;color:#4c1d95;font-size:13px;line-height:1.8;">
-              <li>Never share your verification code with anyone</li>
-              <li>Campus Event Management will never ask for this code via email or message</li>
-              <li>This is a confidential code meant only for you</li>
-            </ul>
-          </div>
-
           <!-- CTA Button -->
           <div style="text-align:center;margin:28px 0;">
-            <p style="margin:0 0 12px 0;font-size:13px;color:#6b7280;">Ready to verify? Go back to the app:</p>
-            <a href="https://intelligent-campus-event-management-8jou.onrender.com/dashboard" style="display:inline-block;background:linear-gradient(135deg,#0f766e 0%,#14b8a6 100%);color:#ffffff;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;transition:opacity 0.3s ease;">Open Registration Page</a>
-          </div>
-
-          <!-- Divider -->
-          <div style="height:1px;background:#e5e7eb;margin:28px 0;"></div>
-
-          <!-- Need Help Section -->
-          <div style="background:#f9fafb;padding:16px;border-radius:8px;margin-bottom:20px;">
-            <p style="margin:0 0 10px 0;font-size:13px;font-weight:600;color:#1f2937;">Need Help?</p>
-            <p style="margin:0;font-size:13px;color:#6b7280;line-height:1.6;">
-              If you didn't create this account or have any questions, please contact our support team at 
-              <a href="mailto:support@campusevent.com" style="color:#0f766e;text-decoration:none;font-weight:600;">support@campusevent.com</a>
-            </p>
+            <p style="margin:0 0 12px 0;font-size:13px;color:#6b7280;">Ready to continue?</p>
+            <a href="${browseEventsUrl}" style="display:inline-block;background:linear-gradient(135deg,#0f766e 0%,#14b8a6 100%);color:#ffffff;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;transition:opacity 0.3s ease;">Browse Events</a>
           </div>
 
           <!-- Footer -->
