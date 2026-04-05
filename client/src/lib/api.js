@@ -1,16 +1,48 @@
 const API_BASE = import.meta.env.VITE_API_URL || "";
+const REQUEST_TIMEOUT_MS = Number(import.meta.env.VITE_API_TIMEOUT_MS || 15000);
+
+function buildRequestId() {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
 
 async function apiFetch(path, { method = "GET", body, token } = {}) {
-  const headers = { "Content-Type": "application/json" };
+  const requestId = buildRequestId();
+  const headers = {
+    "Content-Type": "application/json",
+    "x-request-id": requestId
+  };
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_BASE}${path}`, {
-    method,
-    headers,
-    body: body ? JSON.stringify(body) : undefined
-  });
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+  let response;
+  try {
+    response = await fetch(`${API_BASE}${path}`, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+      signal: controller.signal
+    });
+  } catch (error) {
+    if (error.name === "AbortError") {
+      const timeoutError = new Error(
+        `Request timed out after ${Math.round(REQUEST_TIMEOUT_MS / 1000)}s (Ref: ${requestId})`
+      );
+      timeoutError.status = 408;
+      timeoutError.requestId = requestId;
+      throw timeoutError;
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timeout);
+  }
 
   const contentType = response.headers.get("content-type") || "";
   const payload = contentType.includes("application/json")
@@ -18,10 +50,14 @@ async function apiFetch(path, { method = "GET", body, token } = {}) {
     : null;
 
   if (!response.ok) {
+    const serverRequestId = response.headers.get("x-request-id") || payload?.requestId || requestId;
     const message = payload?.message || `Request failed (${response.status})`;
-    const error = new Error(message);
+    const displayMessage = serverRequestId ? `${message} (Ref: ${serverRequestId})` : message;
+    const error = new Error(displayMessage);
     error.status = response.status;
     error.payload = payload;
+    error.requestId = serverRequestId;
+    error.rawMessage = message;
     throw error;
   }
 

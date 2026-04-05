@@ -1,0 +1,17 @@
+{
+  "name": "campus-event-workspace",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "predev": "kill-port 5000 5173",
+    "dev": "concurrently -n server,client -c yellow,cyan \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "dev:server": "npm run dev --prefix server",
+    "dev:client": "npm run dev --prefix client",
+    "build": "npm run build --prefix client",
+    "test": "npm run test --prefix server; npm run test --prefix client"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "kill-port": "^2.0.1"
+  }
+}

@@ -20,4 +20,10 @@ npm run dev
 ## Environment Variables (server)
 - `MONGODB_URI`
 - `JWT_SECRET`
+- `CORS_ORIGIN` (for production, set to your frontend URL)
 - `PORT` (optional, default 5000)
+- `JWT_EXPIRES_IN` (optional, default `7d`)
+- `LOG_LEVEL` (optional, default `info`)
+
+Optional email settings:
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_SECURE`, `SMTP_FROM`
