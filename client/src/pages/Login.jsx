@@ -303,9 +303,11 @@ export default function Login() {
               required
             />
             <p className="mt-2 text-xs text-[var(--text3)]">
-              {verificationStage === "secondary"
-                ? "Step 2 of 2: Enter the secondary OTP."
-                : "Step 1 of 2: Enter the primary OTP."} The code was sent to {verificationSentTo || verificationEmail}. It is valid for 7 days.
+              {secondaryVerificationSentTo
+                ? verificationStage === "secondary"
+                  ? "Step 2 of 2: Enter the secondary OTP."
+                  : "Step 1 of 2: Enter the primary OTP."
+                : "Enter the verification code."} The code was sent to {verificationSentTo || verificationEmail}.
             </p>
           </div>
 
@@ -322,9 +324,11 @@ export default function Login() {
           >
             {isSubmitting
               ? "Verifying..."
-              : verificationStage === "secondary"
+              : secondaryVerificationSentTo && verificationStage === "secondary"
               ? "Verify Step 2 & Complete"
-              : "Verify Step 1"}
+              : secondaryVerificationSentTo
+              ? "Verify Step 1"
+              : "Verify & Complete"}
           </button>
           <button
             className="neo-btn-ghost w-full px-3 py-2 text-sm disabled:opacity-70"

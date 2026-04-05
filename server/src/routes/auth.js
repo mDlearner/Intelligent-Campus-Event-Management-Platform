@@ -267,12 +267,15 @@ function dispatchRegistrationOtpEmails(user, isDualRole) {
     throw error;
   }
 
-  setImmediate(async () => {
+  // Dispatch OTP emails asynchronously in background
+  process.nextTick(async () => {
     try {
-      await sendRegistrationOtpEmails(user, isDualRole);
+      logger.info({ email: user.email, role: user.role, isDualRole }, "Starting background OTP dispatch");
+      const result = await sendRegistrationOtpEmails(user, isDualRole);
+      logger.info({ email: user.email, role: user.role, result }, "Background OTP dispatch completed successfully");
     } catch (error) {
       logger.error(
-        { err: error, email: user.email, role: user.role },
+        { err: error.message, stack: error.stack, email: user.email, role: user.role, isDualRole },
         "Background registration OTP dispatch failed"
       );
     }
