@@ -1,4 +1,5 @@
 const express = require("express");
+const rateLimit = require("express-rate-limit");
 const Event = require("../models/Event");
 const Registration = require("../models/Registration");
 const { authRequired, requireRole } = require("../middleware/auth");
@@ -6,6 +7,13 @@ const { isSmtpConfigured, sendMail } = require("../utils/mailer");
 const { validateEventPayload: validateEventSchema } = require("../shared/schemas");
 
 const router = express.Router();
+const mutationLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many requests, please try again later" }
+});
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_REGEX = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
@@ -269,7 +277,7 @@ router.get("/registrations/me", authRequired, async (req, res, next) => {
   }
 });
 
-router.post("/", authRequired, requireRole(["admin", "club"]), async (req, res, next) => {
+router.post("/", authRequired, requireRole(["admin", "club"]), mutationLimiter, async (req, res, next) => {
   try {
     const payload = {
       ...req.body,
@@ -322,11 +330,19 @@ router.get("/:id", async (req, res, next) => {
   }
 });
 
-router.put("/:id", authRequired, requireRole(["admin", "club"]), async (req, res, next) => {
+router.put("/:id", authRequired, requireRole(["admin", "club"]), mutationLimiter, async (req, res, next) => {
   try {
     const existingEvent = await Event.findById(req.params.id);
     if (!existingEvent) {
       return res.status(404).json({ message: "Event not found" });
+    }
+
+    if (
+      req.user.role !== "admin" &&
+      existingEvent.organizer &&
+      existingEvent.organizer.toString() !== String(req.user.userId)
+    ) {
+      return res.status(403).json({ message: "You can only update events you created" });
     }
 
     const mergedPayload = {
@@ -376,19 +392,29 @@ router.put("/:id", authRequired, requireRole(["admin", "club"]), async (req, res
   }
 });
 
-router.delete("/:id", authRequired, requireRole(["admin", "club"]), async (req, res, next) => {
+router.delete("/:id", authRequired, requireRole(["admin", "club"]), mutationLimiter, async (req, res, next) => {
   try {
-    const event = await Event.findByIdAndDelete(req.params.id);
+    const event = await Event.findById(req.params.id);
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
     }
+
+    if (
+      req.user.role !== "admin" &&
+      event.organizer &&
+      event.organizer.toString() !== String(req.user.userId)
+    ) {
+      return res.status(403).json({ message: "You can only delete events you created" });
+    }
+
+    await Event.findByIdAndDelete(req.params.id);
     return res.json({ message: "Event deleted" });
   } catch (err) {
     return next(err);
   }
 });
 
-router.post("/:id/register", authRequired, requireRole(["student"]), async (req, res, next) => {
+router.post("/:id/register", authRequired, requireRole(["student"]), mutationLimiter, async (req, res, next) => {
   try {
     if (!req.user?.email) {
       return res.status(400).json({ message: "User email is missing" });

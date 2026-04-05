@@ -1,5 +1,7 @@
 const express = require("express");
 const cors = require("cors");
+const helmet = require("helmet");
+const mongoSanitize = require("express-mongo-sanitize");
 const morgan = require("morgan");
 require("dotenv").config();
 
@@ -7,11 +9,34 @@ const connectDb = require("./config/db");
 const authRoutes = require("./routes/auth");
 const eventRoutes = require("./routes/events");
 const notificationRoutes = require("./routes/notifications");
+const sanitizeInput = require("./middleware/sanitizeInput");
 
 const app = express();
 
-app.use(cors());
+const allowedOrigins = (process.env.CORS_ORIGIN || "http://localhost:5173")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true
+  })
+);
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+  })
+);
 app.use(express.json());
+app.use(mongoSanitize());
+app.use(sanitizeInput);
 app.use(morgan("dev"));
 
 app.get("/health", (req, res) => {

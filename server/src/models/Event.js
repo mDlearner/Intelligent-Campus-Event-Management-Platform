@@ -103,4 +103,13 @@ const eventSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Fast event list sorting and date-based scans.
+eventSchema.index({ date: 1, startTime: 1 });
+// Multi-key index for category filtering.
+eventSchema.index({ categories: 1 });
+// Conflict and state checks for venue-based lookups.
+eventSchema.index({ venue: 1, status: 1 });
+// Ownership/administration queries.
+eventSchema.index({ organizer: 1, createdAt: -1 });
+
 module.exports = mongoose.model("Event", eventSchema);

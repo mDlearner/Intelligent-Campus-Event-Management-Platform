@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import ToastStack from "../components/ToastStack.jsx";
 import { fetchEventById, registerForEvent } from "../lib/api.js";
 import { getToken } from "../lib/auth.js";
 import { getCategoryTone } from "../lib/eventUi.js";
 import { formatEventDateTimeRange, formatTime12h, formatTimeRange12h } from "../lib/time.js";
+import { useToasts } from "../lib/useToasts.js";
 
 export default function EventDetail() {
   const { eventId } = useParams();
@@ -12,38 +14,70 @@ export default function EventDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isRegistering, setIsRegistering] = useState(false);
-  const [notice, setNotice] = useState("");
+  const { toasts, showToast, dismissToast } = useToasts();
+
+  async function loadEvent() {
+    try {
+      setLoading(true);
+      setError("");
+      const data = await fetchEventById(eventId);
+      setEvent(data);
+    } catch (err) {
+      const message = err.message || "Failed to load event";
+      setError(message);
+      showToast({
+        type: "error",
+        message,
+        actionLabel: "Retry",
+        action: () => loadEvent()
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    async function loadEvent() {
-      try {
-        const data = await fetchEventById(eventId);
-        setEvent(data);
-      } catch (err) {
-        setError(err.message || "Failed to load event");
-      } finally {
-        setLoading(false);
-      }
-    }
-
     loadEvent();
   }, [eventId]);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin">
-          <div className="h-12 w-12 rounded-full border-4 border-slate-200 border-t-[color:var(--accent)]" />
+      <section className="space-y-6">
+        <div className="h-9 w-36 animate-pulse rounded-full bg-[var(--surface2)]/70" />
+        <div className="glass-panel rounded-3xl p-8">
+          <div className="h-10 w-1/2 animate-pulse rounded-full bg-[var(--surface2)]/70" />
+          <div className="mt-4 h-4 w-1/3 animate-pulse rounded-full bg-[var(--surface2)]/70" />
+          <div className="mt-8 grid gap-4 md:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={`event-detail-skeleton-stat-${index}`}>
+                <div className="h-3 w-20 animate-pulse rounded-full bg-[var(--surface2)]/70" />
+                <div className="mt-3 h-6 w-28 animate-pulse rounded-full bg-[var(--surface2)]/70" />
+              </div>
+            ))}
+          </div>
+          <div className="mt-8 h-24 animate-pulse rounded-2xl bg-[var(--surface2)]/70" />
         </div>
-      </div>
+      </section>
     );
   }
 
   if (error || !event) {
     return (
-      <div className="rounded-2xl border border-red-200 bg-red-50 px-6 py-8 text-center text-red-700">
-        {error || "Event not found"}
-      </div>
+      <section className="space-y-4">
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-6 py-8 text-center text-red-700">
+          {error || "Event not found"}
+        </div>
+        <div className="flex justify-center">
+          <button
+            className="rounded-full border border-[var(--border2)] bg-[var(--surface)]/50 px-5 py-2 text-sm font-semibold text-[var(--text2)] transition hover:bg-[var(--surface)] hover:text-[var(--text)]"
+            type="button"
+            onClick={loadEvent}
+          >
+            Retry loading
+          </button>
+        </div>
+        <ToastStack toasts={toasts} onDismiss={dismissToast} />
+      </section>
     );
   }
 
@@ -56,9 +90,8 @@ export default function EventDetail() {
 
     try {
       setIsRegistering(true);
-      setNotice("");
       await registerForEvent(event._id, token);
-      setNotice("Registration confirmed. Your dashboard has been updated.");
+      showToast({ type: "success", message: "Registration confirmed. Your dashboard has been updated." });
       window.dispatchEvent(new Event("registrations-updated"));
       setEvent((prev) => {
         if (!prev) {
@@ -74,7 +107,12 @@ export default function EventDetail() {
         };
       });
     } catch (err) {
-      setNotice(err.message || "Unable to register for this event");
+      showToast({
+        type: "error",
+        message: err.message || "Unable to register for this event",
+        actionLabel: "Retry",
+        action: () => handleRegister()
+      });
     } finally {
       setIsRegistering(false);
     }
@@ -206,17 +244,6 @@ export default function EventDetail() {
           <p className="text-sm text-[var(--text2)]">
             Reserve your spot now. Your registration will appear in Dashboard instantly.
           </p>
-          {notice && (
-            <div
-              className={`mt-4 rounded-2xl border px-4 py-3 text-sm ${
-                notice.toLowerCase().includes("confirmed")
-                  ? "border-[var(--teal)]/30 bg-[rgba(0,212,170,0.1)] text-[var(--teal)]"
-                  : "border-[var(--rose)]/30 bg-[rgba(255,107,138,0.1)] text-[var(--rose)]"
-              }`}
-            >
-              {notice}
-            </div>
-          )}
           <div className="mt-5 flex flex-col gap-3 sm:flex-row">
             <button
               className="rounded-full bg-[var(--gold)] px-5 py-2 text-sm font-semibold text-[var(--bg)] disabled:opacity-60 transition hover:bg-[var(--gold2)]"
@@ -376,6 +403,7 @@ export default function EventDetail() {
         </div>
         </div>
       </div>
+      <ToastStack toasts={toasts} onDismiss={dismissToast} />
     </section>
   );
 }

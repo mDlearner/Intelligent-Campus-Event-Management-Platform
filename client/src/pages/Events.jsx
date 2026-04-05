@@ -1,11 +1,13 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import ToastStack from '../components/ToastStack.jsx';
 import { fetchEventsPaginated, createEvent, updateEvent, deleteEvent, registerForEvent } from '../lib/api.js';
 import { getAuth, getToken } from '../lib/auth.js';
 import { formatTime12h, formatTimeRange12h, formatEventDateTimeRange, getEventDateTimeSpan } from '../lib/time.js';
 import { getCategoryTone, getEventTags, getRegistrationCloseLabel } from '../lib/eventUi.js';
 import { validateEventPayload } from '../lib/schemas.js';
+import { useToasts } from '../lib/useToasts.js';
 
 const initialEventForm = {
   title: "",
@@ -62,6 +64,7 @@ export default function Events({ showEnded = false }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const pageSize = 8;
+  const loadMoreTriggerRef = useRef(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const [form, setForm] = useState(initialEventForm);
   const [formError, setFormError] = useState("");
@@ -73,6 +76,7 @@ export default function Events({ showEnded = false }) {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
+  const { toasts, showToast, dismissToast } = useToasts();
   const [auth, setAuth] = useState(() => getAuth());
   const canCreate = auth?.user?.role === "club" || auth?.user?.role === "admin";
   const isAdmin = auth?.user?.role === "admin";
@@ -121,7 +125,33 @@ export default function Events({ showEnded = false }) {
   const loading = eventsQuery.isLoading;
   const isLoadingMore = eventsQuery.isFetchingNextPage;
   const hasNextPage = eventsQuery.hasNextPage;
+  const fetchNextPage = eventsQuery.fetchNextPage;
   const error = eventsQuery.error?.message || '';
+
+  useEffect(() => {
+    const target = loadMoreTriggerRef.current;
+    if (!target || !hasNextPage) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const firstEntry = entries[0];
+        if (!firstEntry?.isIntersecting || isLoadingMore) {
+          return;
+        }
+        fetchNextPage();
+      },
+      {
+        root: null,
+        rootMargin: "180px",
+        threshold: 0
+      }
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [fetchNextPage, hasNextPage, isLoadingMore]);
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -205,7 +235,12 @@ export default function Events({ showEnded = false }) {
         setForm(initialEventForm);
       }
     } catch (err) {
-      alert(err.message || "Unable to delete event");
+      showToast({
+        type: "error",
+        message: err.message || "Unable to delete event",
+        actionLabel: "Retry",
+        action: () => handleDelete(eventId)
+      });
     }
   }
 
@@ -220,10 +255,15 @@ export default function Events({ showEnded = false }) {
       await registerForEvent(eventId, token);
       queryClient.invalidateQueries({ queryKey: ['events-paginated'] });
       window.dispatchEvent(new Event("registrations-updated"));
-      alert("Registered successfully");
+      showToast({ type: "success", message: "Registered successfully" });
       return true;
     } catch (err) {
-      alert(err.message || "Unable to register");
+      showToast({
+        type: "error",
+        message: err.message || "Unable to register",
+        actionLabel: "Retry",
+        action: () => handleRegister(eventId)
+      });
       return false;
     }
   }
@@ -329,8 +369,21 @@ export default function Events({ showEnded = false }) {
     setIsRegistering(false);
   }
 
+  function openEventDetail(eventId) {
+    navigate(`/events/${eventId}`);
+  }
+
+  const liveStatusMessage = loading
+    ? "Loading events"
+    : error
+    ? `Events error: ${error}`
+    : `${filteredEvents.length} events shown`;
+
   return (
-    <section className="space-y-8">
+    <section className="space-y-8" aria-busy={loading || isLoadingMore}>
+      <p className="sr-only" role="status" aria-live="polite">
+        {liveStatusMessage}
+      </p>
       <div className="glass-panel rounded-3xl p-6 md:p-8">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div>
@@ -387,6 +440,7 @@ export default function Events({ showEnded = false }) {
               className="w-full bg-transparent text-sm font-medium text-[var(--text)] outline-none placeholder:text-[var(--text3)] transition-colors duration-300"
               placeholder="Search events by name, club, or venue…"
               type="search"
+              aria-label="Search events"
               value={searchQuery}
               onChange={(event) => {
                 setSearchQuery(event.target.value);
@@ -419,6 +473,7 @@ export default function Events({ showEnded = false }) {
           <div className="glass-panel rounded-full px-4 py-3 lg:w-64">
             <select
               className="w-full bg-transparent text-sm font-semibold text-[var(--text)] outline-none"
+              aria-label="Filter events by category"
               value={selectedCategory}
               onChange={(event) => {
                 const nextCategory = event.target.value;
@@ -489,7 +544,16 @@ export default function Events({ showEnded = false }) {
                 <article
                   key={event._id}
                   className="bento-tile flex flex-col justify-between rounded-3xl p-5 transition hover:-translate-y-1 hover:border-[var(--gold2)] hover:shadow-lg hover:shadow-[rgba(240,192,64,0.1)] cursor-pointer overflow-hidden"
-                  onClick={() => navigate(`/events/${event._id}`)}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Open details for ${event.title}`}
+                  onClick={() => openEventDetail(event._id)}
+                  onKeyDown={(eventAction) => {
+                    if (eventAction.key === "Enter" || eventAction.key === " ") {
+                      eventAction.preventDefault();
+                      openEventDetail(event._id);
+                    }
+                  }}
                 >
                   <div
                     className={`relative flex h-52 items-end justify-between overflow-hidden rounded-2xl p-4 text-white ${
@@ -610,8 +674,21 @@ export default function Events({ showEnded = false }) {
             </div>
           )}
 
+          {!loading && !error && isLoadingMore && (
+            <div className="grid gap-4 md:grid-cols-2">
+              {Array.from({ length: 2 }).map((_, index) => (
+                <div key={`event-loadmore-skeleton-${index}`} className="bento-tile animate-pulse rounded-3xl p-4">
+                  <div className="h-52 rounded-2xl bg-[var(--surface2)]/70" />
+                  <div className="mt-4 h-4 w-2/3 rounded-full bg-[var(--surface2)]/70" />
+                  <div className="mt-3 h-3 w-1/2 rounded-full bg-[var(--surface2)]/70" />
+                </div>
+              ))}
+            </div>
+          )}
+
           {!loading && !error && hasNextPage && (
             <div className="flex justify-center pt-2">
+              <div ref={loadMoreTriggerRef} className="h-1 w-full" aria-hidden="true" />
               <button
                 className="rounded-full border border-[var(--border2)] bg-[var(--surface2)]/50 px-5 py-2 text-sm font-semibold text-[var(--text2)] transition hover:bg-[var(--surface2)] hover:text-[var(--text)] disabled:cursor-not-allowed disabled:opacity-60"
                 type="button"
@@ -682,6 +759,8 @@ export default function Events({ showEnded = false }) {
           </div>
         </div>
       )}
+
+      <ToastStack toasts={toasts} onDismiss={dismissToast} />
     </section>
   );
 }

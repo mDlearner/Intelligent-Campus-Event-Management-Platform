@@ -96,7 +96,20 @@ export default function Dashboard() {
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-[var(--text)]">My Registered Events</h2>
           </div>
-          {loading && <p className="mt-3 text-sm text-[var(--text2)]">Loading events...</p>}
+          {loading && (
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              {Array.from({ length: 2 }).map((_, index) => (
+                <div key={`dashboard-registration-skeleton-${index}`} className="animate-pulse rounded-2xl border border-[var(--border2)] bg-[var(--surface2)]/30 p-4">
+                  <div className="h-4 w-3/4 rounded-full bg-[var(--surface2)]/70" />
+                  <div className="mt-3 h-3 w-1/2 rounded-full bg-[var(--surface2)]/70" />
+                  <div className="mt-4 flex gap-2">
+                    <div className="h-8 w-20 rounded-full bg-[var(--surface2)]/70" />
+                    <div className="h-8 w-24 rounded-full bg-[var(--surface2)]/70" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
           {!loading && registrations.length === 0 && (
             <div className="mt-4 rounded-2xl border border-[var(--border2)] bg-[var(--surface2)]/30 px-4 py-6 text-sm text-[var(--text2)]">
               No registrations yet. Find your first event and unlock your QR pass.

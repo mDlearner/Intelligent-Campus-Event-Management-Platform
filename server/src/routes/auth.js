@@ -1,13 +1,31 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const rateLimit = require("express-rate-limit");
 const User = require("../models/User");
 const { authRequired } = require("../middleware/auth");
 const { isSmtpConfigured, sendMail } = require("../utils/mailer");
 
 const router = express.Router();
+const jwtExpiresIn = process.env.JWT_EXPIRES_IN || "7d";
 
-router.post("/register", async (req, res, next) => {
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many authentication attempts, please try again later" }
+});
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many login attempts, please try again later" }
+});
+
+router.post("/register", authLimiter, async (req, res, next) => {
   try {
     const { name, email, password, role, department, studentId, year } = req.body;
 
@@ -87,7 +105,7 @@ router.post("/register", async (req, res, next) => {
     const token = jwt.sign(
       { userId: user._id, role: user.role, email: user.email },
       process.env.JWT_SECRET,
-      { expiresIn: "7d" }
+      { expiresIn: jwtExpiresIn }
     );
 
     return res.status(201).json({
@@ -100,14 +118,15 @@ router.post("/register", async (req, res, next) => {
         department: user.department || "",
         studentId: user.studentId || "",
         year: user.year || ""
-      }
+      },
+      tokenExpiresIn: jwtExpiresIn
     });
   } catch (err) {
     return next(err);
   }
 });
 
-router.post("/login", async (req, res, next) => {
+router.post("/login", loginLimiter, async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
@@ -132,7 +151,7 @@ router.post("/login", async (req, res, next) => {
     const token = jwt.sign(
       { userId: user._id, role: user.role, email: user.email },
       process.env.JWT_SECRET,
-      { expiresIn: "7d" }
+      { expiresIn: jwtExpiresIn }
     );
 
     return res.json({
@@ -145,14 +164,15 @@ router.post("/login", async (req, res, next) => {
         department: user.department || "",
         studentId: user.studentId || "",
         year: user.year || ""
-      }
+      },
+      tokenExpiresIn: jwtExpiresIn
     });
   } catch (err) {
     return next(err);
   }
 });
 
-router.post("/verify", async (req, res, next) => {
+router.post("/verify", authLimiter, async (req, res, next) => {
   try {
     const { email, code } = req.body;
     if (!email || !code) {
@@ -188,7 +208,7 @@ router.post("/verify", async (req, res, next) => {
     const token = jwt.sign(
       { userId: user._id, role: user.role, email: user.email },
       process.env.JWT_SECRET,
-      { expiresIn: "7d" }
+      { expiresIn: jwtExpiresIn }
     );
 
     return res.json({
@@ -201,14 +221,15 @@ router.post("/verify", async (req, res, next) => {
         department: user.department || "",
         studentId: user.studentId || "",
         year: user.year || ""
-      }
+      },
+      tokenExpiresIn: jwtExpiresIn
     });
   } catch (err) {
     return next(err);
   }
 });
 
-router.post("/resend", async (req, res, next) => {
+router.post("/resend", authLimiter, async (req, res, next) => {
   try {
     const { email } = req.body;
     if (!email) {
