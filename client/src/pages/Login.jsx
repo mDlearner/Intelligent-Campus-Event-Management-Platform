@@ -9,9 +9,12 @@ const initialForm = {
   password: "",
   role: "student",
   department: "",
+  clubName: "",
   studentId: "",
   year: ""
 };
+
+const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
 
 const DEPARTMENTS = [
   "Artificial Intelligence and Machine Learning",
@@ -22,6 +25,8 @@ const DEPARTMENTS = [
   "Electrical and Electronics Engineering (EEE)",
   "Computer Science and Engineering (CSE)"
 ];
+
+const STUDENT_YEARS = ["1", "2", "3", "4"];
 
 export default function Login() {
   const navigate = useNavigate();
@@ -39,7 +44,27 @@ export default function Login() {
 
   function handleChange(event) {
     const { name, value } = event.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    const normalizedValue = name === "studentId" ? value.replace(/\D/g, "").slice(0, 12) : value;
+    setForm((prev) => {
+      const next = { ...prev, [name]: normalizedValue };
+
+      if (name === "role") {
+        if (value === "student") {
+          next.clubName = "";
+        } else if (value === "club") {
+          next.department = "";
+          next.studentId = "";
+          next.year = "";
+        } else if (value === "admin") {
+          next.department = "";
+          next.clubName = "";
+          next.studentId = "";
+          next.year = "";
+        }
+      }
+
+      return next;
+    });
   }
 
   async function handleSubmit(event) {
@@ -48,6 +73,16 @@ export default function Login() {
     setIsSubmitting(true);
 
     try {
+      if (mode === "register" && !strongPasswordRegex.test(form.password)) {
+        setError("Password must be at least 8 characters and include uppercase, lowercase, number, and special character");
+        return;
+      }
+
+      if (mode === "register" && form.role === "student" && form.studentId.length !== 12) {
+        setError("Student ID must be 12 digits");
+        return;
+      }
+
       const payload = mode === "login"
         ? { email: form.email, password: form.password }
         : {
@@ -55,9 +90,10 @@ export default function Login() {
             email: form.email,
             password: form.password,
             role: form.role,
-        department: form.department || undefined,
-        studentId: form.role === "student" ? form.studentId || undefined : undefined,
-        year: form.role === "student" ? form.year || undefined : undefined
+            department: form.role === "student" ? form.department || undefined : undefined,
+            clubName: form.role === "club" ? form.clubName || undefined : undefined,
+            studentId: form.role === "student" ? form.studentId || undefined : undefined,
+            year: form.role === "student" ? form.year || undefined : undefined
           };
 
       const result = mode === "login"
@@ -198,6 +234,11 @@ export default function Login() {
               placeholder="••••••••"
               required
             />
+            {mode === "register" && (
+              <p className="mt-2 text-xs text-[var(--text3)]">
+                Must be 8+ chars with uppercase, lowercase, number, and special character.
+              </p>
+            )}
           </div>
           {mode === "register" && (
             <>
@@ -214,25 +255,42 @@ export default function Login() {
                   <option value="admin">Admin</option>
                 </select>
               </div>
-              <div>
-                <label className="text-xs font-semibold text-[var(--text3)]">Department</label>
-                <select
-                  className="neo-input mt-2"
-                  name="department"
-                  value={form.department}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="" disabled>
-                    Select department
-                  </option>
-                  {DEPARTMENTS.map((departmentName) => (
-                    <option key={departmentName} value={departmentName}>
-                      {departmentName}
+              {form.role === "student" && (
+                <div>
+                  <label className="text-xs font-semibold text-[var(--text3)]">Department</label>
+                  <select
+                    className="neo-input mt-2"
+                    name="department"
+                    value={form.department}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="" disabled>
+                      Select department
                     </option>
-                  ))}
-                </select>
-              </div>
+                    {DEPARTMENTS.map((departmentName) => (
+                      <option key={departmentName} value={departmentName}>
+                        {departmentName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {form.role === "club" && (
+                <div>
+                  <label className="text-xs font-semibold text-[var(--text3)]">Club Name</label>
+                  <input
+                    className="neo-input mt-2"
+                    type="text"
+                    name="clubName"
+                    value={form.clubName}
+                    onChange={handleChange}
+                    placeholder="Coding Club"
+                    required
+                  />
+                </div>
+              )}
               {form.role === "student" && (
                 <div className="grid gap-3 md:grid-cols-2">
                   <div>
@@ -243,21 +301,30 @@ export default function Login() {
                       name="studentId"
                       value={form.studentId}
                       onChange={handleChange}
-                      placeholder="STU-2026-0245"
+                      placeholder="123456789012"
+                      maxLength={12}
+                      inputMode="numeric"
                       required
                     />
                   </div>
                   <div>
                     <label className="text-xs font-semibold text-[var(--text3)]">Year</label>
-                    <input
+                    <select
                       className="neo-input mt-2"
-                      type="text"
                       name="year"
                       value={form.year}
                       onChange={handleChange}
-                      placeholder="2"
                       required
-                    />
+                    >
+                      <option value="" disabled>
+                        Select year
+                      </option>
+                      {STUDENT_YEARS.map((yearValue) => (
+                        <option key={yearValue} value={yearValue}>
+                          {yearValue}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
               )}

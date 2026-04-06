@@ -58,7 +58,8 @@ export default function Profile() {
 
   function handleChange(event) {
     const { name, value } = event.target;
-    setProfile((prev) => ({ ...prev, [name]: value }));
+    const normalizedValue = name === "studentId" ? value.replace(/\D/g, "").slice(0, 12) : value;
+    setProfile((prev) => ({ ...prev, [name]: normalizedValue }));
   }
 
   async function handleSubmit(event) {
@@ -73,9 +74,16 @@ export default function Profile() {
         return;
       }
 
+      if (profile.role === "student" && profile.studentId && profile.studentId.length !== 12) {
+        setError("Student ID must be 12 digits");
+        setStatus("idle");
+        return;
+      }
+
       const payload = {
         name: profile.name,
         department: profile.department,
+        clubName: profile.clubName,
         studentId: profile.studentId,
         year: profile.year
       };
@@ -209,7 +217,9 @@ export default function Profile() {
                   name="studentId"
                   value={profile.studentId}
                   onChange={handleChange}
-                  placeholder="STU-2026-0245"
+                  placeholder="123456789012"
+                  maxLength={12}
+                  inputMode="numeric"
                 />
               </div>
               <div>

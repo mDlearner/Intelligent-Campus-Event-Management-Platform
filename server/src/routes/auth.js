@@ -11,6 +11,10 @@ const router = express.Router();
 const jwtExpiresIn = process.env.JWT_EXPIRES_IN || "7d";
 const verificationCodeTtlDays = 7;
 const emailSendTimeoutMs = Number(process.env.EMAIL_SEND_TIMEOUT_MS || 12000);
+const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
+const studentIdRegex = /^\d{12}$/;
+const allowedRoles = new Set(["student", "club", "admin"]);
+const allowedStudentYears = new Set(["1", "2", "3", "4"]);
 const allowedDepartments = new Set([
   "Artificial Intelligence and Machine Learning",
   "Information Technology (IT)",
@@ -560,7 +564,7 @@ const loginLimiter = rateLimit({
 
 router.post("/register", authLimiter, async (req, res, next) => {
   try {
-    const { name, email, password, role, department, studentId, year } = req.body;
+    const { name, email, password, role, department, clubName, studentId, year } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ message: "Missing required fields" });
@@ -568,11 +572,27 @@ router.post("/register", authLimiter, async (req, res, next) => {
 
     const normalizedEmail = String(email).trim().toLowerCase();
     const normalizedRole = role || "student";
-    const normalizedStudentId = studentId ? String(studentId).trim().toUpperCase() : undefined;
+    const normalizedDepartment = department ? String(department).trim() : undefined;
+    const normalizedClubName = clubName ? String(clubName).trim() : undefined;
+    const normalizedStudentId = studentId ? String(studentId).replace(/\D/g, "").slice(0, 12) : undefined;
     const normalizedYear = year ? String(year).trim() : undefined;
 
-    if (!department || !allowedDepartments.has(department)) {
+    if (!allowedRoles.has(normalizedRole)) {
+      return res.status(400).json({ message: "Invalid role" });
+    }
+
+    if (!strongPasswordRegex.test(password)) {
+      return res.status(400).json({
+        message: "Password must be at least 8 characters and include uppercase, lowercase, number, and special character"
+      });
+    }
+
+    if (normalizedRole === "student" && (!normalizedDepartment || !allowedDepartments.has(normalizedDepartment))) {
       return res.status(400).json({ message: "Please select a valid department" });
+    }
+
+    if (normalizedRole === "club" && !normalizedClubName) {
+      return res.status(400).json({ message: "Club registration requires club name" });
     }
 
     if (!isResendConfigured() && !isSmtpConfigured()) {
@@ -583,6 +603,14 @@ router.post("/register", authLimiter, async (req, res, next) => {
       return res.status(400).json({
         message: "Student registration requires department, student ID, and year"
       });
+    }
+
+    if (normalizedRole === "student" && !studentIdRegex.test(normalizedStudentId || "")) {
+      return res.status(400).json({ message: "Student ID must be exactly 12 digits" });
+    }
+
+    if (normalizedRole === "student" && !allowedStudentYears.has(normalizedYear)) {
+      return res.status(400).json({ message: "Please select a valid year (1-4)" });
     }
 
     if (normalizedStudentId) {
@@ -602,9 +630,10 @@ router.post("/register", authLimiter, async (req, res, next) => {
         existing.name = name;
         existing.passwordHash = await bcrypt.hash(password, 10);
         existing.role = normalizedRole;
-        existing.department = department;
-        existing.studentId = normalizedStudentId;
-        existing.year = normalizedYear;
+        existing.department = normalizedRole === "student" ? normalizedDepartment : undefined;
+        existing.clubName = normalizedRole === "club" ? normalizedClubName : undefined;
+        existing.studentId = normalizedRole === "student" ? normalizedStudentId : undefined;
+        existing.year = normalizedRole === "student" ? normalizedYear : undefined;
         existing.verificationCode = createVerificationCode();
         existing.verificationExpiresAt = createVerificationExpiry();
         existing.primaryOtpVerified = false;
@@ -641,9 +670,10 @@ router.post("/register", authLimiter, async (req, res, next) => {
       email: normalizedEmail,
       passwordHash,
       role: normalizedRole,
-      department,
-      studentId: normalizedStudentId,
-      year: normalizedYear,
+      department: normalizedRole === "student" ? normalizedDepartment : undefined,
+      clubName: normalizedRole === "club" ? normalizedClubName : undefined,
+      studentId: normalizedRole === "student" ? normalizedStudentId : undefined,
+      year: normalizedRole === "student" ? normalizedYear : undefined,
       isVerified: false,
       verificationCode: createVerificationCode(),
       verificationExpiresAt: createVerificationExpiry(),
@@ -708,6 +738,7 @@ router.post("/login", loginLimiter, async (req, res, next) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        clubName: user.clubName || "",
         department: user.department || "",
         studentId: user.studentId || "",
         year: user.year || ""
@@ -813,6 +844,7 @@ router.post("/verify", authLimiter, async (req, res, next) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        clubName: user.clubName || "",
         department: user.department || "",
         studentId: user.studentId || "",
         year: user.year || ""
@@ -912,6 +944,7 @@ router.get("/profile", authRequired, async (req, res, next) => {
       name: user.name,
       email: user.email,
       role: user.role,
+      clubName: user.clubName || "",
       department: user.department || "",
       studentId: user.studentId || "",
       year: user.year || ""
@@ -923,11 +956,22 @@ router.get("/profile", authRequired, async (req, res, next) => {
 
 router.put("/profile", authRequired, async (req, res, next) => {
   try {
-    const { name, department, studentId, year } = req.body;
+    const { name, department, clubName, studentId, year } = req.body;
+    const currentUser = await User.findById(req.user.userId);
+    if (!currentUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const normalizedStudentId = studentId ? String(studentId).replace(/\D/g, "").slice(0, 12) : "";
+    if (currentUser.role === "student" && normalizedStudentId && !studentIdRegex.test(normalizedStudentId)) {
+      return res.status(400).json({ message: "Student ID must be exactly 12 digits" });
+    }
+
     const updates = {
       name,
       department,
-      studentId,
+      clubName,
+      studentId: normalizedStudentId || undefined,
       year
     };
 
@@ -941,6 +985,7 @@ router.put("/profile", authRequired, async (req, res, next) => {
       name: user.name,
       email: user.email,
       role: user.role,
+      clubName: user.clubName || "",
       department: user.department || "",
       studentId: user.studentId || "",
       year: user.year || ""
@@ -1063,6 +1108,7 @@ router.post("/profile/email/verify", authRequired, authLimiter, async (req, res,
         name: user.name,
         email: user.email,
         role: user.role,
+        clubName: user.clubName || "",
         department: user.department || "",
         studentId: user.studentId || "",
         year: user.year || ""
