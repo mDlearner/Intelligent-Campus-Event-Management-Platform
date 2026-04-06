@@ -384,13 +384,13 @@ export default function Events({ showEnded = false }) {
       <p className="sr-only" role="status" aria-live="polite">
         {liveStatusMessage}
       </p>
-      <div className="glass-panel rounded-3xl p-6 md:p-8">
+      <div className="glass-panel rounded-3xl p-4 sm:p-5 md:p-8">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--text3)]">
               {showEnded ? "Event Archive" : "Events & Registrations"}
             </p>
-            <h1 className="mt-2 text-3xl font-semibold leading-tight md:text-4xl text-[var(--text)]">
+            <h1 className="mt-2 text-2xl font-semibold leading-tight sm:text-3xl md:text-4xl text-[var(--text)]">
               {showEnded ? "Ended Events" : "What's happening next?"}
             </h1>
             <p className="mt-3 max-w-2xl text-sm text-[var(--text2)]">
@@ -399,7 +399,7 @@ export default function Events({ showEnded = false }) {
                 : "Discover, filter, and register for campus events in real time."}
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="grid w-full gap-2 sm:flex sm:w-auto sm:flex-wrap">
             {canCreate && !showEnded && (
               <button
                 className="rounded-full border border-[var(--border2)] bg-[var(--gold)] px-5 py-2 text-sm font-semibold text-[var(--bg)] transition hover:bg-[var(--gold2)]"
@@ -418,7 +418,7 @@ export default function Events({ showEnded = false }) {
             </button>
           </div>
         </div>
-        <div className="mt-6 flex flex-col gap-4 lg:flex-row lg:items-center">
+        <div className="mt-5 flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-center">
           <div className="glass-panel flex flex-1 items-center gap-3 rounded-full px-4 py-3">
             <span className="text-[var(--text3)]">
               <svg
@@ -443,7 +443,13 @@ export default function Events({ showEnded = false }) {
               aria-label="Search events"
               value={searchQuery}
               onChange={(event) => {
-                setSearchQuery(event.target.value);
+                const nextValue = event.target.value;
+                setSearchQuery(nextValue);
+                if (!nextValue.trim()) {
+                  const nextParams = new URLSearchParams(searchParams);
+                  nextParams.delete("search");
+                  setSearchParams(nextParams, { replace: true });
+                }
               }}
               onBlur={() => {
                 const nextParams = new URLSearchParams(searchParams);
@@ -495,11 +501,11 @@ export default function Events({ showEnded = false }) {
             </select>
           </div>
           {!showEnded && (
-            <div className="flex flex-wrap gap-2">
+            <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
               {["All", "Happening Now", "This Week", "Workshops", "Paid Event"].map((filter) => (
                 <button
                   key={filter}
-                  className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
+                  className={`shrink-0 rounded-full px-4 py-2 text-xs font-semibold transition ${
                     activeFilter === filter
                       ? "bg-[var(--gold)] text-[var(--bg)]"
                       : "border border-[var(--border2)] bg-[var(--surface2)]/50 text-[var(--text2)] hover:bg-[var(--surface2)] hover:text-[var(--text)]"
@@ -556,7 +562,7 @@ export default function Events({ showEnded = false }) {
                   }}
                 >
                   <div
-                    className={`relative flex h-52 items-end justify-between overflow-hidden rounded-2xl p-4 text-white ${
+                    className={`relative flex h-44 items-end justify-between overflow-hidden rounded-2xl p-4 text-white sm:h-52 ${
                       event.imageUrl
                         ? "bg-[var(--surface2)]"
                         : index % 2 === 0
@@ -602,7 +608,7 @@ export default function Events({ showEnded = false }) {
                       ))}
                     </div>
                     <div className="mt-3 flex items-start justify-between gap-3">
-                      <h2 className="text-lg font-bold text-[var(--text)]">{event.title}</h2>
+                      <h2 className="text-base font-bold text-[var(--text)] sm:text-lg">{event.title}</h2>
                       {event.registrationOpen !== false && (
                         <span className="shrink-0 rounded-full bg-[var(--gold)]/20 px-3 py-1 text-[10px] font-semibold text-[var(--gold)]">
                           Seats: {event.seatsRemaining ?? event.maxSeats}
@@ -619,7 +625,7 @@ export default function Events({ showEnded = false }) {
                       </p>
                     )}
                     {event.description && (
-                      <p className="mt-3 text-sm font-semibold text-[var(--text2)]">{truncateText(event.description, 100)}</p>
+                      <p className="mt-3 text-sm font-semibold text-[var(--text2)]">{truncateText(event.description, 86)}</p>
                     )}
                   </div>
                   {!showEnded && (

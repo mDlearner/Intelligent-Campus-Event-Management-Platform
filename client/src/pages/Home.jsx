@@ -663,13 +663,13 @@ export default function Home() {
 
   return (
     <section className="w-full space-y-8">
-      <section className="glass-panel rounded-3xl p-5 md:p-6">
-        <div className="mb-4 flex items-center justify-between gap-4">
+      <section className="glass-panel rounded-3xl p-4 sm:p-5 md:p-6">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 sm:gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--text3)]">
               Spotlight
             </p>
-            <h3 className="mt-1 text-lg font-semibold text-[var(--text)]">Upcoming Events</h3>
+            <h3 className="mt-1 text-base font-semibold text-[var(--text)] sm:text-lg">Upcoming Events</h3>
             <p className="mt-1 text-xs text-[var(--text3)]">
               Browse the latest events with auto-scroll and manual navigation.
             </p>
@@ -700,7 +700,7 @@ export default function Home() {
         </div>
 
         {loading ? (
-          <div className="h-64 animate-pulse rounded-3xl bg-[var(--surface2)]/60" />
+            <div className="h-52 animate-pulse rounded-3xl bg-[var(--surface2)]/60 sm:h-64" />
         ) : !activeSlideEvent ? (
           <div className="rounded-2xl border border-dashed border-[var(--border2)] px-4 py-6 text-sm text-[var(--text2)]">
             No upcoming events to showcase.
@@ -716,13 +716,13 @@ export default function Home() {
             <div className="overflow-hidden rounded-3xl">
               <div
                 ref={carouselContainerRef}
-                className="relative min-h-[420px] w-full"
+                className="relative min-h-[320px] w-full sm:min-h-[420px]"
                 onTransitionEnd={handleCarouselTransitionEnd}
               >
                 {renderedCarouselSlides.map((slideEvent, slideIndex) => (
                   <article
                     key={`slide-${slideEvent._id}-${slideIndex}`}
-                    className={`group absolute inset-0 min-h-[420px] w-full overflow-hidden rounded-2xl transition-opacity duration-1000 ease-in-out ${
+                    className={`group absolute inset-0 min-h-[320px] w-full overflow-hidden rounded-2xl transition-opacity duration-1000 ease-in-out sm:min-h-[420px] ${
                       slideIndex === activeSlideIndex
                         ? "z-20 pointer-events-auto opacity-100"
                         : "z-0 pointer-events-none opacity-0"
@@ -749,13 +749,13 @@ export default function Home() {
 
                     <div className="absolute inset-0 bg-gradient-to-r from-[rgba(8,11,18,0.92)] via-[rgba(8,11,18,0.74)] to-[rgba(8,11,18,0.88)]" />
 
-                    <div className="relative flex min-h-[420px] flex-col justify-between p-6 md:p-8 md:pb-10">
+                    <div className="relative flex min-h-[320px] flex-col justify-between p-4 sm:min-h-[420px] sm:p-6 md:p-8 md:pb-10">
                       <div className="max-w-2xl">
-                        <h4 className="text-4xl font-semibold leading-tight text-[var(--text)] md:text-5xl">
+                        <h4 className="text-2xl font-semibold leading-tight text-[var(--text)] sm:text-3xl md:text-5xl">
                         {slideEvent.title}
                         </h4>
 
-                        <div className="mt-6 flex flex-wrap gap-3 text-sm">
+                        <div className="mt-4 flex flex-wrap gap-2 text-xs sm:mt-6 sm:gap-3 sm:text-sm">
                           <span className="rounded-full border border-[var(--border2)] bg-[rgba(255,255,255,0.05)] px-3 py-1 text-[var(--gold2)]">
                             {displayDate(slideEvent.date)}
                           </span>
@@ -768,7 +768,7 @@ export default function Home() {
                         </div>
 
                         {slideEvent.description && (
-                          <p className="mt-4 max-w-xl text-base leading-7 text-[var(--text2)] line-clamp-3 md:text-lg md:leading-8">
+                          <p className="mt-3 max-w-xl text-sm leading-6 text-[var(--text2)] line-clamp-3 sm:mt-4 sm:text-base sm:leading-7 md:text-lg md:leading-8">
                             {slideEvent.description}
                           </p>
                         )}
@@ -816,7 +816,7 @@ export default function Home() {
       )}
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)]">
-        <section className="relative overflow-hidden rounded-3xl border border-[var(--border)] bg-[rgba(8,12,20,0.75)] p-5 md:p-6">
+        <section className="relative overflow-hidden rounded-3xl border border-[var(--border)] bg-[rgba(8,12,20,0.75)] p-4 sm:p-5 md:p-6">
           <div className="pointer-events-none absolute inset-0 opacity-80">
             <div className="absolute -left-20 top-1/2 h-72 w-72 -translate-y-1/2 rounded-full bg-[var(--teal)]/15 blur-3xl" />
             <div className="absolute right-0 top-0 h-56 w-56 rounded-full bg-[var(--gold)]/10 blur-3xl" />
@@ -827,7 +827,7 @@ export default function Home() {
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--text3)]">
                 This Week to Date
               </p>
-              <h3 className="mt-2 text-4xl italic text-[var(--text)]">
+              <h3 className="mt-2 text-2xl italic text-[var(--text)] sm:text-3xl md:text-4xl">
                 {selectedDate === todayKey ? "Today" : selectedDateDisplay}
               </h3>
               <p className="mt-1 max-w-2xl text-sm text-[var(--text2)]">
@@ -881,7 +881,7 @@ export default function Home() {
                     onMouseEnter={() => setHoveredScheduleEventId(event._id)}
                     onMouseLeave={() => setHoveredScheduleEventId(null)}
                   >
-                    <div className="grid items-start gap-4 md:grid-cols-[44px_minmax(0,1fr)_max-content]">
+                    <div className="grid items-start gap-3 sm:gap-4 md:grid-cols-[44px_minmax(0,1fr)_max-content]">
                       <div
                         className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border text-xs font-semibold transition group-hover:border-[var(--gold)] group-hover:text-[var(--gold)] ${
                         index === 0
@@ -896,7 +896,7 @@ export default function Home() {
                         <p className="text-[11px] uppercase tracking-[0.16em] text-[var(--text3)]">
                           {scheduleMeta(event)}
                         </p>
-                        <h4 className="mt-1 text-xl font-semibold leading-tight text-[var(--text)] transition group-hover:text-[var(--gold2)]">
+                        <h4 className="mt-1 text-lg font-semibold leading-tight text-[var(--text)] transition group-hover:text-[var(--gold2)] sm:text-xl">
                           {event.title}
                         </h4>
                         <p className="mt-1 text-sm text-[var(--text2)]">{event.venue || "Venue TBA"}</p>
@@ -958,7 +958,7 @@ export default function Home() {
         </section>
 
         <section className="space-y-6">
-          <div className="glass-panel rounded-3xl p-5 md:p-6">
+          <div className="glass-panel rounded-3xl p-4 sm:p-5 md:p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--text3)]">
               Search
             </p>
@@ -974,7 +974,7 @@ export default function Home() {
             </label>
           </div>
 
-          <div className="glass-panel rounded-3xl p-5 md:p-6">
+          <div className="glass-panel rounded-3xl p-4 sm:p-5 md:p-6">
             <div className="flex items-center justify-between">
               <h3 className="text-base font-semibold text-[var(--text)]">Calendar</h3>
               <div className="flex items-center gap-2">
@@ -1038,18 +1038,21 @@ export default function Home() {
         </section>
       </div>
 
-      <footer className="glass-panel rounded-3xl border border-[var(--border)] px-6 py-8 md:px-8">
-        <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-4">
+      <footer className="glass-panel rounded-3xl border border-[var(--border)] px-4 py-6 sm:px-6 sm:py-8 md:px-8">
+        <div className="grid gap-6 sm:gap-8 md:grid-cols-2 xl:grid-cols-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--text3)]">
               Campus Events
             </p>
-            <h4 className="mt-2 text-2xl font-semibold text-[var(--text)]">
+            <h4 className="mt-2 text-xl font-semibold text-[var(--text)] sm:text-2xl">
               Stay connected with campus life.
             </h4>
-            <p className="mt-3 text-sm leading-6 text-[var(--text2)]">
+            <p className="mt-3 hidden text-sm leading-6 text-[var(--text2)] sm:block">
               Discover events, follow schedules, and keep track of speakers, sponsors, and
               registrations in one place.
+            </p>
+            <p className="mt-2 text-sm leading-6 text-[var(--text2)] sm:hidden">
+              Events, schedules, and registrations in one place.
             </p>
           </div>
 
@@ -1060,7 +1063,7 @@ export default function Home() {
             <ul className="mt-3 space-y-2 text-sm text-[var(--text2)]">
               <li><a className="transition hover:text-[var(--gold2)]" href="mailto:support@campusevents.edu">support@campusevents.edu</a></li>
               <li><a className="transition hover:text-[var(--gold2)]" href="tel:+10000000000">+1 (000) 000-0000</a></li>
-              <li>Campus Events Office, Main Building</li>
+              <li className="hidden sm:list-item">Campus Events Office, Main Building</li>
             </ul>
           </div>
 
@@ -1075,7 +1078,7 @@ export default function Home() {
             </ul>
           </div>
 
-          <div>
+          <div className="hidden xl:block">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--text3)]">
               Terms & Policies
             </p>
@@ -1088,9 +1091,9 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="mt-8 flex flex-col gap-3 border-t border-[var(--border)] pt-6 text-sm text-[var(--text3)] md:flex-row md:items-center md:justify-between">
+        <div className="mt-6 flex flex-col gap-2 border-t border-[var(--border)] pt-4 text-xs text-[var(--text3)] sm:mt-8 sm:gap-3 sm:pt-6 sm:text-sm md:flex-row md:items-center md:justify-between">
           <p>© 2026 Campus Events. All rights reserved.</p>
-          <p>Built for events, schedules, registrations, and campus communities.</p>
+          <p className="hidden sm:block">Built for events, schedules, registrations, and campus communities.</p>
         </div>
       </footer>
 

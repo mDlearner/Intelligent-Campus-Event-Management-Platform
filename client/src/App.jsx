@@ -106,7 +106,7 @@ export default function App() {
       <div className="ambient ambient-4" />
 
       <Navbar />
-      <main className="relative z-40 mx-auto max-w-8xl px-4 pb-14 pt-28 lg:px-8">
+      <main className="relative z-40 mx-auto max-w-8xl px-4 pb-14 pt-32 lg:px-8 lg:pt-28">
         <div className="route-shell">
           {routeStack.isTransitioning && (
             <div className="route-layer route-layer-exit" aria-hidden="true">

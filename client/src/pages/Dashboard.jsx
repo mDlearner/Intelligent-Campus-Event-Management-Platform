@@ -70,7 +70,7 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-5 sm:space-y-6">
         <div className="grid gap-4 md:grid-cols-3">
           <div className="bento-tile rounded-2xl p-4">
             <p className="text-xs font-semibold text-[var(--text3)]">Registered Events</p>
@@ -92,7 +92,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="bento-tile rounded-2xl p-6">
+        <div className="bento-tile rounded-2xl p-4 sm:p-6">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-[var(--text)]">My Registered Events</h2>
           </div>
@@ -129,7 +129,7 @@ export default function Dashboard() {
                     {registration.event?.date || "TBA"}
                     {registration.event?.venue ? ` · ${registration.event.venue}` : ""}
                   </p>
-                  <div className="mt-3 flex gap-2">
+                  <div className="mt-3 grid gap-2 sm:flex">
                     <button
                       className="neo-btn rounded-full px-3 py-1 text-xs"
                       type="button"
