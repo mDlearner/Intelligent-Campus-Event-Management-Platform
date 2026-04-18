@@ -3,6 +3,12 @@ const { z } = require("zod");
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_REGEX = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
+const optionalUrlField = (message) =>
+  z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z.string().url(message).optional().nullable()
+  );
+
 // Event creation/update schema
 const eventSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(500),
@@ -19,13 +25,22 @@ const eventSchema = z.object({
   speakers: z.array(
     z.object({
       name: z.string().trim().optional(),
-      title: z.string().trim().optional()
+      title: z.string().trim().optional(),
+      bio: z.string().trim().optional(),
+      imageUrl: optionalUrlField("Invalid speaker image URL"),
+      socialLinks: z.object({
+        linkedin: optionalUrlField("Invalid LinkedIn URL"),
+        twitter: optionalUrlField("Invalid Twitter URL"),
+        github: optionalUrlField("Invalid GitHub URL"),
+        website: optionalUrlField("Invalid website URL")
+      }).optional().nullable()
     })
   ).optional().default([]),
   sponsors: z.array(
     z.object({
       name: z.string().trim().optional(),
-      url: z.string().url().optional()
+      logo: optionalUrlField("Invalid sponsor logo URL"),
+      website: optionalUrlField("Invalid sponsor website URL")
     })
   ).optional().default([])
 })

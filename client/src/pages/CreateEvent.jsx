@@ -257,8 +257,38 @@ export default function CreateEvent() {
         maxSeats: Number(form.maxSeats),
         paymentType: form.paymentType,
         categories: form.categories,
-        speakers: form.speakers.filter((s) => s.name),
-        sponsors: form.sponsors.filter((s) => s.name)
+        speakers: form.speakers
+          .filter((speaker) =>
+            speaker.name ||
+            speaker.title ||
+            speaker.bio ||
+            speaker.imageUrl ||
+            speaker.socialLinks?.linkedin ||
+            speaker.socialLinks?.twitter ||
+            speaker.socialLinks?.github ||
+            speaker.socialLinks?.website
+          )
+          .map((speaker) => ({
+            name: speaker.name || "",
+            title: speaker.title || "",
+            bio: speaker.bio || "",
+            imageUrl: speaker.imageUrl || null,
+            socialLinks: speaker.socialLinks
+              ? {
+                  linkedin: speaker.socialLinks.linkedin || "",
+                  twitter: speaker.socialLinks.twitter || "",
+                  github: speaker.socialLinks.github || "",
+                  website: speaker.socialLinks.website || ""
+                }
+              : undefined
+          })),
+        sponsors: form.sponsors
+          .filter((sponsor) => sponsor.name || sponsor.logo || sponsor.website)
+          .map((sponsor) => ({
+            name: sponsor.name || "",
+            logo: sponsor.logo || null,
+            website: sponsor.website || null
+          }))
       };
 
       if (editingEventId) {
